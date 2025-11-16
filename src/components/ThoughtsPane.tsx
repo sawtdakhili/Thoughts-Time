@@ -7,8 +7,6 @@ import { Item } from '../types';
 function ThoughtsPane() {
   const [input, setInput] = useState('');
   const [currentParentId, setCurrentParentId] = useState<string | null>(null);
-  const [currentDepth, setCurrentDepth] = useState(0);
-  const [indentLevel, setIndentLevel] = useState(0);
   const addItem = useStore((state) => state.addItem);
   const items = useStore((state) => state.items);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -47,23 +45,39 @@ function ThoughtsPane() {
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    // Tab: indent (create sub-item)
+    const textarea = e.currentTarget;
+    const { selectionStart, selectionEnd, value } = textarea;
+
+    // Tab: insert indentation (2 spaces)
     if (e.key === 'Tab' && !e.shiftKey) {
       e.preventDefault();
-      if (indentLevel < 2) {
-        setIndentLevel(indentLevel + 1);
-      }
+      const newValue = value.substring(0, selectionStart) + '  ' + value.substring(selectionEnd);
+      setInput(newValue);
+
+      // Move cursor after the inserted spaces
+      setTimeout(() => {
+        textarea.selectionStart = textarea.selectionEnd = selectionStart + 2;
+      }, 0);
       return;
     }
 
-    // Shift+Tab: outdent
+    // Shift+Tab: remove indentation from current line
     if (e.key === 'Tab' && e.shiftKey) {
       e.preventDefault();
-      if (indentLevel > 0) {
-        setIndentLevel(indentLevel - 1);
-        if (indentLevel === 1) {
-          setCurrentParentId(null);
-        }
+
+      // Find start of current line
+      const lineStart = value.lastIndexOf('\n', selectionStart - 1) + 1;
+      const lineText = value.substring(lineStart, selectionStart);
+
+      // Check if line starts with 2 spaces
+      if (lineText.startsWith('  ')) {
+        const newValue = value.substring(0, lineStart) + value.substring(lineStart + 2);
+        setInput(newValue);
+
+        // Move cursor back 2 positions
+        setTimeout(() => {
+          textarea.selectionStart = textarea.selectionEnd = Math.max(lineStart, selectionStart - 2);
+        }, 0);
       }
       return;
     }
@@ -78,16 +92,49 @@ function ThoughtsPane() {
   const handleSubmit = (e: React.FormEvent | React.KeyboardEvent) => {
     e.preventDefault();
     if (input.trim()) {
-      const newItemId = addItem(input, currentParentId, indentLevel);
+      const lines = input.split('\n');
+      let lastParentId: string | null = null;
+      const itemStack: Array<{ id: string; level: number }> = [];
 
-      // If this is a top-level note, it can become a parent for sub-items
-      if (indentLevel === 0) {
-        setCurrentParentId(newItemId);
-        setCurrentDepth(0);
-      } else {
-        // Sub-items maintain the parent context
-        setCurrentDepth(indentLevel);
-      }
+      lines.forEach((line) => {
+        if (!line.trim()) return; // Skip empty lines
+
+        // Detect indentation level (2 spaces = 1 level)
+        const leadingSpaces = line.match(/^(\s*)/)?.[0].length || 0;
+        const indentLevel = Math.floor(leadingSpaces / 2);
+        const contentWithoutIndent = line.trimStart();
+
+        // Find parent based on indent level
+        let parentId: string | null = null;
+        if (indentLevel > 0) {
+          // Find the closest parent at indentLevel - 1
+          for (let i = itemStack.length - 1; i >= 0; i--) {
+            if (itemStack[i].level === indentLevel - 1) {
+              parentId = itemStack[i].id;
+              break;
+            }
+          }
+        }
+
+        // Create item with detected parent and depth
+        const newItemId = addItem(contentWithoutIndent, parentId, indentLevel);
+
+        // Update stack
+        // Remove items at same or deeper level
+        while (itemStack.length > 0 && itemStack[itemStack.length - 1].level >= indentLevel) {
+          itemStack.pop();
+        }
+        // Add this item to stack
+        itemStack.push({ id: newItemId, level: indentLevel });
+
+        // Track the first top-level item as potential parent for next submission
+        if (indentLevel === 0 && !lastParentId) {
+          lastParentId = newItemId;
+        }
+      });
+
+      // Set parent for next submission
+      setCurrentParentId(lastParentId);
 
       setInput('');
 
@@ -102,12 +149,6 @@ function ThoughtsPane() {
           scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
         }
       }, 100);
-    } else if (indentLevel > 0) {
-      // Empty line with indent level > 0: outdent
-      setIndentLevel(Math.max(0, indentLevel - 1));
-      if (indentLevel === 1) {
-        setCurrentParentId(null);
-      }
     }
   };
 
@@ -178,25 +219,16 @@ function ThoughtsPane() {
 
       {/* Input Field - Fixed at Bottom */}
       <form onSubmit={handleSubmit} className="border-t border-border-subtle">
-        <div className="flex items-start min-h-[56px]">
-          {/* Visual indent indicator */}
-          {indentLevel > 0 && (
-            <div className="flex items-center pl-24 pt-16 text-text-secondary text-xs font-mono">
-              {'  '.repeat(indentLevel)}→
-            </div>
-          )}
-          <textarea
-            ref={textareaRef}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={indentLevel > 0 ? "Type prefix: * t e r (Tab/Shift+Tab to indent/outdent)" : "Type here... (Shift+Enter for new line)"}
-            style={{ paddingLeft: indentLevel > 0 ? `${indentLevel * 32 + 24}px` : '24px' }}
-            className="flex-1 min-h-[56px] max-h-[200px] py-16 px-24 bg-transparent border-none outline-none font-serif text-base placeholder-text-secondary resize-none overflow-y-auto"
-            rows={1}
-            autoFocus
-          />
-        </div>
+        <textarea
+          ref={textareaRef}
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder="Type here... (Tab to indent, Shift+Enter for new line)"
+          className="w-full min-h-[56px] max-h-[200px] py-16 px-24 bg-transparent border-none outline-none font-serif text-base placeholder-text-secondary resize-none overflow-y-auto"
+          rows={1}
+          autoFocus
+        />
       </form>
     </div>
   );
