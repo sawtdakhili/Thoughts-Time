@@ -1,10 +1,15 @@
-import { format } from 'date-fns';
+import { format, addDays, subDays } from 'date-fns';
 import { useStore } from './store/useStore';
 import ThoughtsPane from './components/ThoughtsPane';
 import TimePane from './components/TimePane';
 
 function App() {
   const currentDate = useStore((state) => state.currentDate);
+  const setCurrentDate = useStore((state) => state.setCurrentDate);
+
+  const goToPreviousDay = () => setCurrentDate(subDays(currentDate, 1));
+  const goToNextDay = () => setCurrentDate(addDays(currentDate, 1));
+  const goToToday = () => setCurrentDate(new Date());
 
   return (
     <div className="h-full flex flex-col bg-background text-text-primary">
@@ -15,8 +20,28 @@ function App() {
           <button className="text-sm font-mono hover:opacity-70 transition-opacity">
             Search
           </button>
-          <div className="text-sm font-mono">
-            {format(currentDate, 'MMM d, yyyy')}
+          <div className="flex items-center gap-12">
+            <button
+              onClick={goToPreviousDay}
+              className="text-sm font-mono hover:opacity-70 transition-opacity px-12"
+            >
+              ←
+            </button>
+            <button
+              onClick={goToToday}
+              className="text-sm font-mono hover:opacity-70 transition-opacity"
+            >
+              Today
+            </button>
+            <button
+              onClick={goToNextDay}
+              className="text-sm font-mono hover:opacity-70 transition-opacity px-12"
+            >
+              →
+            </button>
+            <div className="text-sm font-mono ml-12">
+              {format(currentDate, 'MMM d, yyyy')}
+            </div>
           </div>
         </div>
       </header>
