@@ -1,0 +1,48 @@
+@import url('https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Courier+Prime&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: #0A0A0A;
+    --text-primary: #F5F5F5;
+    --text-secondary: #6A6A6A;
+    --border-subtle: #1A1A1A;
+    --hover-bg: #0F0F0F;
+    --text-base: 18px;
+    --text-sm: 15px;
+    --text-xs: 14px;
+    --text-lg: 20px;
+    --text-xl: 24px;
+    --line-height: 1.7;
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: "Crimson Text", Lora, Georgia, "Times New Roman", serif;
+    font-size: var(--text-base);
+    line-height: var(--line-height);
+    background-color: var(--background);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  html, body, #root {
+    height: 100%;
+    overflow: hidden;
+  }
+}
+
+@layer utilities {
+  .font-mono {
+    font-family: "Courier Prime", "Courier New", monospace;
+  }
+}
