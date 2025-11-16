@@ -93,6 +93,81 @@ customChrono.refiners.push({
           adjustedEndHour = 0;
         }
 
+        // Fix common mistake: "10 to 12am" probably means "10am to 12pm" (noon)
+        // If end time is before start time, assume they meant PM for the end
+        if (adjustedEndHour < adjustedStartHour || (adjustedEndHour === adjustedStartHour && endMin <= startMin)) {
+          if (endHour === 12 && endMeridiem.toLowerCase() === 'am') {
+            // They probably meant 12pm (noon), not 12am (midnight)
+            adjustedEndHour = 12;
+          } else {
+            // Add 12 hours to make it PM
+            adjustedEndHour += 12;
+          }
+        }
+
+        // Update start time
+        result.start.assign('hour', adjustedStartHour);
+        result.start.assign('minute', startMin);
+
+        // Create or update end time
+        if (!result.end) {
+          result.end = result.start.clone();
+        }
+
+        if (result.end) {
+          result.end.assign('hour', adjustedEndHour);
+          result.end.assign('minute', endMin);
+        }
+      }
+    });
+
+    return results;
+  }
+});
+
+// Custom refiner for "from X to Y" pattern (same as "between X and Y")
+customChrono.refiners.push({
+  refine: (context, results) => {
+    results.forEach((result) => {
+      const text = context.text.substring(result.index);
+      const fromMatch = text.match(/^from\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\s+to\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b/i);
+
+      if (fromMatch) {
+        const startHour = parseInt(fromMatch[1]);
+        const startMin = fromMatch[2] ? parseInt(fromMatch[2]) : 0;
+        const startMeridiem = fromMatch[3] || fromMatch[6];
+        const endHour = parseInt(fromMatch[4]);
+        const endMin = fromMatch[5] ? parseInt(fromMatch[5]) : 0;
+        const endMeridiem = fromMatch[6];
+
+        // Adjust start hour
+        let adjustedStartHour = startHour;
+        if (startMeridiem && startMeridiem.toLowerCase() === 'pm' && startHour !== 12) {
+          adjustedStartHour += 12;
+        } else if (startMeridiem && startMeridiem.toLowerCase() === 'am' && startHour === 12) {
+          adjustedStartHour = 0;
+        }
+
+        // Adjust end hour
+        let adjustedEndHour = endHour;
+        if (endMeridiem.toLowerCase() === 'pm' && endHour !== 12) {
+          adjustedEndHour += 12;
+        } else if (endMeridiem.toLowerCase() === 'am' && endHour === 12) {
+          adjustedEndHour = 0;
+        }
+
+        // Fix common mistake: "10 to 12am" probably means "10am to 12pm" (noon)
+        // If end time is before start time, assume they meant PM for the end
+        if (adjustedEndHour < adjustedStartHour || (adjustedEndHour === adjustedStartHour && endMin <= startMin)) {
+          if (endHour === 12 && endMeridiem.toLowerCase() === 'am') {
+            // They probably meant 12pm (noon), not 12am (midnight)
+            adjustedEndHour = 12;
+          } else {
+            // Add 12 hours to make it PM
+            adjustedEndHour += 12;
+          }
+        }
+
         // Update start time
         result.start.assign('hour', adjustedStartHour);
         result.start.assign('minute', startMin);
