@@ -80,4 +80,25 @@
     animation: pageFlip 0.6s ease-in-out;
     transform-origin: left center;
   }
+
+  /* Page-flip animation for left pane (inverted direction) */
+  @keyframes pageFlipLeft {
+    0% {
+      transform: perspective(2000px) rotateY(0deg);
+      opacity: 1;
+    }
+    50% {
+      transform: perspective(2000px) rotateY(15deg);
+      opacity: 0.8;
+    }
+    100% {
+      transform: perspective(2000px) rotateY(0deg);
+      opacity: 1;
+    }
+  }
+
+  .page-flip-left {
+    animation: pageFlipLeft 0.6s ease-in-out;
+    transform-origin: right center;
+  }
 }

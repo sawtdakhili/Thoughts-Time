@@ -8,9 +8,18 @@ import { parseInput } from '../utils/parser';
 interface ThoughtsPaneProps {
   searchQuery?: string;
   viewMode?: 'infinite' | 'book';
+  currentDate?: string;
+  onNextDay?: () => void;
+  onPreviousDay?: () => void;
 }
 
-function ThoughtsPane({ searchQuery = '', viewMode = 'infinite' }: ThoughtsPaneProps) {
+function ThoughtsPane({
+  searchQuery = '',
+  viewMode = 'infinite',
+  currentDate,
+  onNextDay,
+  onPreviousDay,
+}: ThoughtsPaneProps) {
   const [input, setInput] = useState('');
   const addItem = useStore((state) => state.addItem);
   const items = useStore((state) => state.items);
@@ -21,7 +30,7 @@ function ThoughtsPane({ searchQuery = '', viewMode = 'infinite' }: ThoughtsPaneP
   const [promptedTime, setPromptedTime] = useState('');
   const [promptedEndTime, setPromptedEndTime] = useState('');
   const [isPageFlipping, setIsPageFlipping] = useState(false);
-  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastScrollTop = useRef(0);
 
   // Filter function: recursively check if item or its children match search
   const matchesSearch = (item: Item, query: string): boolean => {
@@ -361,26 +370,42 @@ function ThoughtsPane({ searchQuery = '', viewMode = 'infinite' }: ThoughtsPaneP
   }, []);
 
   const handleScroll = () => {
-    if (scrollRef.current) {
-      const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
-      const atBottom = scrollHeight - scrollTop - clientHeight < 50;
-      setIsAtBottom(atBottom);
+    if (!scrollRef.current) return;
 
-      // Book mode: trigger page-flip animation when scroll settles
-      if (viewMode === 'book') {
-        // Clear existing timeout
-        if (scrollTimeoutRef.current) {
-          clearTimeout(scrollTimeoutRef.current);
-        }
+    const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
+    const atBottom = scrollHeight - scrollTop - clientHeight < 50;
+    setIsAtBottom(atBottom);
 
-        // Set new timeout to detect when scroll stops
-        scrollTimeoutRef.current = setTimeout(() => {
-          // Trigger brief page-flip animation
-          setIsPageFlipping(true);
+    // Book mode: detect when user tries to scroll beyond boundaries
+    if (viewMode === 'book' && onNextDay && onPreviousDay) {
+      const scrollDirection = scrollTop > lastScrollTop.current ? 'down' : 'up';
+      lastScrollTop.current = scrollTop;
+
+      // At bottom, trying to scroll down = next day
+      if (scrollTop + clientHeight >= scrollHeight - 5 && scrollDirection === 'down') {
+        setIsPageFlipping(true);
+        setTimeout(() => {
+          onNextDay();
+          if (scrollRef.current) {
+            scrollRef.current.scrollTop = 0; // Reset to top of new page
+          }
           setTimeout(() => {
             setIsPageFlipping(false);
           }, 600);
-        }, 150);
+        }, 50);
+      }
+      // At top, trying to scroll up = previous day
+      else if (scrollTop <= 5 && scrollDirection === 'up') {
+        setIsPageFlipping(true);
+        setTimeout(() => {
+          onPreviousDay();
+          if (scrollRef.current) {
+            scrollRef.current.scrollTop = scrollRef.current.scrollHeight; // Scroll to bottom of new page
+          }
+          setTimeout(() => {
+            setIsPageFlipping(false);
+          }, 600);
+        }, 50);
       }
     }
   };
@@ -479,26 +504,25 @@ function ThoughtsPane({ searchQuery = '', viewMode = 'infinite' }: ThoughtsPaneP
         ref={scrollRef}
         onScroll={handleScroll}
         className={`flex-1 overflow-y-auto px-24 py-16 ${
-          viewMode === 'infinite' ? 'snap-y snap-mandatory' : 'snap-y snap-mandatory'
+          viewMode === 'infinite' ? 'snap-y snap-mandatory' : ''
         } ${
-          isPageFlipping && viewMode === 'book' ? 'page-flip' : ''
+          isPageFlipping && viewMode === 'book' ? 'page-flip-left' : ''
         }`}
-        style={viewMode === 'book' ? { scrollSnapType: 'y mandatory', height: 'calc(100vh - 60px - 90px)' } : undefined}
+        style={viewMode === 'book' ? { height: 'calc(100vh - 60px - 90px)' } : undefined}
       >
-        {dates.map((date) => {
+        {(viewMode === 'book' && currentDate ? [currentDate] : dates).map((date) => {
           const items = itemsByDate.get(date) || [];
           const isToday = date === today;
 
-          if (items.length === 0 && !isToday) {
-            // Don't show empty days (except today)
+          if (viewMode === 'infinite' && items.length === 0 && !isToday) {
+            // Don't show empty days (except today) in infinite mode
             return null;
           }
 
           return (
             <div
               key={date}
-              className="snap-start"
-              style={viewMode === 'book' ? { minHeight: 'calc(100vh - 60px - 90px)', marginBottom: 0 } : { marginBottom: '16px' }}
+              className={viewMode === 'infinite' ? 'mb-16 snap-start' : ''}
             >
               {/* Date Header */}
               <div className={`sticky top-0 bg-background py-3 mb-6 border-b border-border-subtle ${isToday ? 'text-text-primary' : 'text-text-secondary'}`}>

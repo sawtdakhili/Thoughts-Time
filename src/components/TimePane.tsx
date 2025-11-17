@@ -15,9 +15,18 @@ type TimelineEntry = {
 interface TimePaneProps {
   searchQuery?: string;
   viewMode?: 'infinite' | 'book';
+  currentDate?: string;
+  onNextDay?: () => void;
+  onPreviousDay?: () => void;
 }
 
-function TimePane({ searchQuery = '', viewMode = 'infinite' }: TimePaneProps) {
+function TimePane({
+  searchQuery = '',
+  viewMode = 'infinite',
+  currentDate,
+  onNextDay,
+  onPreviousDay,
+}: TimePaneProps) {
   const items = useStore((state) => state.items);
   const toggleTodoComplete = useStore((state) => state.toggleTodoComplete);
   const updateItem = useStore((state) => state.updateItem);
@@ -27,7 +36,7 @@ function TimePane({ searchQuery = '', viewMode = 'infinite' }: TimePaneProps) {
   const [editingItem, setEditingItem] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
   const [isPageFlipping, setIsPageFlipping] = useState(false);
-  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastScrollTop = useRef(0);
 
   // Filter function: recursively check if item or its children match search
   const matchesSearch = (item: Item, query: string): boolean => {
@@ -166,21 +175,41 @@ function TimePane({ searchQuery = '', viewMode = 'infinite' }: TimePaneProps) {
   }, []);
 
   const handleScroll = () => {
-    // Book mode: trigger page-flip animation when scroll settles
-    if (viewMode === 'book' && scrollRef.current) {
-      // Clear existing timeout
-      if (scrollTimeoutRef.current) {
-        clearTimeout(scrollTimeoutRef.current);
-      }
+    if (!scrollRef.current) return;
 
-      // Set new timeout to detect when scroll stops
-      scrollTimeoutRef.current = setTimeout(() => {
-        // Trigger brief page-flip animation
+    const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
+
+    // Book mode: detect when user tries to scroll beyond boundaries
+    if (viewMode === 'book' && onNextDay && onPreviousDay) {
+      const scrollDirection = scrollTop > lastScrollTop.current ? 'down' : 'up';
+      lastScrollTop.current = scrollTop;
+
+      // At bottom, trying to scroll down = next day
+      if (scrollTop + clientHeight >= scrollHeight - 5 && scrollDirection === 'down') {
         setIsPageFlipping(true);
         setTimeout(() => {
-          setIsPageFlipping(false);
-        }, 600);
-      }, 150);
+          onNextDay();
+          if (scrollRef.current) {
+            scrollRef.current.scrollTop = 0; // Reset to top of new page
+          }
+          setTimeout(() => {
+            setIsPageFlipping(false);
+          }, 600);
+        }, 50);
+      }
+      // At top, trying to scroll up = previous day
+      else if (scrollTop <= 5 && scrollDirection === 'up') {
+        setIsPageFlipping(true);
+        setTimeout(() => {
+          onPreviousDay();
+          if (scrollRef.current) {
+            scrollRef.current.scrollTop = scrollRef.current.scrollHeight; // Scroll to bottom of new page
+          }
+          setTimeout(() => {
+            setIsPageFlipping(false);
+          }, 600);
+        }, 50);
+      }
     }
   };
 
@@ -518,20 +547,20 @@ function TimePane({ searchQuery = '', viewMode = 'infinite' }: TimePaneProps) {
         ref={scrollRef}
         onScroll={handleScroll}
         className={`flex-1 overflow-y-auto px-24 py-16 ${
-          viewMode === 'infinite' ? 'snap-y snap-mandatory' : 'snap-y snap-mandatory'
+          viewMode === 'infinite' ? 'snap-y snap-mandatory' : ''
         } ${
           isPageFlipping && viewMode === 'book' ? 'page-flip' : ''
         }`}
-        style={viewMode === 'book' ? { scrollSnapType: 'y mandatory', height: 'calc(100vh - 60px - 90px)' } : undefined}
+        style={viewMode === 'book' ? { height: 'calc(100vh - 60px - 90px)' } : undefined}
       >
-        {/* Daily Review - appears at top */}
-        <DailyReview />
+        {/* Daily Review - appears at top (infinite mode only) */}
+        {viewMode === 'infinite' && <DailyReview />}
 
-        {dates.map((date) => {
+        {(viewMode === 'book' && currentDate ? [currentDate] : dates).map((date) => {
           const entries = entriesByDate.get(date) || [];
           const isToday = date === today;
 
-          if (entries.length === 0) {
+          if (viewMode === 'infinite' && entries.length === 0) {
             return null;
           }
 
@@ -556,8 +585,7 @@ function TimePane({ searchQuery = '', viewMode = 'infinite' }: TimePaneProps) {
           return (
             <div
               key={date}
-              className="snap-start"
-              style={viewMode === 'book' ? { minHeight: 'calc(100vh - 60px - 90px)', marginBottom: 0 } : { marginBottom: '16px' }}
+              className={viewMode === 'infinite' ? 'mb-16 snap-start' : ''}
             >
               {/* Date Header */}
               <div className={`sticky top-0 bg-background py-3 mb-6 border-b border-border-subtle ${isToday ? 'text-text-primary' : 'text-text-secondary'}`}>
@@ -568,22 +596,28 @@ function TimePane({ searchQuery = '', viewMode = 'infinite' }: TimePaneProps) {
               </div>
 
               {/* Items for this date */}
-              <div className="space-y-6">
-                {times.map((time) => (
-                  <div key={time}>
-                    <div className="text-xs font-mono text-text-secondary mb-1">
-                      {time}
+              {times.length === 0 ? (
+                <div className="text-center text-text-secondary text-sm py-4">
+                  <p>No scheduled items</p>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {times.map((time) => (
+                    <div key={time}>
+                      <div className="text-xs font-mono text-text-secondary mb-1">
+                        {time}
+                      </div>
+                      <div className="space-y-3">
+                        {entriesByTime[time].map((entry, idx) => (
+                          <div key={`${entry.item.id}-${entry.type}-${idx}`}>
+                            {renderEntry(entry)}
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                    <div className="space-y-3">
-                      {entriesByTime[time].map((entry, idx) => (
-                        <div key={`${entry.item.id}-${entry.type}-${idx}`}>
-                          {renderEntry(entry)}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           );
         })}
