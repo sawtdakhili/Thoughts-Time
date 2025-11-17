@@ -122,7 +122,7 @@ function TimePane() {
       const isCompleted = todo.completedAt;
 
       return (
-        <div className={`flex items-start gap-12 ${isCompleted ? 'opacity-40' : ''}`}>
+        <div className={`flex items-start gap-8 ${isCompleted ? 'opacity-40' : ''}`}>
           <button
             onClick={() => toggleTodoComplete(item.id)}
             className="text-base leading-book flex-shrink-0 cursor-pointer hover:opacity-70"
@@ -134,9 +134,9 @@ function TimePane() {
               {item.content}
             </p>
             {item.tags.length > 0 && (
-              <div className="mt-6 text-sm text-text-secondary">
+              <div className="mt-4 text-xs text-text-secondary">
                 {item.tags.map((tag) => (
-                  <span key={tag} className="mr-12">
+                  <span key={tag} className="mr-8">
                     #{tag}
                   </span>
                 ))}
@@ -151,16 +151,16 @@ function TimePane() {
       const endTime = format(new Date(event.endTime), 'h:mm a');
 
       return (
-        <div className="flex items-start gap-12">
+        <div className="flex items-start gap-8">
           <span className="text-base leading-book flex-shrink-0">⇹</span>
           <div className="flex-1">
             <p className="text-base font-serif leading-book font-semibold">
               {item.content} ({startTime} - {endTime})
             </p>
             {item.tags.length > 0 && (
-              <div className="mt-6 text-sm text-text-secondary">
+              <div className="mt-4 text-xs text-text-secondary">
                 {item.tags.map((tag) => (
-                  <span key={tag} className="mr-12">
+                  <span key={tag} className="mr-8">
                     #{tag}
                   </span>
                 ))}
@@ -175,16 +175,16 @@ function TimePane() {
       const endTime = format(new Date(event.endTime), 'h:mm a');
 
       return (
-        <div className="flex items-start gap-12">
+        <div className="flex items-start gap-8">
           <span className="text-base leading-book flex-shrink-0">⇤</span>
           <div className="flex-1">
             <p className="text-base font-serif leading-book font-semibold">
               {item.content} ({startTime} - {endTime})
             </p>
             {item.tags.length > 0 && (
-              <div className="mt-6 text-sm text-text-secondary">
+              <div className="mt-4 text-xs text-text-secondary">
                 {item.tags.map((tag) => (
-                  <span key={tag} className="mr-12">
+                  <span key={tag} className="mr-8">
                     #{tag}
                   </span>
                 ))}
@@ -196,7 +196,7 @@ function TimePane() {
     } else {
       // event-end
       return (
-        <div className="flex items-start gap-12">
+        <div className="flex items-start gap-8">
           <span className="text-base leading-book flex-shrink-0">⇥</span>
           <div className="flex-1">
             <p className="text-base font-serif leading-book font-semibold">
@@ -211,14 +211,14 @@ function TimePane() {
   return (
     <div className="h-full flex flex-col">
       {/* Pane Header */}
-      <div className="h-[48px] border-b border-border-subtle flex items-center px-48">
-        <h2 className="text-sm font-serif uppercase tracking-wide">Time</h2>
+      <div className="h-[40px] border-b border-border-subtle flex items-center px-32">
+        <h2 className="text-xs font-serif uppercase tracking-wider">Time</h2>
       </div>
 
       {/* Timeline - Scrollable through all days */}
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto px-48 py-32"
+        className="flex-1 overflow-y-auto px-32 py-24"
       >
         {/* Daily Review - appears at top */}
         <DailyReview />
@@ -250,23 +250,23 @@ function TimePane() {
           });
 
           return (
-            <div key={date} className="mb-64">
+            <div key={date} className="mb-48">
               {/* Date Header */}
-              <div className={`sticky top-0 bg-background py-12 mb-24 border-b border-border-subtle ${isToday ? 'text-text-primary' : 'text-text-secondary'}`}>
-                <h3 className="text-sm font-mono uppercase tracking-wide">
+              <div className={`sticky top-0 bg-background py-8 mb-16 border-b border-border-subtle ${isToday ? 'text-text-primary' : 'text-text-secondary'}`}>
+                <h3 className="text-xs font-mono uppercase tracking-wider">
                   {format(parseISO(date), 'EEEE, MMM d, yyyy')}
                   {isToday && ' (Today)'}
                 </h3>
               </div>
 
               {/* Items for this date */}
-              <div className="space-y-32">
+              <div className="space-y-20">
                 {times.map((time) => (
                   <div key={time}>
-                    <div className="text-xs font-mono text-text-secondary mb-12">
+                    <div className="text-xs font-mono text-text-secondary mb-8">
                       {time}
                     </div>
-                    <div className="space-y-24">
+                    <div className="space-y-16">
                       {entriesByTime[time].map((entry, idx) => (
                         <div key={`${entry.item.id}-${entry.type}-${idx}`}>
                           {renderEntry(entry)}

@@ -312,15 +312,15 @@ function ThoughtsPane() {
       )}
 
       {/* Pane Header */}
-      <div className="h-[48px] border-b border-border-subtle flex items-center px-48">
-        <h2 className="text-sm font-serif uppercase tracking-wide">Thoughts</h2>
+      <div className="h-[40px] border-b border-border-subtle flex items-center px-32">
+        <h2 className="text-xs font-serif uppercase tracking-wider">Thoughts</h2>
       </div>
 
       {/* Items Area - Scrollable through all days */}
       <div
         ref={scrollRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto px-48 py-32"
+        className="flex-1 overflow-y-auto px-32 py-24"
       >
         {dates.map((date) => {
           const items = itemsByDate.get(date) || [];
@@ -332,10 +332,10 @@ function ThoughtsPane() {
           }
 
           return (
-            <div key={date} className="mb-64">
+            <div key={date} className="mb-48">
               {/* Date Header */}
-              <div className={`sticky top-0 bg-background py-12 mb-24 border-b border-border-subtle ${isToday ? 'text-text-primary' : 'text-text-secondary'}`}>
-                <h3 className="text-sm font-mono uppercase tracking-wide">
+              <div className={`sticky top-0 bg-background py-8 mb-16 border-b border-border-subtle ${isToday ? 'text-text-primary' : 'text-text-secondary'}`}>
+                <h3 className="text-xs font-mono uppercase tracking-wider">
                   {format(parseISO(date), 'EEEE, MMM d, yyyy')}
                   {isToday && ' (Today)'}
                 </h3>
@@ -343,11 +343,11 @@ function ThoughtsPane() {
 
               {/* Items for this date */}
               {items.length === 0 ? (
-                <div className="text-center text-text-secondary text-sm py-24">
+                <div className="text-center text-text-secondary text-sm py-16">
                   <p>Nothing captured yet</p>
                 </div>
               ) : (
-                <div className="space-y-32">
+                <div className="space-y-20">
                   {/* Only render top-level items (sub-items are rendered recursively) */}
                   {items.filter(item => !item.parentId).map((item) => (
                     <ItemDisplay key={item.id} item={item} />
