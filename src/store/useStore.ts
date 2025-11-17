@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { format } from 'date-fns';
 import { Item, Todo, Event, Routine, Note } from '../types';
-import { parseInput } from '../utils/parser';
+import { parseInput, hasExplicitNotePrefix } from '../utils/parser';
 
 interface AppState {
   // Data
@@ -48,16 +48,24 @@ export const useStore = create<AppState>()(
           throw new Error('Note sub-items: maximum depth is 2 levels');
         }
 
-        // RULE: If parent is todo, child MUST be todo (no prefix needed)
+        // RULE: If parent is todo, child defaults to todo UNLESS explicit note prefix (* or n)
         // RULE: If parent is note, child can be ANY type (via prefix: * t e r)
         let itemType = parsed.type;
         if (parentType === 'todo') {
+          // Check if user explicitly wanted a note (used * or n prefix)
+          const explicitNote = hasExplicitNotePrefix(input);
+
           if (parsed.type !== 'todo' && parsed.type !== 'note') {
-            console.error('Todo subtasks must be todos only');
-            throw new Error('Todo subtasks must be todos only');
+            console.error('Todo subtasks can only be todos or notes');
+            throw new Error('Todo subtasks can only be todos or notes');
           }
-          // Force to todo (subtasks are always todos)
-          itemType = 'todo';
+
+          // If explicit note prefix, keep as note; otherwise default to todo
+          if (explicitNote) {
+            itemType = 'note';
+          } else {
+            itemType = 'todo';
+          }
         }
         // For notes: itemType remains as parsed.type (any type allowed via prefix)
 

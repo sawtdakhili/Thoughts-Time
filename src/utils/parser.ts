@@ -198,14 +198,22 @@ export function detectItemType(input: string): ItemType {
   if (input.startsWith('e ')) return 'event';
   if (input.startsWith('r ')) return 'routine';
   if (input.startsWith('n ')) return 'note';
+  if (input.startsWith('* ')) return 'note';
   return 'note'; // Default to note
+}
+
+/**
+ * Check if input has an explicit note prefix
+ */
+export function hasExplicitNotePrefix(input: string): boolean {
+  return input.startsWith('* ') || input.startsWith('n ');
 }
 
 /**
  * Remove prefix from content
  */
 export function removePrefix(input: string): string {
-  const prefixes = ['t ', 'e ', 'r ', 'n '];
+  const prefixes = ['t ', 'e ', 'r ', 'n ', '* '];
   for (const prefix of prefixes) {
     if (input.startsWith(prefix)) {
       return input.slice(2);
