@@ -152,7 +152,7 @@ function TimePane() {
 
       return (
         <div className="flex items-start gap-8">
-          <span className="text-base leading-book flex-shrink-0">⇹</span>
+          <span className="text-base leading-book flex-shrink-0">↹</span>
           <div className="flex-1">
             <p className="text-base font-serif leading-book font-semibold">
               {item.content} ({startTime} - {endTime})

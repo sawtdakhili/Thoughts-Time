@@ -24,7 +24,7 @@ function ItemDisplay({ item, depth = 0, showTime = true }: ItemDisplayProps) {
         const todo = item as Todo;
         return todo.completedAt ? '☑' : '□';
       case 'event':
-        return '⇹';
+        return '↹';
       case 'routine':
         return '↻';
       case 'note':
