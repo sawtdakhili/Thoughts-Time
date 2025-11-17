@@ -12,8 +12,9 @@ function ThoughtsPane() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [isAtBottom, setIsAtBottom] = useState(true);
-  const [timePrompt, setTimePrompt] = useState<{ line: string; index: number } | null>(null);
+  const [timePrompt, setTimePrompt] = useState<{ line: string; index: number; isEvent: boolean } | null>(null);
   const [promptedTime, setPromptedTime] = useState('');
+  const [promptedEndTime, setPromptedEndTime] = useState('');
 
   // Compute items grouped by date (recomputes when items change)
   const itemsByDate = new Map<string, Item[]>();
@@ -106,7 +107,11 @@ function ThoughtsPane() {
 
         if (parsed.needsTimePrompt) {
           // Show time prompt for this line
-          setTimePrompt({ line: contentWithoutIndent, index: i });
+          setTimePrompt({
+            line: contentWithoutIndent,
+            index: i,
+            isEvent: parsed.type === 'event'
+          });
           return;
         }
       }
@@ -170,9 +175,20 @@ function ThoughtsPane() {
   const handleTimePromptSubmit = () => {
     if (!timePrompt || !promptedTime) return;
 
-    // Update the line with the time
+    // For events, also require end time
+    if (timePrompt.isEvent && !promptedEndTime) return;
+
+    // Update the line with the time(s)
     const lines = input.split('\n');
-    const updatedLine = lines[timePrompt.index].trimStart() + ' at ' + promptedTime;
+    let updatedLine: string;
+
+    if (timePrompt.isEvent) {
+      // Events: "from X to Y"
+      updatedLine = lines[timePrompt.index].trimStart() + ' from ' + promptedTime + ' to ' + promptedEndTime;
+    } else {
+      // Tasks: "at X"
+      updatedLine = lines[timePrompt.index].trimStart() + ' at ' + promptedTime;
+    }
 
     // Restore indentation
     const leadingSpaces = lines[timePrompt.index].match(/^(\s*)/)?.[0] || '';
@@ -181,6 +197,7 @@ function ThoughtsPane() {
     setInput(lines.join('\n'));
     setTimePrompt(null);
     setPromptedTime('');
+    setPromptedEndTime('');
 
     // Re-submit after a brief delay to allow state to update
     setTimeout(() => {
@@ -192,6 +209,7 @@ function ThoughtsPane() {
   const handleTimePromptCancel = () => {
     setTimePrompt(null);
     setPromptedTime('');
+    setPromptedEndTime('');
   };
 
   // Auto-scroll to bottom on mount (to show today)
@@ -215,23 +233,67 @@ function ThoughtsPane() {
       {timePrompt && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-background border border-border-subtle rounded-sm p-24 max-w-md w-full mx-16">
-            <h3 className="text-base font-serif mb-16">What time?</h3>
+            <h3 className="text-base font-serif mb-16">
+              {timePrompt.isEvent ? 'When does it start and end?' : 'What time?'}
+            </h3>
             <p className="text-sm text-text-secondary mb-16 font-serif">{timePrompt.line}</p>
-            <input
-              type="time"
-              value={promptedTime}
-              onChange={(e) => setPromptedTime(e.target.value)}
-              className="w-full px-12 py-8 bg-hover-bg border border-border-subtle rounded-sm font-mono text-sm mb-16"
-              autoFocus
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  handleTimePromptSubmit();
-                } else if (e.key === 'Escape') {
-                  handleTimePromptCancel();
-                }
-              }}
-            />
-            <div className="flex gap-8 justify-end">
+
+            {timePrompt.isEvent ? (
+              // Event: show start and end times
+              <div className="space-y-12">
+                <div>
+                  <label className="block text-xs font-mono text-text-secondary mb-4">Start time</label>
+                  <input
+                    type="time"
+                    value={promptedTime}
+                    onChange={(e) => setPromptedTime(e.target.value)}
+                    className="w-full px-12 py-8 bg-hover-bg border border-border-subtle rounded-sm font-mono text-sm"
+                    autoFocus
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleTimePromptSubmit();
+                      } else if (e.key === 'Escape') {
+                        handleTimePromptCancel();
+                      }
+                    }}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-mono text-text-secondary mb-4">End time</label>
+                  <input
+                    type="time"
+                    value={promptedEndTime}
+                    onChange={(e) => setPromptedEndTime(e.target.value)}
+                    className="w-full px-12 py-8 bg-hover-bg border border-border-subtle rounded-sm font-mono text-sm mb-16"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleTimePromptSubmit();
+                      } else if (e.key === 'Escape') {
+                        handleTimePromptCancel();
+                      }
+                    }}
+                  />
+                </div>
+              </div>
+            ) : (
+              // Task: show single time
+              <input
+                type="time"
+                value={promptedTime}
+                onChange={(e) => setPromptedTime(e.target.value)}
+                className="w-full px-12 py-8 bg-hover-bg border border-border-subtle rounded-sm font-mono text-sm mb-16"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleTimePromptSubmit();
+                  } else if (e.key === 'Escape') {
+                    handleTimePromptCancel();
+                  }
+                }}
+              />
+            )}
+
+            <div className="flex gap-8 justify-end mt-16">
               <button
                 onClick={handleTimePromptCancel}
                 className="px-16 py-8 text-sm font-mono text-text-secondary hover:text-text-primary"
@@ -242,7 +304,7 @@ function ThoughtsPane() {
                 onClick={handleTimePromptSubmit}
                 className="px-16 py-8 text-sm font-mono text-text-primary border border-border-subtle rounded-sm hover:bg-hover-bg"
               >
-                Add Time
+                {timePrompt.isEvent ? 'Add Times' : 'Add Time'}
               </button>
             </div>
           </div>
