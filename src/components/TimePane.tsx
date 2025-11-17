@@ -511,10 +511,10 @@ function TimePane({ searchQuery = '' }: TimePaneProps) {
               <div className="space-y-6">
                 {times.map((time) => (
                   <div key={time}>
-                    <div className="text-xs font-mono text-text-secondary mb-2">
+                    <div className="text-xs font-mono text-text-secondary mb-1">
                       {time}
                     </div>
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                       {entriesByTime[time].map((entry, idx) => (
                         <div key={`${entry.item.id}-${entry.type}-${idx}`}>
                           {renderEntry(entry)}

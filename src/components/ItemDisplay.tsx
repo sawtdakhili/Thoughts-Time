@@ -95,7 +95,7 @@ function ItemDisplay({ item, depth = 0, showTime = true }: ItemDisplayProps) {
       >
         {/* Timestamp (only for top-level) */}
         {depth === 0 && (
-          <div className="text-xs font-mono text-text-secondary mb-0.5">
+          <div className="text-xs font-mono text-text-secondary mb-1">
             {getTimeDisplay()}
           </div>
         )}
@@ -181,7 +181,7 @@ function ItemDisplay({ item, depth = 0, showTime = true }: ItemDisplayProps) {
 
             {/* Tags */}
             {item.tags.length > 0 && (
-              <div className="mt-2 text-xs text-text-secondary">
+              <div className="mt-1 text-xs text-text-secondary">
                 {item.tags.map((tag) => (
                   <span key={tag} className="mr-6">
                     #{tag}
@@ -194,7 +194,7 @@ function ItemDisplay({ item, depth = 0, showTime = true }: ItemDisplayProps) {
             {item.type === 'todo' && (
               <>
                 {(item as Todo).deadline && (
-                  <div className="mt-2 text-xs font-mono text-text-secondary">
+                  <div className="mt-1 text-xs font-mono text-text-secondary">
                     Due: {format(new Date((item as Todo).deadline!), 'MMM d, h:mm a')}
                   </div>
                 )}
@@ -203,7 +203,7 @@ function ItemDisplay({ item, depth = 0, showTime = true }: ItemDisplayProps) {
 
             {/* Additional metadata for routines */}
             {item.type === 'routine' && (
-              <div className="mt-2 text-xs font-mono text-text-secondary">
+              <div className="mt-1 text-xs font-mono text-text-secondary">
                 {(item as Routine).recurrencePattern.frequency === 'daily' && 'Every day'}
                 {(item as Routine).streak > 0 && ` (Streak: ${(item as Routine).streak})`}
               </div>
@@ -212,7 +212,7 @@ function ItemDisplay({ item, depth = 0, showTime = true }: ItemDisplayProps) {
             {/* Embedded notes preview */}
             {(item.type === 'todo' || item.type === 'event' || item.type === 'routine') &&
              'embeddedItems' in item && item.embeddedItems.length > 0 && (
-              <div className="mt-2 space-y-2">
+              <div className="mt-1 space-y-1">
                 {item.embeddedItems.map((noteId) => {
                   const embeddedNote = items.find(i => i.id === noteId && i.type === 'note');
 
@@ -247,7 +247,7 @@ function ItemDisplay({ item, depth = 0, showTime = true }: ItemDisplayProps) {
 
       {/* Recursively render sub-items */}
       {subItems.length > 0 && (
-        <div className="mt-4">
+        <div className="mt-3">
           {subItems.map(subItem => (
             <ItemDisplay key={subItem.id} item={subItem} depth={depth + 1} showTime={showTime} />
           ))}

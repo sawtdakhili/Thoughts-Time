@@ -98,7 +98,7 @@ function DailyReview() {
       <div className="space-y-6 pl-16">
         {reviewItems.map(({ item, waitingDays }) => (
           <div key={item.id} className="group">
-            <div className="flex items-start gap-3 mb-3">
+            <div className="flex items-start gap-3 mb-2">
               <span className="text-base leading-book flex-shrink-0 text-text-secondary">•</span>
               <div className="flex-1">
                 <p className="text-base font-serif leading-book">
@@ -108,7 +108,7 @@ function DailyReview() {
                   </span>
                 </p>
                 {item.tags.length > 0 && (
-                  <div className="mt-2 text-xs text-text-secondary">
+                  <div className="mt-1 text-xs text-text-secondary">
                     {item.tags.map((tag) => (
                       <span key={tag} className="mr-6">
                         #{tag}
