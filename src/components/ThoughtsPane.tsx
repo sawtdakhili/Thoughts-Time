@@ -405,7 +405,7 @@ function ThoughtsPane({
         setTimeout(() => {
           onPreviousDay();
           setTimeout(() => {
-            if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+            if (scrollRef.current) scrollRef.current.scrollTop = 0;
             setTimeout(() => {
               setIsPageFlipping(false);
               isTransitioning.current = false;
@@ -458,7 +458,7 @@ function ThoughtsPane({
           // Wait for React to re-render with new content before resetting scroll
           setTimeout(() => {
             if (scrollRef.current) {
-              scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+              scrollRef.current.scrollTop = 0;
             }
             setTimeout(() => {
               setIsPageFlipping(false);
