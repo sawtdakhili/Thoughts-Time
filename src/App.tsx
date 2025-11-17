@@ -11,8 +11,9 @@ function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const viewMode = useSettingsStore((state) => state.viewMode);
 
-  // Book mode: track current day
-  const [currentDayIndex, setCurrentDayIndex] = useState(30); // Start at today (index 30 in 60-day range)
+  // Book mode: track current day for each pane independently
+  const [thoughtsDayIndex, setThoughtsDayIndex] = useState(30); // Start at today (index 30 in 60-day range)
+  const [timeDayIndex, setTimeDayIndex] = useState(30);
 
   // Generate date range: 30 days past to 30 days future
   const dates: string[] = [];
@@ -25,17 +26,32 @@ function App() {
     dates.push(format(date, 'yyyy-MM-dd'));
   }
 
-  const currentDate = viewMode === 'book' ? dates[currentDayIndex] : undefined;
+  const thoughtsCurrentDate = viewMode === 'book' ? dates[thoughtsDayIndex] : undefined;
+  const timeCurrentDate = viewMode === 'book' ? dates[timeDayIndex] : undefined;
 
-  const goToNextDay = () => {
-    if (currentDayIndex < dates.length - 1) {
-      setCurrentDayIndex(currentDayIndex + 1);
+  // Navigation functions for Thoughts pane
+  const goToNextDayThoughts = () => {
+    if (thoughtsDayIndex < dates.length - 1) {
+      setThoughtsDayIndex(thoughtsDayIndex + 1);
     }
   };
 
-  const goToPreviousDay = () => {
-    if (currentDayIndex > 0) {
-      setCurrentDayIndex(currentDayIndex - 1);
+  const goToPreviousDayThoughts = () => {
+    if (thoughtsDayIndex > 0) {
+      setThoughtsDayIndex(thoughtsDayIndex - 1);
+    }
+  };
+
+  // Navigation functions for Time pane
+  const goToNextDayTime = () => {
+    if (timeDayIndex < dates.length - 1) {
+      setTimeDayIndex(timeDayIndex + 1);
+    }
+  };
+
+  const goToPreviousDayTime = () => {
+    if (timeDayIndex > 0) {
+      setTimeDayIndex(timeDayIndex - 1);
     }
   };
 
@@ -92,9 +108,9 @@ function App() {
           <ThoughtsPane
             searchQuery={searchQuery}
             viewMode={viewMode}
-            currentDate={currentDate}
-            onNextDay={goToNextDay}
-            onPreviousDay={goToPreviousDay}
+            currentDate={thoughtsCurrentDate}
+            onNextDay={goToNextDayThoughts}
+            onPreviousDay={goToPreviousDayThoughts}
           />
         </div>
 
@@ -103,9 +119,9 @@ function App() {
           <TimePane
             searchQuery={searchQuery}
             viewMode={viewMode}
-            currentDate={currentDate}
-            onNextDay={goToNextDay}
-            onPreviousDay={goToPreviousDay}
+            currentDate={timeCurrentDate}
+            onNextDay={goToNextDayTime}
+            onPreviousDay={goToPreviousDayTime}
           />
         </div>
       </div>
