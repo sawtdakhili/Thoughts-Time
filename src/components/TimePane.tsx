@@ -528,8 +528,8 @@ function TimePane({ searchQuery = '' }: TimePaneProps) {
           return (
             <div key={date} className="mb-16">
               {/* Date Header */}
-              <div className={`sticky top-0 bg-background py-2 mb-4 border-b border-border-subtle ${isToday ? 'text-text-primary' : 'text-text-secondary'}`}>
-                <h3 className="text-xs font-mono uppercase tracking-wider">
+              <div className={`sticky top-0 bg-background py-3 mb-6 border-b border-border-subtle ${isToday ? 'text-text-primary' : 'text-text-secondary'}`}>
+                <h3 className="text-base font-serif uppercase tracking-wide">
                   {format(parseISO(date), 'EEEE, MMM d, yyyy')}
                   {isToday && ' (Today)'}
                 </h3>
