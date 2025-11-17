@@ -89,9 +89,92 @@ function ThoughtsPane({ searchQuery = '' }: ThoughtsPaneProps) {
     dates.push(format(date, 'yyyy-MM-dd'));
   }
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newValue = e.target.value;
+    const cursorPos = e.target.selectionStart;
+
+    // Check if a space was just added
+    if (newValue.length > input.length && newValue[cursorPos - 1] === ' ') {
+      // Find the start of the current line
+      const lineStart = newValue.lastIndexOf('\n', cursorPos - 2) + 1;
+      const beforeSpace = newValue.substring(lineStart, cursorPos - 1).trim();
+
+      // Check if it matches a prefix
+      const prefixToSymbol: { [key: string]: string } = {
+        'e': '↹',
+        't': '□',
+        'r': '↻',
+        '*': '↝',
+      };
+
+      if (prefixToSymbol[beforeSpace]) {
+        // Replace prefix with symbol
+        const symbol = prefixToSymbol[beforeSpace];
+        const leadingSpaces = newValue.substring(lineStart, cursorPos - 1).match(/^\s*/)?.[0] || '';
+        const updatedValue =
+          newValue.substring(0, lineStart) +
+          leadingSpaces +
+          symbol +
+          ' ' +
+          newValue.substring(cursorPos);
+
+        setInput(updatedValue);
+
+        // Move cursor to after the symbol and space
+        setTimeout(() => {
+          if (textareaRef.current) {
+            const newCursorPos = lineStart + leadingSpaces.length + symbol.length + 1;
+            textareaRef.current.selectionStart = textareaRef.current.selectionEnd = newCursorPos;
+          }
+        }, 0);
+        return;
+      }
+    }
+
+    setInput(newValue);
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     const textarea = e.currentTarget;
     const { selectionStart, selectionEnd, value } = textarea;
+
+    // Backspace: check if we need to revert symbol to prefix
+    if (e.key === 'Backspace' && selectionStart === selectionEnd) {
+      const charBeforeCursor = value[selectionStart - 1];
+      const charBeforeThat = value[selectionStart - 2];
+
+      // If we're deleting a space after a symbol, revert to prefix
+      if (charBeforeCursor === ' ') {
+        const symbolToPrefix: { [key: string]: string } = {
+          '↹': 'e',
+          '□': 't',
+          '↻': 'r',
+          '↝': '*',
+        };
+
+        if (charBeforeThat && symbolToPrefix[charBeforeThat]) {
+          // Check if the symbol is at the start of a line
+          const lineStart = value.lastIndexOf('\n', selectionStart - 3) + 1;
+          const beforeSymbol = value.substring(lineStart, selectionStart - 2).trim();
+
+          if (beforeSymbol === '') {
+            // Revert symbol + space to prefix + space, then remove space
+            e.preventDefault();
+            const prefix = symbolToPrefix[charBeforeThat];
+            const newValue =
+              value.substring(0, selectionStart - 2) +
+              prefix +
+              value.substring(selectionStart);
+            setInput(newValue);
+
+            setTimeout(() => {
+              textarea.selectionStart = textarea.selectionEnd = selectionStart - 1;
+            }, 0);
+            return;
+          }
+        }
+      }
+    }
 
     // Tab: insert indentation (2 spaces)
     if (e.key === 'Tab' && !e.shiftKey) {
@@ -406,7 +489,7 @@ function ThoughtsPane({ searchQuery = '' }: ThoughtsPaneProps) {
         <textarea
           ref={textareaRef}
           value={input}
-          onChange={(e) => setInput(e.target.value)}
+          onChange={handleInputChange}
           onKeyDown={handleKeyDown}
           placeholder="Type here... (Tab to indent, Shift+Enter for new line)"
           className="w-full min-h-[56px] max-h-[200px] py-16 px-24 bg-transparent border-none outline-none font-serif text-base placeholder-text-secondary resize-none overflow-y-auto"
