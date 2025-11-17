@@ -274,7 +274,7 @@ function ItemDisplay({ item, depth = 0, showTime = true }: ItemDisplayProps) {
 
       {/* Recursively render sub-items */}
       {subItems.length > 0 && (
-        <div className="mt-6">
+        <div className="mt-1">
           {subItems.map(subItem => (
             <ItemDisplay key={subItem.id} item={subItem} depth={depth + 1} showTime={showTime} />
           ))}
