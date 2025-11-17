@@ -34,7 +34,7 @@ export default {
         '64': '64px',
       },
       lineHeight: {
-        'book': '1.7',
+        'book': '1.42',
       },
     },
   },

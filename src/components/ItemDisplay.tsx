@@ -95,13 +95,13 @@ function ItemDisplay({ item, depth = 0, showTime = true }: ItemDisplayProps) {
       >
         {/* Timestamp (only for top-level) */}
         {depth === 0 && (
-          <div className="text-xs font-mono text-text-secondary mb-2">
+          <div className="text-xs font-mono text-text-secondary mb-1">
             {getTimeDisplay()}
           </div>
         )}
 
         {/* Item Content */}
-        <div className={`flex items-start gap-6 ${isCompleted ? 'opacity-40' : ''}`}>
+        <div className={`flex items-start gap-4 ${isCompleted ? 'opacity-40' : ''}`}>
           {/* Symbol */}
           <button
             onClick={handleToggleComplete}
@@ -212,7 +212,7 @@ function ItemDisplay({ item, depth = 0, showTime = true }: ItemDisplayProps) {
             {/* Embedded notes preview */}
             {(item.type === 'todo' || item.type === 'event' || item.type === 'routine') &&
              'embeddedItems' in item && item.embeddedItems.length > 0 && (
-              <div className="mt-6 space-y-4">
+              <div className="mt-4 space-y-3">
                 {item.embeddedItems.map((noteId) => {
                   const embeddedNote = items.find(i => i.id === noteId && i.type === 'note');
 
@@ -247,7 +247,7 @@ function ItemDisplay({ item, depth = 0, showTime = true }: ItemDisplayProps) {
 
       {/* Recursively render sub-items */}
       {subItems.length > 0 && (
-        <div className="mt-8">
+        <div className="mt-6">
           {subItems.map(subItem => (
             <ItemDisplay key={subItem.id} item={subItem} depth={depth + 1} showTime={showTime} />
           ))}
