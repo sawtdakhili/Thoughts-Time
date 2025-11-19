@@ -16,6 +16,8 @@ function DailyReview() {
   const toggleTodoComplete = useStore((state) => state.toggleTodoComplete);
   const [showRescheduler, setShowRescheduler] = useState<string | null>(null);
   const [rescheduleInput, setRescheduleInput] = useState('');
+  const [handledItems, setHandledItems] = useState<Set<string>>(new Set());
+  const [itemsToShow, setItemsToShow] = useState(10);
 
   const today = format(new Date(), 'yyyy-MM-dd');
   const now = new Date();
@@ -67,6 +69,8 @@ function DailyReview() {
         scheduledTime: parsed.scheduledTime,
         hasTime: parsed.hasTime,
       });
+      // Mark item as handled
+      setHandledItems(prev => new Set(prev).add(itemId));
     } else {
       alert('Please specify a date/time for rescheduling');
       return;
@@ -78,11 +82,15 @@ function DailyReview() {
 
   const handleComplete = (itemId: string) => {
     toggleTodoComplete(itemId);
+    // Mark item as handled
+    setHandledItems(prev => new Set(prev).add(itemId));
   };
 
   const handleCancel = (itemId: string) => {
     if (confirm('Cancel this item permanently?')) {
       deleteItem(itemId);
+      // Mark item as handled
+      setHandledItems(prev => new Set(prev).add(itemId));
     }
   };
 
@@ -90,7 +98,11 @@ function DailyReview() {
     return null;
   }
 
-  const allHandled = false; // TODO: Track which items have been handled
+  // Filter unhandled items and apply pagination
+  const unhandledItems = reviewItems.filter(({ item }) => !handledItems.has(item.id));
+  const displayedItems = unhandledItems.slice(0, itemsToShow);
+  const hasMore = unhandledItems.length > itemsToShow;
+  const allHandled = unhandledItems.length === 0;
 
   return (
     <div>
@@ -101,12 +113,17 @@ function DailyReview() {
             {allHandled ? '□' : '■'}
           </span>
           <h3 className="text-base font-serif font-semibold">Daily Review</h3>
+          {allHandled && (
+            <span className="text-sm text-text-secondary font-serif">
+              All items handled
+            </span>
+          )}
         </div>
       </div>
 
       {/* Review Items */}
       <div className="space-y-6 pl-16">
-        {reviewItems.map(({ item, waitingDays }) => (
+        {displayedItems.map(({ item, waitingDays }) => (
           <div key={item.id} className="group">
             <div className="flex items-start gap-3">
               {/* Bullet - always shown */}
@@ -201,6 +218,18 @@ function DailyReview() {
             </div>
           </div>
         ))}
+
+        {/* Show More button */}
+        {hasMore && (
+          <div className="pt-4">
+            <button
+              onClick={() => setItemsToShow(prev => prev + 10)}
+              className="text-sm text-text-secondary hover:text-text-primary font-serif"
+            >
+              Show {Math.min(10, unhandledItems.length - itemsToShow)} more...
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
