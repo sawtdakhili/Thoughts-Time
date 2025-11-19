@@ -3,7 +3,9 @@ import { format, subDays, addDays } from 'date-fns';
 import ThoughtsPane from './components/ThoughtsPane';
 import TimePane from './components/TimePane';
 import Settings from './components/Settings';
+import ToastContainer from './components/Toast';
 import { useSettingsStore } from './store/useSettingsStore';
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 
 function App() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -55,6 +57,31 @@ function App() {
     }
   };
 
+  // Keyboard shortcuts
+  useKeyboardShortcuts([
+    {
+      key: 'f',
+      ctrlKey: true,
+      metaKey: true, // Support both Ctrl (Windows/Linux) and Cmd (Mac)
+      handler: () => {
+        setIsSearchOpen(true);
+      },
+      description: 'Open search',
+    },
+    {
+      key: 'Escape',
+      handler: () => {
+        if (isSearchOpen) {
+          setIsSearchOpen(false);
+          setSearchQuery('');
+        } else if (isSettingsOpen) {
+          setIsSettingsOpen(false);
+        }
+      },
+      description: 'Close search or settings',
+    },
+  ]);
+
   return (
     <div className="h-full flex flex-col bg-background text-text-primary">
       {/* Settings Modal */}
@@ -88,6 +115,7 @@ function App() {
             }}
             className="text-base hover:opacity-70 transition-opacity"
             title="Search"
+            aria-label={isSearchOpen ? "Close search" : "Open search"}
           >
             🔍
           </button>
@@ -95,6 +123,7 @@ function App() {
             onClick={() => setIsSettingsOpen(true)}
             className="text-base hover:opacity-70 transition-opacity"
             title="Settings"
+            aria-label="Open settings"
           >
             ⚙️
           </button>
@@ -125,6 +154,9 @@ function App() {
           />
         </div>
       </div>
+
+      {/* Toast Notifications */}
+      <ToastContainer />
     </div>
   );
 }

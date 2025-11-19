@@ -6,6 +6,8 @@ import { useSettingsStore } from '../store/useSettingsStore';
 import { parseInput } from '../utils/parser';
 import { createItem } from '../utils/itemFactory';
 import { symbolsToPrefix, formatTimeForDisplay, prefixToSymbol, symbolToPrefix as symbolToPrefixMap } from '../utils/formatting';
+import { useToast } from '../hooks/useToast';
+import ConfirmDialog from './ConfirmDialog';
 
 interface ItemDisplayProps {
   item: Item;
@@ -21,12 +23,18 @@ function ItemDisplay({ item, depth = 0, showTime = true, sourcePane = 'thoughts'
   const addItemDirect = useStore((state) => state.addItemDirect);
   const items = useStore((state) => state.items);
   const timeFormat = useSettingsStore((state) => state.timeFormat);
+  const addToast = useToast((state) => state.addToast);
   const [isHovered, setIsHovered] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState('');
   const [timePrompt, setTimePrompt] = useState<{ content: string; isEvent: boolean } | null>(null);
   const [promptedTime, setPromptedTime] = useState('');
   const [promptedEndTime, setPromptedEndTime] = useState('');
+  const [confirmDelete, setConfirmDelete] = useState<{ isOpen: boolean; message: string; hasChildren: boolean }>({
+    isOpen: false,
+    message: '',
+    hasChildren: false,
+  });
 
   const getSymbol = () => {
     switch (item.type) {
@@ -294,14 +302,21 @@ function ItemDisplay({ item, depth = 0, showTime = true, sourcePane = 'thoughts'
 
     const hasChildren = subItemIds.length > 0;
 
-    let message = 'Delete this item?';
+    let message = 'Are you sure you want to delete this item?';
     if (hasChildren) {
-      message = `Delete this item and its ${subItemIds.length} sub-item${subItemIds.length > 1 ? 's' : ''}?`;
+      message = `This will also delete ${subItemIds.length} sub-item${subItemIds.length > 1 ? 's' : ''}. Continue?`;
     }
 
-    if (confirm(message)) {
-      deleteItem(item.id);
-    }
+    setConfirmDelete({
+      isOpen: true,
+      message,
+      hasChildren,
+    });
+  };
+
+  const handleConfirmDelete = () => {
+    deleteItem(item.id);
+    addToast('Item deleted', 'success');
   };
 
   const isCompleted = item.type === 'todo' && (item as Todo).completedAt;
@@ -557,6 +572,18 @@ function ItemDisplay({ item, depth = 0, showTime = true, sourcePane = 'thoughts'
         </div>
       )}
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={confirmDelete.isOpen}
+        title="Delete Item"
+        message={confirmDelete.message}
+        confirmText="Delete"
+        cancelText="Cancel"
+        isDangerous={true}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setConfirmDelete({ isOpen: false, message: '', hasChildren: false })}
+      />
     </>
   );
 }

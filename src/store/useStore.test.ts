@@ -91,7 +91,7 @@ describe('useStore', () => {
       const level1Id = addItem('* Level 1', parentId, 1);
 
       // Add level 2 sub-item
-      const level2Id = addItem('* Level 2', level1Id, 2);
+      addItem('* Level 2', level1Id, 2);
 
       // Verify all items exist
       expect(useStore.getState().items.length).toBe(3);
