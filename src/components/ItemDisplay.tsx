@@ -3,6 +3,8 @@ import { format } from 'date-fns';
 import { Item, Todo, Routine, Note, Event } from '../types';
 import { useStore } from '../store/useStore';
 import { parseInput } from '../utils/parser';
+import { createItem } from '../utils/itemFactory';
+import { symbolsToPrefix, formatTimeForDisplay, prefixToSymbol, symbolToPrefix as symbolToPrefixMap } from '../utils/formatting';
 
 interface ItemDisplayProps {
   item: Item;
@@ -15,7 +17,7 @@ function ItemDisplay({ item, depth = 0, showTime = true, sourcePane = 'thoughts'
   const toggleTodoComplete = useStore((state) => state.toggleTodoComplete);
   const updateItem = useStore((state) => state.updateItem);
   const deleteItem = useStore((state) => state.deleteItem);
-  const addItem = useStore((state) => state.addItem);
+  const addItemDirect = useStore((state) => state.addItemDirect);
   const items = useStore((state) => state.items);
   const [isHovered, setIsHovered] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -91,48 +93,18 @@ function ItemDisplay({ item, depth = 0, showTime = true, sourcePane = 'thoughts'
 
     // If type changed, delete old item and create new one
     if (parsed.type !== item.type) {
-      // Create new item with parsed data
-      const newItemData = {
+      // Create new item with parsed data, preserving original creation time
+      const newItemData = createItem({
         content: parsed.content,
-        type: parsed.type,
-        createdAt: item.createdAt, // Preserve original creation time
+        createdAt: item.createdAt,
         createdDate: item.createdDate,
-      };
-
-      // Add type-specific fields
-      if (parsed.type === 'todo') {
-        Object.assign(newItemData, {
-          scheduledTime: parsed.scheduledTime,
-          hasTime: parsed.hasTime,
-          completedAt: null,
-          subtasks: [],
-          embeddedItems: [],
-        });
-      } else if (parsed.type === 'event') {
-        Object.assign(newItemData, {
-          startTime: parsed.scheduledTime || new Date(),
-          endTime: parsed.endTime || parsed.scheduledTime || new Date(),
-          hasTime: parsed.hasTime,
-          embeddedItems: [],
-        });
-      } else if (parsed.type === 'routine') {
-        Object.assign(newItemData, {
-          scheduledTime: parsed.scheduledTime ? format(parsed.scheduledTime, 'HH:mm') : '09:00',
-          hasTime: parsed.hasTime,
-          recurrencePattern: parsed.recurrencePattern || { frequency: 'daily', interval: 1 },
-          streak: 0,
-          lastCompleted: null,
-          embeddedItems: [],
-        });
-      } else if (parsed.type === 'note') {
-        Object.assign(newItemData, {
-          subItems: [],
-        });
-      }
+        parsed,
+        userId: item.userId,
+      });
 
       // Delete old and add new
       deleteItem(item.id);
-      addItem(newItemData as any);
+      addItemDirect({ ...newItemData, id: item.id });
     } else {
       // Same type, just update
       const updates: Partial<Item> = { content: parsed.content };
@@ -167,13 +139,6 @@ function ItemDisplay({ item, depth = 0, showTime = true, sourcePane = 'thoughts'
     setIsEditing(false);
   };
 
-  // Helper: Convert 24-hour time string (HH:mm) to 12-hour format with am/pm
-  const formatTimeForDisplay = (time24: string): string => {
-    const [hours, minutes] = time24.split(':').map(Number);
-    const period = hours >= 12 ? 'pm' : 'am';
-    const hours12 = hours % 12 || 12;
-    return `${hours12}:${minutes.toString().padStart(2, '0')}${period}`;
-  };
 
   const handleTimePromptSubmit = () => {
     if (!timePrompt || !promptedTime) return;
@@ -199,44 +164,18 @@ function ItemDisplay({ item, depth = 0, showTime = true, sourcePane = 'thoughts'
 
     // If type changed, delete old item and create new one
     if (parsed.type !== item.type) {
-      // Create new item with parsed data
-      const newItemData = {
+      // Create new item with parsed data, preserving original creation time
+      const newItemData = createItem({
         content: parsed.content,
-        type: parsed.type,
-        createdAt: item.createdAt, // Preserve original creation time
+        createdAt: item.createdAt,
         createdDate: item.createdDate,
-      };
-
-      // Add type-specific fields
-      if (parsed.type === 'todo') {
-        Object.assign(newItemData, {
-          scheduledTime: parsed.scheduledTime,
-          hasTime: parsed.hasTime,
-          completedAt: null,
-          subtasks: [],
-          embeddedItems: [],
-        });
-      } else if (parsed.type === 'event') {
-        Object.assign(newItemData, {
-          startTime: parsed.scheduledTime || new Date(),
-          endTime: parsed.endTime || parsed.scheduledTime || new Date(),
-          hasTime: parsed.hasTime,
-          embeddedItems: [],
-        });
-      } else if (parsed.type === 'routine') {
-        Object.assign(newItemData, {
-          scheduledTime: parsed.scheduledTime ? format(parsed.scheduledTime, 'HH:mm') : '09:00',
-          hasTime: parsed.hasTime,
-          recurrencePattern: parsed.recurrencePattern || { frequency: 'daily', interval: 1 },
-          streak: 0,
-          lastCompleted: null,
-          embeddedItems: [],
-        });
-      }
+        parsed,
+        userId: item.userId,
+      });
 
       // Delete old and add new
       deleteItem(item.id);
-      addItem(newItemData as any);
+      addItemDirect({ ...newItemData, id: item.id });
     } else {
       // Same type, just update
       const updates: Partial<Item> = { content: parsed.content };
@@ -276,15 +215,6 @@ function ItemDisplay({ item, depth = 0, showTime = true, sourcePane = 'thoughts'
     setPromptedEndTime('');
   };
 
-  // Helper: Convert symbols back to prefixes for parsing
-  const symbolsToPrefix = (text: string): string => {
-    return text
-      .replace(/^(\s*)↹\s/, '$1e ')
-      .replace(/^(\s*)□\s/, '$1t ')
-      .replace(/^(\s*)☑\s/, '$1t ')
-      .replace(/^(\s*)↻\s/, '$1r ')
-      .replace(/^(\s*)↝\s/, '$1* ');
-  };
 
   // Handle input change with symbol conversion
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -296,13 +226,6 @@ function ItemDisplay({ item, depth = 0, showTime = true, sourcePane = 'thoughts'
       const beforeSpace = newValue.substring(0, cursorPos - 1).trim();
 
       // Check if it matches a prefix
-      const prefixToSymbol: { [key: string]: string } = {
-        'e': '↹',
-        't': '□',
-        'r': '↻',
-        '*': '↝',
-      };
-
       if (prefixToSymbol[beforeSpace]) {
         // Replace prefix with symbol
         const symbol = prefixToSymbol[beforeSpace];
@@ -342,18 +265,10 @@ function ItemDisplay({ item, depth = 0, showTime = true, sourcePane = 'thoughts'
 
       // If we're deleting a space after a symbol, revert to prefix
       if (charBeforeCursor === ' ' && selectionStart! === 2) {
-        const symbolToPrefix: { [key: string]: string } = {
-          '↹': 'e',
-          '□': 't',
-          '☑': 't',
-          '↻': 'r',
-          '↝': '*',
-        };
-
-        if (charBeforeThat && symbolToPrefix[charBeforeThat]) {
+        if (charBeforeThat && symbolToPrefixMap[charBeforeThat]) {
           // Revert symbol + space to prefix
           e.preventDefault();
-          const prefix = symbolToPrefix[charBeforeThat];
+          const prefix = symbolToPrefixMap[charBeforeThat];
           const newValue = prefix + value.substring(selectionStart!);
           setEditContent(newValue);
 
@@ -367,7 +282,21 @@ function ItemDisplay({ item, depth = 0, showTime = true, sourcePane = 'thoughts'
   };
 
   const handleDelete = () => {
-    if (confirm('Delete this item?')) {
+    // Get sub-items count for confirmation message
+    const subItemIds = item.type === 'note'
+      ? (item as Note).subItems
+      : item.type === 'todo'
+        ? (item as Todo).subtasks
+        : [];
+
+    const hasChildren = subItemIds.length > 0;
+
+    let message = 'Delete this item?';
+    if (hasChildren) {
+      message = `Delete this item and its ${subItemIds.length} sub-item${subItemIds.length > 1 ? 's' : ''}?`;
+    }
+
+    if (confirm(message)) {
       deleteItem(item.id);
     }
   };

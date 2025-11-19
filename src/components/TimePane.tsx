@@ -4,6 +4,8 @@ import { useStore } from '../store/useStore';
 import DailyReview from './DailyReview';
 import { Item, Todo, Event as EventType, Note, Routine } from '../types';
 import { parseInput } from '../utils/parser';
+import { createItem } from '../utils/itemFactory';
+import { symbolsToPrefix, formatTimeForDisplay } from '../utils/formatting';
 
 type TimelineEntry = {
   time: Date;
@@ -273,15 +275,6 @@ function TimePane({
     }
   };
 
-  // Helper: Convert symbols back to prefixes for parsing
-  const symbolsToPrefix = (text: string): string => {
-    return text
-      .replace(/^(\s*)↹\s/, '$1e ')
-      .replace(/^(\s*)□\s/, '$1t ')
-      .replace(/^(\s*)☑\s/, '$1t ')
-      .replace(/^(\s*)↻\s/, '$1r ')
-      .replace(/^(\s*)↝\s/, '$1* ');
-  };
 
   const handleSaveEdit = (itemId: string) => {
     const currentItem = items.find(i => i.id === itemId);
@@ -309,49 +302,19 @@ function TimePane({
 
     // If type changed, delete old item and create new one
     if (parsed.type !== currentItem.type) {
-      // Create new item with parsed data
-      const newItemData = {
+      // Create new item with parsed data, preserving original creation time
+      const newItemData = createItem({
         content: parsed.content,
-        type: parsed.type,
-        createdAt: currentItem.createdAt, // Preserve original creation time
+        createdAt: currentItem.createdAt,
         createdDate: currentItem.createdDate,
-      };
-
-      // Add type-specific fields
-      if (parsed.type === 'todo') {
-        Object.assign(newItemData, {
-          scheduledTime: parsed.scheduledTime,
-          hasTime: parsed.hasTime,
-          completedAt: null,
-          subtasks: [],
-          embeddedItems: [],
-        });
-      } else if (parsed.type === 'event') {
-        Object.assign(newItemData, {
-          startTime: parsed.scheduledTime || new Date(),
-          endTime: parsed.endTime || parsed.scheduledTime || new Date(),
-          hasTime: parsed.hasTime,
-          embeddedItems: [],
-        });
-      } else if (parsed.type === 'routine') {
-        Object.assign(newItemData, {
-          scheduledTime: parsed.scheduledTime ? format(parsed.scheduledTime, 'HH:mm') : '09:00',
-          hasTime: parsed.hasTime,
-          recurrencePattern: parsed.recurrencePattern || { frequency: 'daily', interval: 1 },
-          streak: 0,
-          lastCompleted: null,
-          embeddedItems: [],
-        });
-      } else if (parsed.type === 'note') {
-        Object.assign(newItemData, {
-          subItems: [],
-        });
-      }
+        parsed,
+        userId: currentItem.userId,
+      });
 
       // Delete old and add new
-      const addItem = useStore.getState().addItem;
+      const addItemDirect = useStore.getState().addItemDirect;
       deleteItem(itemId);
-      addItem(newItemData as any);
+      addItemDirect({ ...newItemData, id: itemId });
     } else {
       // Same type, just update
       const updates: Partial<Item> = { content: parsed.content };
@@ -387,13 +350,6 @@ function TimePane({
     setEditContent('');
   };
 
-  // Helper: Convert 24-hour time string (HH:mm) to 12-hour format with am/pm
-  const formatTimeForDisplay = (time24: string): string => {
-    const [hours, minutes] = time24.split(':').map(Number);
-    const period = hours >= 12 ? 'pm' : 'am';
-    const hours12 = hours % 12 || 12;
-    return `${hours12}:${minutes.toString().padStart(2, '0')}${period}`;
-  };
 
   const handleTimePromptSubmit = () => {
     if (!timePrompt || !promptedTime) return;
@@ -422,45 +378,19 @@ function TimePane({
 
     // If type changed, delete old item and create new one
     if (parsed.type !== currentItem.type) {
-      // Create new item with parsed data
-      const newItemData = {
+      // Create new item with parsed data, preserving original creation time
+      const newItemData = createItem({
         content: parsed.content,
-        type: parsed.type,
-        createdAt: currentItem.createdAt, // Preserve original creation time
+        createdAt: currentItem.createdAt,
         createdDate: currentItem.createdDate,
-      };
-
-      // Add type-specific fields
-      if (parsed.type === 'todo') {
-        Object.assign(newItemData, {
-          scheduledTime: parsed.scheduledTime,
-          hasTime: parsed.hasTime,
-          completedAt: null,
-          subtasks: [],
-          embeddedItems: [],
-        });
-      } else if (parsed.type === 'event') {
-        Object.assign(newItemData, {
-          startTime: parsed.scheduledTime || new Date(),
-          endTime: parsed.endTime || parsed.scheduledTime || new Date(),
-          hasTime: parsed.hasTime,
-          embeddedItems: [],
-        });
-      } else if (parsed.type === 'routine') {
-        Object.assign(newItemData, {
-          scheduledTime: parsed.scheduledTime ? format(parsed.scheduledTime, 'HH:mm') : '09:00',
-          hasTime: parsed.hasTime,
-          recurrencePattern: parsed.recurrencePattern || { frequency: 'daily', interval: 1 },
-          streak: 0,
-          lastCompleted: null,
-          embeddedItems: [],
-        });
-      }
+        parsed,
+        userId: currentItem.userId,
+      });
 
       // Delete old and add new
-      const addItem = useStore.getState().addItem;
+      const addItemDirect = useStore.getState().addItemDirect;
       deleteItem(timePrompt.itemId);
-      addItem(newItemData as any);
+      addItemDirect({ ...newItemData, id: timePrompt.itemId });
     } else {
       // Same type, just update
       const updates: Partial<Item> = { content: parsed.content };
@@ -921,8 +851,15 @@ function TimePane({
           const entries = entriesByDate.get(date) || [];
           const isToday = date === today;
 
-          if (viewMode === 'infinite' && entries.length === 0 && !isToday) {
-            return null;
+          // Don't show empty days (except today) in infinite mode
+          // Also hide empty days in book mode when searching
+          if (entries.length === 0 && !isToday) {
+            if (viewMode === 'infinite') {
+              return null;
+            }
+            if (viewMode === 'book' && searchQuery) {
+              return null;
+            }
           }
 
           // Sort entries by time
@@ -959,7 +896,7 @@ function TimePane({
               {/* Daily Review - appears under current day title in both modes */}
               {isToday && (
                 <div className={`mb-8 ${viewMode === 'book' ? 'border border-border-subtle rounded-sm p-16 bg-hover-bg' : ''}`}>
-                  <DailyReview />
+                  <DailyReview searchQuery={searchQuery} />
                   {viewMode === 'infinite' && <div className="mt-8 border-t border-border-subtle" />}
                 </div>
               )}

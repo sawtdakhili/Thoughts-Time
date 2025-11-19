@@ -60,7 +60,7 @@ This app enforces a strict scheduling philosophy: **every single task, event, an
 ---
 
 #### 2. Subtasks Enhancements
-**Status**: Partially implemented
+**Status**: Completed ✅
 
 **Completed**:
 - [x] Tab/Shift+Tab for indent/outdent
@@ -69,14 +69,7 @@ This app enforces a strict scheduling philosophy: **every single task, event, an
 - [x] Checking parent checks all children
 - [x] Max 1 level depth enforcement
 
-**Missing**:
-- [ ] Metadata displays AFTER all subtasks (currently may not be consistent)
-- [ ] Subtasks cannot have own scheduled times (validation)
-- [ ] Completed subtasks show strikethrough but stay visible
-
-**Files to modify**:
-- `src/components/ItemDisplay.tsx`
-- `src/store/useStore.ts` (add validation)
+**Note**: Metadata positioning item removed as todos no longer have metadata to display, and routines don't have subtasks.
 
 ---
 

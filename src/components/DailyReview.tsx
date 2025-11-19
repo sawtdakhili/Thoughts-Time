@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { format, differenceInDays } from 'date-fns';
 import { useStore } from '../store/useStore';
-import { Todo } from '../types';
+import { Todo, Item } from '../types';
 import { parseInput } from '../utils/parser';
 
 interface DailyReviewItem {
@@ -9,7 +9,11 @@ interface DailyReviewItem {
   waitingDays: number;
 }
 
-function DailyReview() {
+interface DailyReviewProps {
+  searchQuery?: string;
+}
+
+function DailyReview({ searchQuery = '' }: DailyReviewProps) {
   const items = useStore((state) => state.items);
   const updateItem = useStore((state) => state.updateItem);
   const deleteItem = useStore((state) => state.deleteItem);
@@ -22,6 +26,31 @@ function DailyReview() {
   const today = format(new Date(), 'yyyy-MM-dd');
   const now = new Date();
 
+  // Filter function: recursively check if item or its children match search
+  const matchesSearch = (item: Item, query: string): boolean => {
+    if (!query) return true;
+
+    const lowerQuery = query.toLowerCase();
+
+    // Check content
+    if (item.content.toLowerCase().includes(lowerQuery)) {
+      return true;
+    }
+
+    // Recursively check subtasks for todos
+    if (item.type === 'todo') {
+      const todo = item as Todo;
+      for (const subtaskId of todo.subtasks) {
+        const subtask = items.find(i => i.id === subtaskId);
+        if (subtask && matchesSearch(subtask, query)) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  };
+
   // Generate ALL undone todos from previous days (scheduled or unscheduled)
   // Only include parent-level todos (not subtasks)
   const reviewItems: DailyReviewItem[] = items
@@ -31,12 +60,15 @@ function DailyReview() {
 
       // ALL incomplete todos from previous days (not today)
       // Exclude subtasks - they'll be shown nested under their parents
-      return (
+      const isReviewCandidate = (
         todo.createdDate < today &&
         !todo.completedAt &&
         !todo.cancelledAt &&
         !todo.parentId // Only show parent-level todos
       );
+
+      // Apply search filter
+      return isReviewCandidate && matchesSearch(item, searchQuery);
     })
     .map((item) => {
       const todo = item as Todo;

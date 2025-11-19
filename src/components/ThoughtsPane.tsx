@@ -4,6 +4,7 @@ import { useStore } from '../store/useStore';
 import ItemDisplay from './ItemDisplay';
 import { Item, Todo, Note } from '../types';
 import { parseInput } from '../utils/parser';
+import { symbolsToPrefix, formatTimeForDisplay, prefixToSymbol, symbolToPrefix as symbolToPrefixMap } from '../utils/formatting';
 
 interface ThoughtsPaneProps {
   searchQuery?: string;
@@ -98,14 +99,6 @@ function ThoughtsPane({
     dates.push(format(date, 'yyyy-MM-dd'));
   }
 
-  // Helper: Convert symbols back to prefixes for parsing
-  const symbolsToPrefix = (text: string): string => {
-    return text
-      .replace(/^(\s*)↹\s/, '$1e ')
-      .replace(/^(\s*)□\s/, '$1t ')
-      .replace(/^(\s*)↻\s/, '$1r ')
-      .replace(/^(\s*)↝\s/, '$1* ');
-  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
@@ -118,13 +111,6 @@ function ThoughtsPane({
       const beforeSpace = newValue.substring(lineStart, cursorPos - 1).trim();
 
       // Check if it matches a prefix
-      const prefixToSymbol: { [key: string]: string } = {
-        'e': '↹',
-        't': '□',
-        'r': '↻',
-        '*': '↝',
-      };
-
       if (prefixToSymbol[beforeSpace]) {
         // Replace prefix with symbol
         const symbol = prefixToSymbol[beforeSpace];
@@ -163,14 +149,7 @@ function ThoughtsPane({
 
       // If we're deleting a space after a symbol, revert to prefix
       if (charBeforeCursor === ' ') {
-        const symbolToPrefix: { [key: string]: string } = {
-          '↹': 'e',
-          '□': 't',
-          '↻': 'r',
-          '↝': '*',
-        };
-
-        if (charBeforeThat && symbolToPrefix[charBeforeThat]) {
+        if (charBeforeThat && symbolToPrefixMap[charBeforeThat]) {
           // Check if the symbol is at the start of a line
           const lineStart = value.lastIndexOf('\n', selectionStart - 3) + 1;
           const beforeSymbol = value.substring(lineStart, selectionStart - 2).trim();
@@ -178,7 +157,7 @@ function ThoughtsPane({
           if (beforeSymbol === '') {
             // Revert symbol + space to prefix + space, then remove space
             e.preventDefault();
-            const prefix = symbolToPrefix[charBeforeThat];
+            const prefix = symbolToPrefixMap[charBeforeThat];
             const newValue =
               value.substring(0, selectionStart - 2) +
               prefix +
@@ -319,13 +298,6 @@ function ThoughtsPane({
     }, 100);
   };
 
-  // Helper: Convert 24-hour time string (HH:mm) to 12-hour format with am/pm
-  const formatTimeForDisplay = (time24: string): string => {
-    const [hours, minutes] = time24.split(':').map(Number);
-    const period = hours >= 12 ? 'pm' : 'am';
-    const hours12 = hours % 12 || 12;
-    return `${hours12}:${minutes.toString().padStart(2, '0')}${period}`;
-  };
 
   const handleTimePromptSubmit = () => {
     if (!timePrompt || !promptedTime) return;
@@ -550,9 +522,15 @@ function ThoughtsPane({
           const items = itemsByDate.get(date) || [];
           const isToday = date === today;
 
-          if (viewMode === 'infinite' && items.length === 0 && !isToday) {
-            // Don't show empty days (except today) in infinite mode
-            return null;
+          // Don't show empty days (except today) in infinite mode
+          // Also hide empty days in book mode when searching
+          if (items.length === 0 && !isToday) {
+            if (viewMode === 'infinite') {
+              return null;
+            }
+            if (viewMode === 'book' && searchQuery) {
+              return null;
+            }
           }
 
           return (

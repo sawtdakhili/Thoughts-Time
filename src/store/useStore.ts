@@ -10,6 +10,7 @@ interface AppState {
 
   // Actions
   addItem: (input: string, parentId?: string | null, depthLevel?: number) => string;
+  addItemDirect: (item: Item) => void;
   updateItem: (id: string, updates: Partial<Item>) => void;
   deleteItem: (id: string) => void;
   toggleTodoComplete: (id: string) => void;
@@ -172,6 +173,12 @@ export const useStore = create<AppState>()(
         return newId;
       },
 
+      addItemDirect: (item: Item) => {
+        set((state) => ({
+          items: [...state.items, item],
+        }));
+      },
+
       updateItem: (id: string, updates: Partial<Item>) => {
         set((state) => ({
           items: state.items.map((item) =>
@@ -181,9 +188,55 @@ export const useStore = create<AppState>()(
       },
 
       deleteItem: (id: string) => {
-        set((state) => ({
-          items: state.items.filter((item) => item.id !== id),
-        }));
+        set((state) => {
+          const itemToDelete = state.items.find(i => i.id === id);
+          if (!itemToDelete) return state;
+
+          // Collect all IDs to delete (item + all descendants)
+          const idsToDelete = new Set<string>();
+
+          const collectDescendants = (itemId: string) => {
+            idsToDelete.add(itemId);
+            const item = state.items.find(i => i.id === itemId);
+            if (!item) return;
+
+            // Collect subtasks (for todos)
+            if (item.type === 'todo' && item.subtasks.length > 0) {
+              item.subtasks.forEach(subtaskId => collectDescendants(subtaskId));
+            }
+
+            // Collect sub-items (for notes)
+            if (item.type === 'note' && item.subItems.length > 0) {
+              item.subItems.forEach(subItemId => collectDescendants(subItemId));
+            }
+
+            // Note: We don't delete embeddedItems (they're just links, not owned children)
+          };
+
+          collectDescendants(id);
+
+          // Remove all collected items and clean up parent references
+          return {
+            items: state.items
+              .filter(item => !idsToDelete.has(item.id))
+              .map(item => {
+                // Clean up parent references
+                if (item.type === 'todo' && item.subtasks.length > 0) {
+                  const cleanedSubtasks = item.subtasks.filter(sid => !idsToDelete.has(sid));
+                  if (cleanedSubtasks.length !== item.subtasks.length) {
+                    return { ...item, subtasks: cleanedSubtasks };
+                  }
+                }
+                if (item.type === 'note' && item.subItems.length > 0) {
+                  const cleanedSubItems = item.subItems.filter(sid => !idsToDelete.has(sid));
+                  if (cleanedSubItems.length !== item.subItems.length) {
+                    return { ...item, subItems: cleanedSubItems };
+                  }
+                }
+                return item;
+              }),
+          };
+        });
       },
 
       toggleTodoComplete: (id: string) => {
