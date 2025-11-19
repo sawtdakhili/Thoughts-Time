@@ -322,7 +322,6 @@ function TimePane({
         Object.assign(newItemData, {
           scheduledTime: parsed.scheduledTime,
           hasTime: parsed.hasTime,
-          deadline: parsed.deadline,
           completedAt: null,
           subtasks: [],
           embeddedItems: [],
@@ -361,7 +360,6 @@ function TimePane({
         Object.assign(updates, {
           scheduledTime: parsed.scheduledTime !== null ? parsed.scheduledTime : (currentItem as Todo).scheduledTime,
           hasTime: parsed.hasTime,
-          deadline: parsed.deadline !== null ? parsed.deadline : (currentItem as Todo).deadline,
         });
       } else if (currentItem.type === 'event') {
         Object.assign(updates, {
@@ -437,7 +435,6 @@ function TimePane({
         Object.assign(newItemData, {
           scheduledTime: parsed.scheduledTime,
           hasTime: parsed.hasTime,
-          deadline: parsed.deadline,
           completedAt: null,
           subtasks: [],
           embeddedItems: [],
@@ -472,7 +469,6 @@ function TimePane({
         Object.assign(updates, {
           scheduledTime: parsed.scheduledTime !== null ? parsed.scheduledTime : (currentItem as Todo).scheduledTime,
           hasTime: parsed.hasTime,
-          deadline: parsed.deadline !== null ? parsed.deadline : (currentItem as Todo).deadline,
         });
       } else if (currentItem.type === 'event') {
         Object.assign(updates, {

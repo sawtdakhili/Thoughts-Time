@@ -71,7 +71,6 @@ This app enforces a strict scheduling philosophy: **every single task, event, an
 
 **Missing**:
 - [ ] Metadata displays AFTER all subtasks (currently may not be consistent)
-- [ ] Subtasks cannot have own deadlines (validation)
 - [ ] Subtasks cannot have own scheduled times (validation)
 - [ ] Completed subtasks show strikethrough but stay visible
 
@@ -291,7 +290,6 @@ Oct 14 Thoughts:
 - [ ] Notification permission request
 - [ ] Schedule notifications for events (X minutes before)
 - [ ] Schedule notifications for routines
-- [ ] Schedule notifications for deadlines
 - [ ] Notification settings UI
 - [ ] User preferences storage
 - [ ] Dismiss handling

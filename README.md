@@ -18,7 +18,7 @@ The magic happens when these two views coexist. An idea can become a task. A tas
 
 1. **Minimal Friction**: Quick input with simple prefixes. No clicking through forms or navigating complex hierarchies.
 
-2. **Natural Language**: Write "meeting at 2pm" or "deadline by Friday" – the app understands.
+2. **Natural Language**: Write "meeting at 2pm" or "call mom tomorrow" – the app understands.
 
 3. **Contextual Structure**: Items can nest (todos can have subtasks, notes can have subnotes) but the structure emerges from your thinking, not from imposed categories.
 
@@ -41,7 +41,7 @@ The magic happens when these two views coexist. An idea can become a task. A tas
 2. **Adding Time**: Include time naturally in your text:
    - `t buy milk at 5pm`
    - `e team meeting from 2pm to 3pm`
-   - `t submit report by Friday`
+   - `t submit report on Friday`
 
 3. **Nesting Items**: Use indentation (Tab key) to create subtasks or subnotes:
    ```
@@ -57,7 +57,6 @@ The magic happens when these two views coexist. An idea can become a task. A tas
 - Checkbox symbol: □ (unchecked) / ☑ (checked)
 - Click the checkbox to mark complete
 - Can have subtasks
-- Can have deadlines ("by Friday")
 
 **Events (e)**: Time-bound occurrences with start and end times.
 - Symbol: ↹
@@ -144,7 +143,6 @@ The app understands various time expressions:
 - **Absolute**: "tomorrow at 3pm", "Friday at noon", "Oct 15"
 - **Relative**: "in 2 hours", "in 30 minutes", "in 3 days"
 - **Ranges**: "from 2pm to 4pm", "between 10am and 12pm"
-- **Deadlines**: "by Friday", "due tomorrow"
 
 ### Nested Structure
 

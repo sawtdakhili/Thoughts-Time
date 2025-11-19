@@ -88,7 +88,6 @@ export const useStore = create<AppState>()(
               ...baseItem,
               type: 'todo',
               scheduledTime: parsed.scheduledTime,
-              deadline: parsed.deadline,
               hasTime: parsed.hasTime,
               parentId,
               parentType,

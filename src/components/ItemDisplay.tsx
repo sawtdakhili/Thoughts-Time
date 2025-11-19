@@ -104,7 +104,6 @@ function ItemDisplay({ item, depth = 0, showTime = true, sourcePane = 'thoughts'
         Object.assign(newItemData, {
           scheduledTime: parsed.scheduledTime,
           hasTime: parsed.hasTime,
-          deadline: parsed.deadline,
           completedAt: null,
           subtasks: [],
           embeddedItems: [],
@@ -142,7 +141,6 @@ function ItemDisplay({ item, depth = 0, showTime = true, sourcePane = 'thoughts'
         Object.assign(updates, {
           scheduledTime: parsed.scheduledTime !== null ? parsed.scheduledTime : (item as Todo).scheduledTime,
           hasTime: parsed.hasTime,
-          deadline: parsed.deadline !== null ? parsed.deadline : (item as Todo).deadline,
         });
       } else if (item.type === 'event') {
         Object.assign(updates, {
@@ -214,7 +212,6 @@ function ItemDisplay({ item, depth = 0, showTime = true, sourcePane = 'thoughts'
         Object.assign(newItemData, {
           scheduledTime: parsed.scheduledTime,
           hasTime: parsed.hasTime,
-          deadline: parsed.deadline,
           completedAt: null,
           subtasks: [],
           embeddedItems: [],
@@ -248,7 +245,6 @@ function ItemDisplay({ item, depth = 0, showTime = true, sourcePane = 'thoughts'
         Object.assign(updates, {
           scheduledTime: parsed.scheduledTime !== null ? parsed.scheduledTime : (item as Todo).scheduledTime,
           hasTime: parsed.hasTime,
-          deadline: parsed.deadline !== null ? parsed.deadline : (item as Todo).deadline,
         });
       } else if (item.type === 'event') {
         Object.assign(updates, {
@@ -567,13 +563,7 @@ function ItemDisplay({ item, depth = 0, showTime = true, sourcePane = 'thoughts'
 
             {/* Additional metadata for todos */}
             {item.type === 'todo' && (
-              <>
-                {(item as Todo).deadline && (
-                  <div className="mt-1 text-xs font-mono text-text-secondary">
-                    Due: {format(new Date((item as Todo).deadline!), 'MMM d, h:mm a')}
-                  </div>
-                )}
-              </>
+              <></>
             )}
 
             {/* Additional metadata for routines */}
