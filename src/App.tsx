@@ -6,12 +6,16 @@ import Settings from './components/Settings';
 import ToastContainer from './components/Toast';
 import { useSettingsStore } from './store/useSettingsStore';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
+import { useUndoRedo } from './hooks/useUndoRedo';
 
 function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const viewMode = useSettingsStore((state) => state.viewMode);
+
+  // Setup undo/redo
+  const { undo, redo } = useUndoRedo();
 
   // Book mode: track current day for each pane independently
   const [thoughtsDayIndex, setThoughtsDayIndex] = useState(30); // Start at today (index 30 in 60-day range)
@@ -67,6 +71,26 @@ function App() {
         setIsSearchOpen(true);
       },
       description: 'Open search',
+    },
+    {
+      key: 'z',
+      ctrlKey: true,
+      metaKey: true,
+      shiftKey: false,
+      handler: () => {
+        undo();
+      },
+      description: 'Undo',
+    },
+    {
+      key: 'z',
+      ctrlKey: true,
+      metaKey: true,
+      shiftKey: true,
+      handler: () => {
+        redo();
+      },
+      description: 'Redo',
     },
     {
       key: 'Escape',

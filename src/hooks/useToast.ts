@@ -7,11 +7,12 @@ export interface Toast {
   message: string;
   type: ToastType;
   duration?: number;
+  onUndo?: () => void;
 }
 
 interface ToastState {
   toasts: Toast[];
-  addToast: (message: string, type?: ToastType, duration?: number) => void;
+  addToast: (message: string, type?: ToastType, duration?: number, onUndo?: () => void) => void;
   removeToast: (id: string) => void;
   clearAll: () => void;
 }
@@ -21,9 +22,9 @@ const generateId = () => Math.random().toString(36).substring(2, 11);
 export const useToast = create<ToastState>()((set) => ({
   toasts: [],
 
-  addToast: (message: string, type: ToastType = 'info', duration: number = 4000) => {
+  addToast: (message: string, type: ToastType = 'info', duration: number = 4000, onUndo?: () => void) => {
     const id = generateId();
-    const toast: Toast = { id, message, type, duration };
+    const toast: Toast = { id, message, type, duration, onUndo };
 
     set((state) => ({
       toasts: [...state.toasts, toast],

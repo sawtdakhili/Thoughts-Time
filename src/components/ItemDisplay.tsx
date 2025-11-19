@@ -7,6 +7,7 @@ import { parseInput } from '../utils/parser';
 import { createItem } from '../utils/itemFactory';
 import { symbolsToPrefix, formatTimeForDisplay, prefixToSymbol, symbolToPrefix as symbolToPrefixMap } from '../utils/formatting';
 import { useToast } from '../hooks/useToast';
+import { useHistory } from '../store/useHistory';
 import ConfirmDialog from './ConfirmDialog';
 
 interface ItemDisplayProps {
@@ -316,7 +317,8 @@ function ItemDisplay({ item, depth = 0, showTime = true, sourcePane = 'thoughts'
 
   const handleConfirmDelete = () => {
     deleteItem(item.id);
-    addToast('Item deleted', 'success');
+    const performUndo = useHistory.getState().performUndo;
+    addToast('Item deleted', 'success', 4000, performUndo || undefined);
   };
 
   const isCompleted = item.type === 'todo' && (item as Todo).completedAt;

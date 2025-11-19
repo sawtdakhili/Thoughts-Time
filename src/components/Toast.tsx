@@ -69,6 +69,18 @@ function ToastItem({ toast, onClose }: ToastItemProps) {
         {getTypeIcon()}
       </span>
       <p className="flex-1 leading-relaxed">{toast.message}</p>
+      {toast.onUndo && (
+        <button
+          onClick={() => {
+            toast.onUndo?.();
+            onClose();
+          }}
+          className="flex-shrink-0 px-8 py-2 text-xs border border-current rounded-sm hover:bg-current hover:bg-opacity-10 transition-colors"
+          aria-label="Undo action"
+        >
+          Undo
+        </button>
+      )}
       <button
         onClick={onClose}
         className="flex-shrink-0 text-text-secondary hover:text-text-primary transition-colors"

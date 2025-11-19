@@ -3,10 +3,12 @@ import { persist } from 'zustand/middleware';
 import { format } from 'date-fns';
 import { Item, Todo, Event, Routine, Note } from '../types';
 import { parseInput, hasExplicitNotePrefix } from '../utils/parser';
+import { useHistory } from './useHistory';
 
 interface AppState {
   // Data
   items: Item[];
+  skipHistory: boolean; // Flag to prevent recording during undo/redo
 
   // Actions
   addItem: (input: string, parentId?: string | null, depthLevel?: number) => string;
@@ -14,6 +16,7 @@ interface AppState {
   updateItem: (id: string, updates: Partial<Item>) => void;
   deleteItem: (id: string) => void;
   toggleTodoComplete: (id: string) => void;
+  setSkipHistory: (skip: boolean) => void;
 
   // Computed - get items grouped by date
   getItemsByDate: () => Map<string, Item[]>;
@@ -27,6 +30,11 @@ export const useStore = create<AppState>()(
   persist(
     (set, get) => ({
       items: [],
+      skipHistory: false,
+
+      setSkipHistory: (skip: boolean) => {
+        set({ skipHistory: skip });
+      },
 
       addItem: (input: string, parentId: string | null = null, depthLevel: number = 0) => {
         const parsed = parseInput(input);
@@ -174,12 +182,37 @@ export const useStore = create<AppState>()(
       },
 
       addItemDirect: (item: Item) => {
+        const { skipHistory } = get();
+
+        // Record history before adding
+        if (!skipHistory) {
+          useHistory.getState().recordAction({
+            type: 'create',
+            timestamp: new Date(),
+            item,
+          });
+        }
+
         set((state) => ({
           items: [...state.items, item],
         }));
       },
 
       updateItem: (id: string, updates: Partial<Item>) => {
+        const { skipHistory, items } = get();
+        const oldItem = items.find(i => i.id === id);
+
+        // Record history before updating (only for content changes, not internal updates)
+        if (!skipHistory && oldItem && updates.content !== undefined && updates.content !== oldItem.content) {
+          useHistory.getState().recordAction({
+            type: 'edit',
+            timestamp: new Date(),
+            itemId: id,
+            oldContent: oldItem.content,
+            newContent: updates.content,
+          });
+        }
+
         set((state) => ({
           items: state.items.map((item) =>
             item.id === id ? { ...item, ...updates, updatedAt: new Date() } as Item : item
@@ -188,33 +221,42 @@ export const useStore = create<AppState>()(
       },
 
       deleteItem: (id: string) => {
+        const { skipHistory, items } = get();
+
+        // Collect all items that will be deleted (for undo)
+        const itemToDelete = items.find(i => i.id === id);
+        if (!itemToDelete) return;
+
+        const idsToDelete = new Set<string>();
+        const collectDescendants = (itemId: string) => {
+          idsToDelete.add(itemId);
+          const item = items.find(i => i.id === itemId);
+          if (!item) return;
+
+          if (item.type === 'todo' && item.subtasks.length > 0) {
+            item.subtasks.forEach(subtaskId => collectDescendants(subtaskId));
+          }
+
+          if (item.type === 'note' && item.subItems.length > 0) {
+            item.subItems.forEach(subItemId => collectDescendants(subItemId));
+          }
+        };
+
+        collectDescendants(id);
+
+        // Collect all items to delete for history
+        const deletedItems = items.filter(item => idsToDelete.has(item.id));
+
+        // Record history before deletion
+        if (!skipHistory) {
+          useHistory.getState().recordAction({
+            type: 'delete',
+            timestamp: new Date(),
+            deletedItems,
+          });
+        }
+
         set((state) => {
-          const itemToDelete = state.items.find(i => i.id === id);
-          if (!itemToDelete) return state;
-
-          // Collect all IDs to delete (item + all descendants)
-          const idsToDelete = new Set<string>();
-
-          const collectDescendants = (itemId: string) => {
-            idsToDelete.add(itemId);
-            const item = state.items.find(i => i.id === itemId);
-            if (!item) return;
-
-            // Collect subtasks (for todos)
-            if (item.type === 'todo' && item.subtasks.length > 0) {
-              item.subtasks.forEach(subtaskId => collectDescendants(subtaskId));
-            }
-
-            // Collect sub-items (for notes)
-            if (item.type === 'note' && item.subItems.length > 0) {
-              item.subItems.forEach(subItemId => collectDescendants(subItemId));
-            }
-
-            // Note: We don't delete embeddedItems (they're just links, not owned children)
-          };
-
-          collectDescendants(id);
-
           // Remove all collected items and clean up parent references
           return {
             items: state.items
@@ -240,11 +282,24 @@ export const useStore = create<AppState>()(
       },
 
       toggleTodoComplete: (id: string) => {
-        set((state) => {
-          const todo = state.items.find(i => i.id === id && i.type === 'todo') as Todo | undefined;
-          if (!todo) return state;
+        const { skipHistory, items } = get();
+        const todo = items.find(i => i.id === id && i.type === 'todo') as Todo | undefined;
+        if (!todo) return;
 
-          const isCompleting = !todo.completedAt; // Will be marked complete
+        const wasCompleted = !!todo.completedAt;
+
+        // Record history before toggling
+        if (!skipHistory) {
+          useHistory.getState().recordAction({
+            type: 'complete',
+            timestamp: new Date(),
+            itemId: id,
+            wasCompleted,
+          });
+        }
+
+        set((state) => {
+          const isCompleting = !wasCompleted; // Will be marked complete
           const now = new Date();
 
           return {

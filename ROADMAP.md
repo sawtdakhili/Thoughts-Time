@@ -41,9 +41,11 @@ This app enforces a strict scheduling philosophy: **every single task, event, an
 - [x] Toast notification system (success, error, info, warning)
 - [x] Custom confirmation dialogs (replaced browser confirm)
 - [x] Error boundary with graceful error handling
-- [x] Keyboard shortcuts (Cmd/Ctrl+F, Escape)
+- [x] Keyboard shortcuts (Cmd/Ctrl+F, Escape, Cmd/Ctrl+Z, Cmd/Ctrl+Shift+Z)
 - [x] Accessibility improvements (ARIA labels, focus indicators)
 - [x] Comprehensive test suite (115 tests with Vitest)
+- [x] Undo/Redo system (tracks all actions with Cmd/Ctrl+Z/Shift+Z)
+- [x] Undo button in delete toasts
 
 ---
 
@@ -164,9 +166,34 @@ This app enforces a strict scheduling philosophy: **every single task, event, an
 
 ---
 
+#### 6. Undo/Redo System
+**Status**: Completed ✅
+
+**Completed**:
+- [x] Action history store with undo/redo stacks
+- [x] Tracks create, delete, edit, complete actions
+- [x] Keyboard shortcuts: Cmd/Ctrl+Z (undo), Cmd/Ctrl+Shift+Z (redo)
+- [x] Undo button in delete toasts
+- [x] Cascade undo/redo for deletions (restores parent-child relationships)
+- [x] Max 20 actions in history (memory management)
+- [x] Skip history flag prevents infinite loops during undo/redo
+
+**Components Created**:
+- `src/store/useHistory.ts` - History management with Zustand
+- `src/hooks/useUndoRedo.ts` - Undo/redo integration hook
+
+**Files Modified**:
+- `src/store/useStore.ts` (added history recording to all mutations)
+- `src/App.tsx` (integrated undo/redo hook, keyboard shortcuts)
+- `src/hooks/useToast.ts` (added onUndo callback support)
+- `src/components/Toast.tsx` (added Undo button UI)
+- `src/components/ItemDisplay.tsx` (connected delete toast to undo)
+
+---
+
 ### 🟡 Medium Priority (Phase 2)
 
-#### 6. Search Functionality
+#### 7. Search Functionality
 **Status**: Completed ✅
 
 **Completed**:
@@ -192,7 +219,7 @@ This app enforces a strict scheduling philosophy: **every single task, event, an
 
 ---
 
-#### 7. Event Auto-Split Logic
+#### 8. Event Auto-Split Logic
 **Status**: Not implemented
 
 **Requirements**:
@@ -227,7 +254,7 @@ if (itemsDuring.length > 0) {
 
 ---
 
-#### 8. URL Link Previews for Notes
+#### 9. URL Link Previews for Notes
 **Status**: Not implemented
 
 **Requirements**:
@@ -259,7 +286,7 @@ domain: 13px, #6A6A6A
 
 ---
 
-#### 9. Note Embedding in Todos
+#### 10. Note Embedding in Todos
 **Status**: Not implemented
 
 **Requirements**:
@@ -288,7 +315,7 @@ domain: 13px, #6A6A6A
 
 ### 🟢 Lower Priority (Phase 3)
 
-#### 10. Completion Linking System
+#### 11. Completion Linking System
 **Status**: Partially implemented in store, not in UI - **Not a priority**
 
 **Requirements**:
@@ -320,7 +347,7 @@ Oct 14 Thoughts:
 
 ---
 
-#### 11. Database Backend (Supabase)
+#### 12. Database Backend (Supabase)
 **Status**: Not implemented (currently localStorage only)
 
 **Requirements**:
@@ -349,7 +376,7 @@ Oct 14 Thoughts:
 
 ---
 
-#### 12. Mobile Responsive Optimizations
+#### 13. Mobile Responsive Optimizations
 **Status**: Partially responsive, needs improvements
 
 **Requirements**:
@@ -369,7 +396,7 @@ Oct 14 Thoughts:
 
 ---
 
-#### 13. Notifications System
+#### 14. Notifications System
 **Status**: Not implemented
 
 **Requirements**:
@@ -390,7 +417,7 @@ Oct 14 Thoughts:
 
 ---
 
-#### 14. Performance Optimizations
+#### 15. Performance Optimizations
 **Status**: Not implemented
 
 **Requirements**:
@@ -417,7 +444,7 @@ Oct 14 Thoughts:
 
 ---
 
-#### 15. Accessibility Improvements
+#### 16. Accessibility Improvements
 **Status**: Basic accessibility, needs WCAG 2.1 compliance
 
 **Requirements**:
