@@ -18,16 +18,15 @@ function DailyReview() {
   const today = format(new Date(), 'yyyy-MM-dd');
   const now = new Date();
 
-  // Generate unscheduled todos from previous days
+  // Generate ALL undone todos from previous days (scheduled or unscheduled)
   const reviewItems: DailyReviewItem[] = items
     .filter((item) => {
       if (item.type !== 'todo') return false;
       const todo = item as Todo;
 
-      // Only unscheduled todos from previous days (not today)
+      // ALL incomplete todos from previous days (not today)
       return (
         todo.createdDate < today &&
-        !todo.scheduledTime &&
         !todo.completedAt &&
         !todo.cancelledAt
       );

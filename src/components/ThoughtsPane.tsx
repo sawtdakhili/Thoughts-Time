@@ -574,7 +574,12 @@ function ThoughtsPane({
                 <div className="space-y-6">
                   {/* Only render top-level items (sub-items are rendered recursively) */}
                   {items.filter(item => !item.parentId).map((item) => (
-                    <ItemDisplay key={item.id} item={item} />
+                    <ItemDisplay
+                      key={item.id}
+                      item={item}
+                      sourcePane="thoughts"
+                      enableDrag={true}
+                    />
                   ))}
                 </div>
               )}

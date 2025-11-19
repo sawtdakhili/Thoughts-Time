@@ -1,15 +1,27 @@
 import { useState } from 'react';
 import { format, subDays, addDays } from 'date-fns';
+import { DndContext, DragOverlay } from '@dnd-kit/core';
 import ThoughtsPane from './components/ThoughtsPane';
 import TimePane from './components/TimePane';
 import Settings from './components/Settings';
+import ItemDisplay from './components/ItemDisplay';
 import { useSettingsStore } from './store/useSettingsStore';
+import { useDragAndDropContext } from './hooks/useDragAndDrop';
 
 function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const viewMode = useSettingsStore((state) => state.viewMode);
+
+  // Drag and drop context
+  const {
+    activeItem,
+    handleDragStart,
+    handleDragOver,
+    handleDragEnd,
+    handleDragCancel,
+  } = useDragAndDropContext();
 
   // Book mode: track current day for each pane independently
   const [thoughtsDayIndex, setThoughtsDayIndex] = useState(30); // Start at today (index 30 in 60-day range)
@@ -56,6 +68,12 @@ function App() {
   };
 
   return (
+    <DndContext
+      onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
+      onDragEnd={handleDragEnd}
+      onDragCancel={handleDragCancel}
+    >
     <div className="h-full flex flex-col bg-background text-text-primary">
       {/* Settings Modal */}
       <Settings isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
@@ -126,6 +144,26 @@ function App() {
         </div>
       </div>
     </div>
+
+    {/* Drag Overlay for visual feedback */}
+    <DragOverlay>
+      {activeItem ? (
+        <div
+          style={{
+            opacity: 0.7,
+            transform: 'rotate(2deg)',
+            boxShadow: '0 8px 16px rgba(0, 0, 0, 0.3)',
+            padding: '8px',
+            backgroundColor: 'var(--background)',
+            border: '1px solid var(--border-subtle)',
+            borderRadius: '4px',
+          }}
+        >
+          <ItemDisplay item={activeItem.item} sourcePane={activeItem.sourcePane} enableDrag={false} />
+        </div>
+      ) : null}
+    </DragOverlay>
+    </DndContext>
   );
 }
 

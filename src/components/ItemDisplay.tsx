@@ -3,14 +3,17 @@ import { format } from 'date-fns';
 import { Item, Todo, Routine, Note, Event } from '../types';
 import { useStore } from '../store/useStore';
 import { parseInput } from '../utils/parser';
+import { useDraggableItem } from '../hooks/useDragAndDrop';
 
 interface ItemDisplayProps {
   item: Item;
   depth?: number;
   showTime?: boolean;
+  sourcePane?: 'thoughts' | 'time';
+  enableDrag?: boolean;
 }
 
-function ItemDisplay({ item, depth = 0, showTime = true }: ItemDisplayProps) {
+function ItemDisplay({ item, depth = 0, showTime = true, sourcePane = 'thoughts', enableDrag = false }: ItemDisplayProps) {
   const toggleTodoComplete = useStore((state) => state.toggleTodoComplete);
   const updateItem = useStore((state) => state.updateItem);
   const deleteItem = useStore((state) => state.deleteItem);
@@ -23,6 +26,14 @@ function ItemDisplay({ item, depth = 0, showTime = true }: ItemDisplayProps) {
   const [promptedTime, setPromptedTime] = useState('');
   const [promptedEndTime, setPromptedEndTime] = useState('');
 
+  // Drag and drop
+  const {
+    setNodeRef: setDragRef,
+    attributes: dragAttributes,
+    listeners: dragListeners,
+    style: dragStyle,
+  } = useDraggableItem(item.id, item, sourcePane);
+
   const getSymbol = () => {
     switch (item.type) {
       case 'todo':
@@ -34,24 +45,6 @@ function ItemDisplay({ item, depth = 0, showTime = true }: ItemDisplayProps) {
         return '↻';
       case 'note':
         return '↝';
-      default:
-        return '';
-    }
-  };
-
-  // Get prefix for item type
-  const getPrefix = () => {
-    switch (item.type) {
-      case 'todo':
-        return 't';
-      case 'event':
-        return 'e';
-      case 'routine':
-        return 'r';
-      case 'note':
-        // Notes (both top-level and subnotes) have no prefix when editing
-        // Subnotes are identified by their depth/indentation, not by prefix
-        return '';
       default:
         return '';
     }
@@ -488,7 +481,13 @@ function ItemDisplay({ item, depth = 0, showTime = true }: ItemDisplayProps) {
 
       <div className="group">
         <div
-          style={{ marginLeft: `${indentPx}px` }}
+          ref={enableDrag && depth === 0 ? setDragRef : undefined}
+          {...(enableDrag && depth === 0 ? dragAttributes : {})}
+          {...(enableDrag && depth === 0 ? dragListeners : {})}
+          style={{
+            marginLeft: `${indentPx}px`,
+            ...(enableDrag && depth === 0 ? dragStyle : {}),
+          }}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
@@ -642,7 +641,14 @@ function ItemDisplay({ item, depth = 0, showTime = true }: ItemDisplayProps) {
       {subItems.length > 0 && (
         <div className="mt-1">
           {subItems.map(subItem => (
-            <ItemDisplay key={subItem.id} item={subItem} depth={depth + 1} showTime={showTime} />
+            <ItemDisplay
+              key={subItem.id}
+              item={subItem}
+              depth={depth + 1}
+              showTime={showTime}
+              sourcePane={sourcePane}
+              enableDrag={enableDrag}
+            />
           ))}
         </div>
       )}
