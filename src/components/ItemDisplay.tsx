@@ -8,9 +8,10 @@ interface ItemDisplayProps {
   item: Item;
   depth?: number;
   showTime?: boolean;
+  sourcePane?: 'thoughts' | 'time';
 }
 
-function ItemDisplay({ item, depth = 0, showTime = true }: ItemDisplayProps) {
+function ItemDisplay({ item, depth = 0, showTime = true, sourcePane = 'thoughts' }: ItemDisplayProps) {
   const toggleTodoComplete = useStore((state) => state.toggleTodoComplete);
   const updateItem = useStore((state) => state.updateItem);
   const deleteItem = useStore((state) => state.deleteItem);
@@ -34,24 +35,6 @@ function ItemDisplay({ item, depth = 0, showTime = true }: ItemDisplayProps) {
         return '↻';
       case 'note':
         return '↝';
-      default:
-        return '';
-    }
-  };
-
-  // Get prefix for item type
-  const getPrefix = () => {
-    switch (item.type) {
-      case 'todo':
-        return 't';
-      case 'event':
-        return 'e';
-      case 'routine':
-        return 'r';
-      case 'note':
-        // Notes (both top-level and subnotes) have no prefix when editing
-        // Subnotes are identified by their depth/indentation, not by prefix
-        return '';
       default:
         return '';
     }
@@ -158,9 +141,9 @@ function ItemDisplay({ item, depth = 0, showTime = true }: ItemDisplayProps) {
 
       if (item.type === 'todo') {
         Object.assign(updates, {
-          scheduledTime: parsed.scheduledTime,
+          scheduledTime: parsed.scheduledTime !== null ? parsed.scheduledTime : (item as Todo).scheduledTime,
           hasTime: parsed.hasTime,
-          deadline: parsed.deadline,
+          deadline: parsed.deadline !== null ? parsed.deadline : (item as Todo).deadline,
         });
       } else if (item.type === 'event') {
         Object.assign(updates, {
@@ -187,20 +170,28 @@ function ItemDisplay({ item, depth = 0, showTime = true }: ItemDisplayProps) {
     setIsEditing(false);
   };
 
+  // Helper: Convert 24-hour time string (HH:mm) to 12-hour format with am/pm
+  const formatTimeForDisplay = (time24: string): string => {
+    const [hours, minutes] = time24.split(':').map(Number);
+    const period = hours >= 12 ? 'pm' : 'am';
+    const hours12 = hours % 12 || 12;
+    return `${hours12}:${minutes.toString().padStart(2, '0')}${period}`;
+  };
+
   const handleTimePromptSubmit = () => {
     if (!timePrompt || !promptedTime) return;
 
     // For events, also require end time
     if (timePrompt.isEvent && !promptedEndTime) return;
 
-    // Update content with time
+    // Update content with time (formatted for readability)
     let updatedContent: string;
     if (timePrompt.isEvent) {
       // Events: "from X to Y"
-      updatedContent = timePrompt.content + ' from ' + promptedTime + ' to ' + promptedEndTime;
+      updatedContent = timePrompt.content + ' from ' + formatTimeForDisplay(promptedTime) + ' to ' + formatTimeForDisplay(promptedEndTime);
     } else {
       // Tasks/Routines: "at X"
-      updatedContent = timePrompt.content + ' at ' + promptedTime;
+      updatedContent = timePrompt.content + ' at ' + formatTimeForDisplay(promptedTime);
     }
 
     // Convert symbols back to prefixes before parsing
@@ -257,9 +248,9 @@ function ItemDisplay({ item, depth = 0, showTime = true }: ItemDisplayProps) {
 
       if (item.type === 'todo') {
         Object.assign(updates, {
-          scheduledTime: parsed.scheduledTime,
+          scheduledTime: parsed.scheduledTime !== null ? parsed.scheduledTime : (item as Todo).scheduledTime,
           hasTime: parsed.hasTime,
-          deadline: parsed.deadline,
+          deadline: parsed.deadline !== null ? parsed.deadline : (item as Todo).deadline,
         });
       } else if (item.type === 'event') {
         Object.assign(updates, {
@@ -488,7 +479,9 @@ function ItemDisplay({ item, depth = 0, showTime = true }: ItemDisplayProps) {
 
       <div className="group">
         <div
-          style={{ marginLeft: `${indentPx}px` }}
+          style={{
+            marginLeft: `${indentPx}px`,
+          }}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
@@ -501,16 +494,18 @@ function ItemDisplay({ item, depth = 0, showTime = true }: ItemDisplayProps) {
 
         {/* Item Content */}
         <div className={`flex items-start gap-3 ${isCompleted ? 'opacity-40' : ''}`}>
-          {/* Symbol */}
-          <button
-            onClick={handleToggleComplete}
-            className={`text-base leading-book flex-shrink-0 ${
-              item.type === 'todo' ? 'cursor-pointer hover:opacity-70' : 'cursor-default'
-            }`}
-            disabled={item.type !== 'todo'}
-          >
-            {getSymbol()}
-          </button>
+          {/* Symbol - hide when editing */}
+          {!isEditing && (
+            <button
+              onClick={handleToggleComplete}
+              className={`text-base leading-book flex-shrink-0 ${
+                item.type === 'todo' ? 'cursor-pointer hover:opacity-70' : 'cursor-default'
+              }`}
+              disabled={item.type !== 'todo'}
+            >
+              {getSymbol()}
+            </button>
+          )}
 
           {/* Content */}
           <div className="flex-1">
@@ -642,7 +637,13 @@ function ItemDisplay({ item, depth = 0, showTime = true }: ItemDisplayProps) {
       {subItems.length > 0 && (
         <div className="mt-1">
           {subItems.map(subItem => (
-            <ItemDisplay key={subItem.id} item={subItem} depth={depth + 1} showTime={showTime} />
+            <ItemDisplay
+              key={subItem.id}
+              item={subItem}
+              depth={depth + 1}
+              showTime={showTime}
+              sourcePane={sourcePane}
+            />
           ))}
         </div>
       )}

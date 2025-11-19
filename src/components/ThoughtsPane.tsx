@@ -324,22 +324,30 @@ function ThoughtsPane({
     }, 100);
   };
 
+  // Helper: Convert 24-hour time string (HH:mm) to 12-hour format with am/pm
+  const formatTimeForDisplay = (time24: string): string => {
+    const [hours, minutes] = time24.split(':').map(Number);
+    const period = hours >= 12 ? 'pm' : 'am';
+    const hours12 = hours % 12 || 12;
+    return `${hours12}:${minutes.toString().padStart(2, '0')}${period}`;
+  };
+
   const handleTimePromptSubmit = () => {
     if (!timePrompt || !promptedTime) return;
 
     // For events, also require end time
     if (timePrompt.isEvent && !promptedEndTime) return;
 
-    // Update the line with the time(s)
+    // Update the line with the time(s) (formatted for readability)
     const lines = input.split('\n');
     let updatedLine: string;
 
     if (timePrompt.isEvent) {
       // Events: "from X to Y"
-      updatedLine = lines[timePrompt.index].trimStart() + ' from ' + promptedTime + ' to ' + promptedEndTime;
+      updatedLine = lines[timePrompt.index].trimStart() + ' from ' + formatTimeForDisplay(promptedTime) + ' to ' + formatTimeForDisplay(promptedEndTime);
     } else {
       // Tasks: "at X"
-      updatedLine = lines[timePrompt.index].trimStart() + ' at ' + promptedTime;
+      updatedLine = lines[timePrompt.index].trimStart() + ' at ' + formatTimeForDisplay(promptedTime);
     }
 
     // Restore indentation
@@ -574,7 +582,11 @@ function ThoughtsPane({
                 <div className="space-y-6">
                   {/* Only render top-level items (sub-items are rendered recursively) */}
                   {items.filter(item => !item.parentId).map((item) => (
-                    <ItemDisplay key={item.id} item={item} />
+                    <ItemDisplay
+                      key={item.id}
+                      item={item}
+                      sourcePane="thoughts"
+                    />
                   ))}
                 </div>
               )}

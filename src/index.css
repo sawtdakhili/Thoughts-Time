@@ -53,6 +53,38 @@
     height: 100%;
     overflow: hidden;
   }
+
+  /* Custom scrollbar styling to match book aesthetic */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-text-secondary) var(--color-background);
+  }
+
+  /* Webkit browsers (Chrome, Safari, Edge) */
+  *::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: var(--color-background);
+    border-left: 1px solid var(--color-border-subtle);
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: var(--color-text-secondary);
+    border-radius: 4px;
+    transition: background 0.2s ease;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background: var(--color-text-primary);
+  }
+
+  /* Scrollbar corner (when both scrollbars are present) */
+  *::-webkit-scrollbar-corner {
+    background: var(--color-background);
+  }
 }
 
 @layer utilities {

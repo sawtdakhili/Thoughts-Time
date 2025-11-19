@@ -78,7 +78,7 @@ function Settings({ isOpen, onClose }: SettingsProps) {
                     : 'bg-transparent text-text-secondary border-border-subtle hover:border-text-secondary'
                 }`}
               >
-                Infinite Scrolling
+                Infinite Scroll
               </button>
               <button
                 onClick={() => setViewMode('book')}

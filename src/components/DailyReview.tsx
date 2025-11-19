@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { format, differenceInDays } from 'date-fns';
 import { useStore } from '../store/useStore';
 import { Todo } from '../types';
+import { parseInput } from '../utils/parser';
 
 interface DailyReviewItem {
   item: Todo;
@@ -12,22 +13,22 @@ function DailyReview() {
   const items = useStore((state) => state.items);
   const updateItem = useStore((state) => state.updateItem);
   const deleteItem = useStore((state) => state.deleteItem);
+  const toggleTodoComplete = useStore((state) => state.toggleTodoComplete);
   const [showRescheduler, setShowRescheduler] = useState<string | null>(null);
-  const [selectedTime, setSelectedTime] = useState('');
+  const [rescheduleInput, setRescheduleInput] = useState('');
 
   const today = format(new Date(), 'yyyy-MM-dd');
   const now = new Date();
 
-  // Generate unscheduled todos from previous days
+  // Generate ALL undone todos from previous days (scheduled or unscheduled)
   const reviewItems: DailyReviewItem[] = items
     .filter((item) => {
       if (item.type !== 'todo') return false;
       const todo = item as Todo;
 
-      // Only unscheduled todos from previous days (not today)
+      // ALL incomplete todos from previous days (not today)
       return (
         todo.createdDate < today &&
-        !todo.scheduledTime &&
         !todo.completedAt &&
         !todo.cancelledAt
       );
@@ -39,35 +40,44 @@ function DailyReview() {
 
       return { item: todo, waitingDays };
     })
-    .sort((a, b) => b.waitingDays - a.waitingDays); // Latest items at top (highest waiting days first)
+    .sort((a, b) => b.waitingDays - a.waitingDays); // Oldest first (highest waiting days first)
 
   const handleReschedule = (itemId: string) => {
+    const item = items.find((i) => i.id === itemId);
+    if (item) {
+      setRescheduleInput(item.content);
+    }
     setShowRescheduler(itemId);
   };
 
   const confirmReschedule = (itemId: string) => {
-    if (!selectedTime) return;
+    if (!rescheduleInput.trim()) return;
 
-    // Parse time (HH:mm format)
-    const [hours, minutes] = selectedTime.split(':').map(Number);
-    const scheduledDate = new Date();
-    scheduledDate.setHours(hours, minutes, 0, 0);
+    // Parse the input using the parser - prepend "t " so parser treats it as a todo
+    const parsed = parseInput('t ' + rescheduleInput);
 
-    updateItem(itemId, {
-      scheduledTime: scheduledDate,
-    });
+    if (!parsed) {
+      alert('Could not parse date/time. Try formats like "tomorrow 2pm", "friday at 3:30pm", "next monday 9am"');
+      return;
+    }
+
+    // Update the item with the new scheduled time
+    if (parsed.scheduledTime) {
+      updateItem(itemId, {
+        scheduledTime: parsed.scheduledTime,
+        hasTime: parsed.hasTime,
+      });
+    } else {
+      alert('Please specify a date/time for rescheduling');
+      return;
+    }
 
     setShowRescheduler(null);
-    setSelectedTime('');
+    setRescheduleInput('');
   };
 
   const handleComplete = (itemId: string) => {
-    updateItem(itemId, {
-      completedAt: now,
-    });
-
-    // TODO: Create completion entry in today's Thoughts
-    // TODO: Create CompletionLink between them
+    toggleTodoComplete(itemId);
   };
 
   const handleCancel = (itemId: string) => {
@@ -83,7 +93,7 @@ function DailyReview() {
   const allHandled = false; // TODO: Track which items have been handled
 
   return (
-    <div className="mb-16">
+    <div>
       {/* Daily Review Header */}
       <div className="mb-6">
         <div className="flex items-center gap-4">
@@ -98,59 +108,76 @@ function DailyReview() {
       <div className="space-y-6 pl-16">
         {reviewItems.map(({ item, waitingDays }) => (
           <div key={item.id} className="group">
-            <div className="flex items-start gap-3 mb-2">
+            <div className="flex items-start gap-3">
+              {/* Bullet - always shown */}
               <span className="text-base leading-book flex-shrink-0 text-text-secondary">•</span>
-              <div className="flex-1">
-                <p className="text-base font-serif leading-book">
-                  {item.content}
-                  <span className="text-xs font-mono text-text-secondary ml-6">
-                    (waiting {waitingDays} {waitingDays === 1 ? 'day' : 'days'})
-                  </span>
-                </p>
-                {item.tags.length > 0 && (
-                  <div className="mt-1 text-xs text-text-secondary">
-                    {item.tags.map((tag) => (
-                      <span key={tag} className="mr-6">
-                        #{tag}
+
+              {/* Content */}
+              <div className="flex-1 min-w-0">
+                {showRescheduler === item.id ? (
+                  <div className="flex items-center gap-8">
+                    <input
+                      type="text"
+                      value={rescheduleInput}
+                      onChange={(e) => setRescheduleInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          confirmReschedule(item.id);
+                        } else if (e.key === 'Escape') {
+                          setShowRescheduler(null);
+                          setRescheduleInput('');
+                        }
+                      }}
+                      placeholder="e.g., tomorrow 2pm, friday 9am"
+                      className="flex-1 bg-background border border-border-subtle px-8 py-4 font-mono text-sm outline-none focus:border-text-secondary"
+                      autoFocus
+                    />
+                    <button
+                      onClick={() => confirmReschedule(item.id)}
+                      className="text-sm text-text-secondary hover:text-text-primary"
+                      title="Save (Enter)"
+                    >
+                      ✓
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowRescheduler(null);
+                        setRescheduleInput('');
+                      }}
+                      className="text-sm text-text-secondary hover:text-text-primary"
+                      title="Cancel (Esc)"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ) : (
+                  <div>
+                    <p className="text-base font-serif leading-book">
+                      {item.content}
+                      <span className="text-xs font-mono text-text-secondary ml-6">
+                        ({waitingDays} {waitingDays === 1 ? 'day' : 'days'} old)
                       </span>
-                    ))}
+                    </p>
+                    {item.tags.length > 0 && (
+                      <div className="mt-1 text-xs text-text-secondary">
+                        {item.tags.map((tag) => (
+                          <span key={tag} className="mr-6">
+                            #{tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
-            </div>
 
-            {/* Action Buttons */}
-            {showRescheduler === item.id ? (
-              <div className="flex items-center gap-4 pl-16">
-                <input
-                  type="time"
-                  value={selectedTime}
-                  onChange={(e) => setSelectedTime(e.target.value)}
-                  className="bg-background border border-border-subtle px-6 py-3 font-mono text-sm outline-none focus:border-text-secondary"
-                  autoFocus
-                />
-                <button
-                  onClick={() => confirmReschedule(item.id)}
-                  className="px-6 py-3 text-xs font-mono hover:opacity-70"
-                >
-                  Confirm
-                </button>
-                <button
-                  onClick={() => {
-                    setShowRescheduler(null);
-                    setSelectedTime('');
-                  }}
-                  className="px-6 py-3 text-xs font-mono text-text-secondary hover:opacity-70"
-                >
-                  Cancel
-                </button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-6 pl-16">
+              {/* Action buttons - always shown */}
+              <div className="flex items-center gap-6 flex-shrink-0">
                 <button
                   onClick={() => handleReschedule(item.id)}
                   className="w-18 h-18 flex items-center justify-center hover:opacity-70 active:opacity-50"
                   title="Reschedule"
+                  disabled={showRescheduler === item.id}
                 >
                   <span className="text-sm">↷</span>
                 </button>
@@ -158,6 +185,7 @@ function DailyReview() {
                   onClick={() => handleComplete(item.id)}
                   className="w-18 h-18 flex items-center justify-center hover:opacity-70 active:opacity-50"
                   title="Complete"
+                  disabled={showRescheduler === item.id}
                 >
                   <span className="text-sm">✓</span>
                 </button>
@@ -165,17 +193,15 @@ function DailyReview() {
                   onClick={() => handleCancel(item.id)}
                   className="w-18 h-18 flex items-center justify-center hover:opacity-70 active:opacity-50 text-text-secondary"
                   title="Cancel"
+                  disabled={showRescheduler === item.id}
                 >
                   <span className="text-sm">×</span>
                 </button>
               </div>
-            )}
+            </div>
           </div>
         ))}
       </div>
-
-      {/* Separator */}
-      <div className="mt-8 border-t border-border-subtle" />
     </div>
   );
 }

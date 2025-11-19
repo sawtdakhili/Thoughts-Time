@@ -365,9 +365,9 @@ function TimePane({
 
       if (currentItem.type === 'todo') {
         Object.assign(updates, {
-          scheduledTime: parsed.scheduledTime,
+          scheduledTime: parsed.scheduledTime !== null ? parsed.scheduledTime : (currentItem as Todo).scheduledTime,
           hasTime: parsed.hasTime,
-          deadline: parsed.deadline,
+          deadline: parsed.deadline !== null ? parsed.deadline : (currentItem as Todo).deadline,
         });
       } else if (currentItem.type === 'event') {
         Object.assign(updates, {
@@ -395,6 +395,14 @@ function TimePane({
     setEditContent('');
   };
 
+  // Helper: Convert 24-hour time string (HH:mm) to 12-hour format with am/pm
+  const formatTimeForDisplay = (time24: string): string => {
+    const [hours, minutes] = time24.split(':').map(Number);
+    const period = hours >= 12 ? 'pm' : 'am';
+    const hours12 = hours % 12 || 12;
+    return `${hours12}:${minutes.toString().padStart(2, '0')}${period}`;
+  };
+
   const handleTimePromptSubmit = () => {
     if (!timePrompt || !promptedTime) return;
 
@@ -404,14 +412,14 @@ function TimePane({
     const currentItem = items.find(i => i.id === timePrompt.itemId);
     if (!currentItem) return;
 
-    // Update content with time
+    // Update content with time (formatted for readability)
     let updatedContent: string;
     if (timePrompt.isEvent) {
       // Events: "from X to Y"
-      updatedContent = timePrompt.content + ' from ' + promptedTime + ' to ' + promptedEndTime;
+      updatedContent = timePrompt.content + ' from ' + formatTimeForDisplay(promptedTime) + ' to ' + formatTimeForDisplay(promptedEndTime);
     } else {
       // Tasks/Routines: "at X"
-      updatedContent = timePrompt.content + ' at ' + promptedTime;
+      updatedContent = timePrompt.content + ' at ' + formatTimeForDisplay(promptedTime);
     }
 
     // Convert symbols back to prefixes before parsing
@@ -469,9 +477,9 @@ function TimePane({
 
       if (currentItem.type === 'todo') {
         Object.assign(updates, {
-          scheduledTime: parsed.scheduledTime,
+          scheduledTime: parsed.scheduledTime !== null ? parsed.scheduledTime : (currentItem as Todo).scheduledTime,
           hasTime: parsed.hasTime,
-          deadline: parsed.deadline,
+          deadline: parsed.deadline !== null ? parsed.deadline : (currentItem as Todo).deadline,
         });
       } else if (currentItem.type === 'event') {
         Object.assign(updates, {
@@ -601,77 +609,78 @@ function TimePane({
 
       return (
         <div
-          className={`flex items-start gap-3 ${isCompleted ? 'opacity-40' : ''}`}
           onMouseEnter={() => setHoveredItem(item.id)}
           onMouseLeave={() => setHoveredItem(null)}
         >
-          <button
-            onClick={() => toggleTodoComplete(item.id)}
-            className="text-base leading-book flex-shrink-0 cursor-pointer hover:opacity-70"
-          >
-            {isCompleted ? '☑' : '□'}
-          </button>
-          <div className="flex-1">
-            {isEditing ? (
-              <div className="flex items-center gap-8">
-                <input
-                  type="text"
-                  value={editContent}
-                  onChange={handleInputChange}
-                  onKeyDown={(e) => handleKeyDown(e, item.id)}
-                  className="flex-1 px-8 py-4 bg-hover-bg border border-border-subtle rounded-sm font-serif text-base"
-                  autoFocus
-                />
-                <button
-                  onClick={() => handleSaveEdit(item.id)}
-                  className="text-sm text-text-secondary hover:text-text-primary"
-                  title="Save (Enter)"
-                >
-                  ✓
-                </button>
-                <button
-                  onClick={handleCancelEdit}
-                  className="text-sm text-text-secondary hover:text-text-primary"
-                  title="Cancel (Esc)"
-                >
-                  ✕
-                </button>
-              </div>
-            ) : (
-              <div className="flex items-start gap-8">
-                <p className={`flex-1 text-base font-serif leading-book ${isCompleted ? 'line-through' : ''}`}>
-                  {item.content}
-                </p>
-                {isHovered && (
-                  <div className="flex gap-4 flex-shrink-0">
-                    <button
-                      onClick={() => handleEdit(item.id, item)}
-                      className="text-xs text-text-secondary hover:text-text-primary"
-                      title="Edit"
-                    >
-                      ✎
-                    </button>
-                    <button
-                      onClick={() => handleDelete(item.id)}
-                      className="text-xs text-text-secondary hover:text-text-primary"
-                      title="Delete"
-                    >
-                      ×
-                    </button>
+          {isEditing ? (
+            <div className="flex items-center gap-8">
+              <input
+                type="text"
+                value={editContent}
+                onChange={handleInputChange}
+                onKeyDown={(e) => handleKeyDown(e, item.id)}
+                className="flex-1 px-8 py-4 bg-hover-bg border border-border-subtle rounded-sm font-serif text-base"
+                autoFocus
+              />
+              <button
+                onClick={() => handleSaveEdit(item.id)}
+                className="text-sm text-text-secondary hover:text-text-primary"
+                title="Save (Enter)"
+              >
+                ✓
+              </button>
+              <button
+                onClick={handleCancelEdit}
+                className="text-sm text-text-secondary hover:text-text-primary"
+                title="Cancel (Esc)"
+              >
+                ✕
+              </button>
+            </div>
+          ) : (
+            <div className={`flex items-start gap-3 ${isCompleted ? 'opacity-40' : ''}`}>
+              <button
+                onClick={() => toggleTodoComplete(item.id)}
+                className="text-base leading-book flex-shrink-0 cursor-pointer hover:opacity-70"
+              >
+                {isCompleted ? '☑' : '□'}
+              </button>
+              <div className="flex-1">
+                <div className="flex items-start gap-8">
+                  <p className={`flex-1 text-base font-serif leading-book ${isCompleted ? 'line-through' : ''}`}>
+                    {item.content}
+                  </p>
+                  {isHovered && (
+                    <div className="flex gap-4 flex-shrink-0">
+                      <button
+                        onClick={() => handleEdit(item.id, item)}
+                        className="text-xs text-text-secondary hover:text-text-primary"
+                        title="Edit"
+                      >
+                        ✎
+                      </button>
+                      <button
+                        onClick={() => handleDelete(item.id)}
+                        className="text-xs text-text-secondary hover:text-text-primary"
+                        title="Delete"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  )}
+                </div>
+                {item.tags.length > 0 && (
+                  <div className="mt-2 text-xs text-text-secondary">
+                    {item.tags.map((tag) => (
+                      <span key={tag} className="mr-6">
+                        #{tag}
+                      </span>
+                    ))}
                   </div>
                 )}
               </div>
-            )}
-            {!isEditing && item.tags.length > 0 && (
-              <div className="mt-2 text-xs text-text-secondary">
-                {item.tags.map((tag) => (
-                  <span key={tag} className="mr-6">
-                    #{tag}
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       );
     } else if (entry.type === 'event-single') {
@@ -683,72 +692,73 @@ function TimePane({
 
       return (
         <div
-          className="flex items-start gap-3"
           onMouseEnter={() => setHoveredItem(item.id)}
           onMouseLeave={() => setHoveredItem(null)}
         >
-          <span className="text-base leading-book flex-shrink-0">↹</span>
-          <div className="flex-1">
-            {isEditing ? (
-              <div className="flex items-center gap-8">
-                <input
-                  type="text"
-                  value={editContent}
-                  onChange={handleInputChange}
-                  onKeyDown={(e) => handleKeyDown(e, item.id)}
-                  className="flex-1 px-8 py-4 bg-hover-bg border border-border-subtle rounded-sm font-serif text-base"
-                  autoFocus
-                />
-                <button
-                  onClick={() => handleSaveEdit(item.id)}
-                  className="text-sm text-text-secondary hover:text-text-primary"
-                  title="Save (Enter)"
-                >
-                  ✓
-                </button>
-                <button
-                  onClick={handleCancelEdit}
-                  className="text-sm text-text-secondary hover:text-text-primary"
-                  title="Cancel (Esc)"
-                >
-                  ✕
-                </button>
-              </div>
-            ) : (
-              <div className="flex items-start gap-8">
-                <p className="flex-1 text-base font-serif leading-book font-semibold">
-                  {item.content} ({startTime} - {endTime})
-                </p>
-                {isHovered && (
-                  <div className="flex gap-4 flex-shrink-0">
-                    <button
-                      onClick={() => handleEdit(item.id, item)}
-                      className="text-xs text-text-secondary hover:text-text-primary"
-                      title="Edit"
-                    >
-                      ✎
-                    </button>
-                    <button
-                      onClick={() => handleDelete(item.id)}
-                      className="text-xs text-text-secondary hover:text-text-primary"
-                      title="Delete"
-                    >
-                      ×
-                    </button>
+          {isEditing ? (
+            <div className="flex items-center gap-8">
+              <input
+                type="text"
+                value={editContent}
+                onChange={handleInputChange}
+                onKeyDown={(e) => handleKeyDown(e, item.id)}
+                className="flex-1 px-8 py-4 bg-hover-bg border border-border-subtle rounded-sm font-serif text-base"
+                autoFocus
+              />
+              <button
+                onClick={() => handleSaveEdit(item.id)}
+                className="text-sm text-text-secondary hover:text-text-primary"
+                title="Save (Enter)"
+              >
+                ✓
+              </button>
+              <button
+                onClick={handleCancelEdit}
+                className="text-sm text-text-secondary hover:text-text-primary"
+                title="Cancel (Esc)"
+              >
+                ✕
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-start gap-3">
+              <span className="text-base leading-book flex-shrink-0">↹</span>
+              <div className="flex-1">
+                <div className="flex items-start gap-8">
+                  <p className="flex-1 text-base font-serif leading-book font-semibold">
+                    {item.content} ({startTime} - {endTime})
+                  </p>
+                  {isHovered && (
+                    <div className="flex gap-4 flex-shrink-0">
+                      <button
+                        onClick={() => handleEdit(item.id, item)}
+                        className="text-xs text-text-secondary hover:text-text-primary"
+                        title="Edit"
+                      >
+                        ✎
+                      </button>
+                      <button
+                        onClick={() => handleDelete(item.id)}
+                        className="text-xs text-text-secondary hover:text-text-primary"
+                        title="Delete"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  )}
+                </div>
+                {item.tags.length > 0 && (
+                  <div className="mt-2 text-xs text-text-secondary">
+                    {item.tags.map((tag) => (
+                      <span key={tag} className="mr-6">
+                        #{tag}
+                      </span>
+                    ))}
                   </div>
                 )}
               </div>
-            )}
-            {!isEditing && item.tags.length > 0 && (
-              <div className="mt-2 text-xs text-text-secondary">
-                {item.tags.map((tag) => (
-                  <span key={tag} className="mr-6">
-                    #{tag}
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       );
     } else if (entry.type === 'event-start') {
@@ -760,72 +770,73 @@ function TimePane({
 
       return (
         <div
-          className="flex items-start gap-3"
           onMouseEnter={() => setHoveredItem(item.id)}
           onMouseLeave={() => setHoveredItem(null)}
         >
-          <span className="text-base leading-book flex-shrink-0">⇤</span>
-          <div className="flex-1">
-            {isEditing ? (
-              <div className="flex items-center gap-8">
-                <input
-                  type="text"
-                  value={editContent}
-                  onChange={handleInputChange}
-                  onKeyDown={(e) => handleKeyDown(e, item.id)}
-                  className="flex-1 px-8 py-4 bg-hover-bg border border-border-subtle rounded-sm font-serif text-base"
-                  autoFocus
-                />
-                <button
-                  onClick={() => handleSaveEdit(item.id)}
-                  className="text-sm text-text-secondary hover:text-text-primary"
-                  title="Save (Enter)"
-                >
-                  ✓
-                </button>
-                <button
-                  onClick={handleCancelEdit}
-                  className="text-sm text-text-secondary hover:text-text-primary"
-                  title="Cancel (Esc)"
-                >
-                  ✕
-                </button>
-              </div>
-            ) : (
-              <div className="flex items-start gap-8">
-                <p className="flex-1 text-base font-serif leading-book font-semibold">
-                  {item.content} ({startTime} - {endTime})
-                </p>
-                {isHovered && (
-                  <div className="flex gap-4 flex-shrink-0">
-                    <button
-                      onClick={() => handleEdit(item.id, item)}
-                      className="text-xs text-text-secondary hover:text-text-primary"
-                      title="Edit"
-                    >
-                      ✎
-                    </button>
-                    <button
-                      onClick={() => handleDelete(item.id)}
-                      className="text-xs text-text-secondary hover:text-text-primary"
-                      title="Delete"
-                    >
-                      ×
-                    </button>
+          {isEditing ? (
+            <div className="flex items-center gap-8">
+              <input
+                type="text"
+                value={editContent}
+                onChange={handleInputChange}
+                onKeyDown={(e) => handleKeyDown(e, item.id)}
+                className="flex-1 px-8 py-4 bg-hover-bg border border-border-subtle rounded-sm font-serif text-base"
+                autoFocus
+              />
+              <button
+                onClick={() => handleSaveEdit(item.id)}
+                className="text-sm text-text-secondary hover:text-text-primary"
+                title="Save (Enter)"
+              >
+                ✓
+              </button>
+              <button
+                onClick={handleCancelEdit}
+                className="text-sm text-text-secondary hover:text-text-primary"
+                title="Cancel (Esc)"
+              >
+                ✕
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-start gap-3">
+              <span className="text-base leading-book flex-shrink-0">⇤</span>
+              <div className="flex-1">
+                <div className="flex items-start gap-8">
+                  <p className="flex-1 text-base font-serif leading-book font-semibold">
+                    {item.content} ({startTime} - {endTime})
+                  </p>
+                  {isHovered && (
+                    <div className="flex gap-4 flex-shrink-0">
+                      <button
+                        onClick={() => handleEdit(item.id, item)}
+                        className="text-xs text-text-secondary hover:text-text-primary"
+                        title="Edit"
+                      >
+                        ✎
+                      </button>
+                      <button
+                        onClick={() => handleDelete(item.id)}
+                        className="text-xs text-text-secondary hover:text-text-primary"
+                        title="Delete"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  )}
+                </div>
+                {item.tags.length > 0 && (
+                  <div className="mt-2 text-xs text-text-secondary">
+                    {item.tags.map((tag) => (
+                      <span key={tag} className="mr-6">
+                        #{tag}
+                      </span>
+                    ))}
                   </div>
                 )}
               </div>
-            )}
-            {!isEditing && item.tags.length > 0 && (
-              <div className="mt-2 text-xs text-text-secondary">
-                {item.tags.map((tag) => (
-                  <span key={tag} className="mr-6">
-                    #{tag}
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       );
     } else {
@@ -944,14 +955,11 @@ function TimePane({
         }`}
         style={viewMode === 'book' ? { height: 'calc(100vh - 60px - 90px)' } : undefined}
       >
-        {/* Daily Review - appears at top (infinite mode only) */}
-        {viewMode === 'infinite' && <DailyReview />}
-
         {(viewMode === 'book' && currentDate ? [currentDate] : dates).map((date) => {
           const entries = entriesByDate.get(date) || [];
           const isToday = date === today;
 
-          if (viewMode === 'infinite' && entries.length === 0) {
+          if (viewMode === 'infinite' && entries.length === 0 && !isToday) {
             return null;
           }
 
@@ -986,6 +994,14 @@ function TimePane({
                 </h3>
               </div>
 
+              {/* Daily Review - appears under current day title in both modes */}
+              {isToday && (
+                <div className={`mb-8 ${viewMode === 'book' ? 'border border-border-subtle rounded-sm p-16 bg-hover-bg' : ''}`}>
+                  <DailyReview />
+                  {viewMode === 'infinite' && <div className="mt-8 border-t border-border-subtle" />}
+                </div>
+              )}
+
               {/* Items for this date */}
               {times.length === 0 ? (
                 <div className="text-center text-text-secondary text-sm py-4">
@@ -993,6 +1009,7 @@ function TimePane({
                 </div>
               ) : (
                 <div className="space-y-6">
+
                   {times.map((time) => (
                     <div key={time}>
                       <div className="text-xs font-mono text-text-secondary mb-1">
