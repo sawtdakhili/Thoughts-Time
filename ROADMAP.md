@@ -40,8 +40,8 @@ This app enforces a strict scheduling philosophy: **every single task, event, an
 
 ### 🔴 High Priority (Phase 1)
 
-#### 1. Daily Review Enhancements ⚠️
-**Status**: Partially implemented, needs improvements
+#### 1. Daily Review Enhancements ✅
+**Status**: Completed
 
 **Current Behavior**: Daily Review shows incomplete todos from past days.
 
@@ -51,14 +51,11 @@ This app enforces a strict scheduling philosophy: **every single task, event, an
 - [x] Track handled items (items disappear after action)
 - [x] Pagination for 10+ items ("Show more" button)
 - [x] Header indicator (■→□) when all handled
+- [x] Auto-complete Daily Review when all items handled
+- [x] Display subtasks nested in review items
 
-**Additional Requirements**:
-- [ ] Auto-complete Daily Review when all items handled
-- [ ] Display subtasks nested in review items
-
-**Files to modify**:
+**Files modified**:
 - `src/components/DailyReview.tsx`
-- `src/store/useStore.ts` (add auto-completion logic)
 
 ---
 
