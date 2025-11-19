@@ -47,7 +47,8 @@ function ItemDisplay({ item, depth = 0, showTime = true, sourcePane = 'thoughts'
   const getTimeDisplay = () => {
     // Only show timestamp for top-level items when showTime is true
     if (depth === 0 && showTime) {
-      const time = format(new Date(item.createdAt), 'h:mm a');
+      const formatPattern = timeFormat === '24h' ? 'HH:mm' : 'h:mm a';
+      const time = format(new Date(item.createdAt), formatPattern);
       return time;
     }
     return null;
