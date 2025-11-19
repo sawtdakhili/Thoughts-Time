@@ -104,86 +104,97 @@ function DailyReview() {
       <div className="space-y-6 pl-16">
         {reviewItems.map(({ item, waitingDays }) => (
           <div key={item.id} className="group">
-            {showRescheduler === item.id ? (
-              <div className="flex items-center gap-4">
-                <span className="text-base leading-book flex-shrink-0 text-text-secondary">•</span>
-                <input
-                  type="text"
-                  value={rescheduleInput}
-                  onChange={(e) => setRescheduleInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      confirmReschedule(item.id);
-                    } else if (e.key === 'Escape') {
-                      setShowRescheduler(null);
-                      setRescheduleInput('');
-                    }
-                  }}
-                  placeholder="e.g., tomorrow 2pm, friday 9am"
-                  className="bg-background border border-border-subtle px-8 py-4 font-mono text-sm outline-none focus:border-text-secondary min-w-[200px]"
-                  autoFocus
-                />
+            <div className="flex items-start gap-3">
+              {/* Bullet - always shown */}
+              <span className="text-base leading-book flex-shrink-0 text-text-secondary">•</span>
+
+              {/* Content */}
+              <div className="flex-1 min-w-0">
+                {showRescheduler === item.id ? (
+                  <div className="flex items-center gap-8">
+                    <input
+                      type="text"
+                      value={rescheduleInput}
+                      onChange={(e) => setRescheduleInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          confirmReschedule(item.id);
+                        } else if (e.key === 'Escape') {
+                          setShowRescheduler(null);
+                          setRescheduleInput('');
+                        }
+                      }}
+                      placeholder="e.g., tomorrow 2pm, friday 9am"
+                      className="flex-1 bg-background border border-border-subtle px-8 py-4 font-mono text-sm outline-none focus:border-text-secondary"
+                      autoFocus
+                    />
+                    <button
+                      onClick={() => confirmReschedule(item.id)}
+                      className="text-sm text-text-secondary hover:text-text-primary"
+                      title="Save (Enter)"
+                    >
+                      ✓
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowRescheduler(null);
+                        setRescheduleInput('');
+                      }}
+                      className="text-sm text-text-secondary hover:text-text-primary"
+                      title="Cancel (Esc)"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ) : (
+                  <div>
+                    <p className="text-base font-serif leading-book">
+                      {item.content}
+                      <span className="text-xs font-mono text-text-secondary ml-6">
+                        ({waitingDays} {waitingDays === 1 ? 'day' : 'days'} old)
+                      </span>
+                    </p>
+                    {item.tags.length > 0 && (
+                      <div className="mt-1 text-xs text-text-secondary">
+                        {item.tags.map((tag) => (
+                          <span key={tag} className="mr-6">
+                            #{tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Action buttons - always shown */}
+              <div className="flex items-center gap-6 flex-shrink-0">
                 <button
-                  onClick={() => confirmReschedule(item.id)}
-                  className="px-8 py-4 text-xs font-mono hover:opacity-70"
+                  onClick={() => handleReschedule(item.id)}
+                  className="w-18 h-18 flex items-center justify-center hover:opacity-70 active:opacity-50"
+                  title="Reschedule"
+                  disabled={showRescheduler === item.id}
                 >
-                  Confirm
+                  <span className="text-sm">↷</span>
                 </button>
                 <button
-                  onClick={() => {
-                    setShowRescheduler(null);
-                    setRescheduleInput('');
-                  }}
-                  className="px-8 py-4 text-xs font-mono text-text-secondary hover:opacity-70"
+                  onClick={() => handleComplete(item.id)}
+                  className="w-18 h-18 flex items-center justify-center hover:opacity-70 active:opacity-50"
+                  title="Complete"
+                  disabled={showRescheduler === item.id}
                 >
-                  Cancel
+                  <span className="text-sm">✓</span>
+                </button>
+                <button
+                  onClick={() => handleCancel(item.id)}
+                  className="w-18 h-18 flex items-center justify-center hover:opacity-70 active:opacity-50 text-text-secondary"
+                  title="Cancel"
+                  disabled={showRescheduler === item.id}
+                >
+                  <span className="text-sm">×</span>
                 </button>
               </div>
-            ) : (
-              <div className="flex items-start gap-3">
-                <span className="text-base leading-book flex-shrink-0 text-text-secondary">•</span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-base font-serif leading-book">
-                    {item.content}
-                    <span className="text-xs font-mono text-text-secondary ml-6">
-                      ({waitingDays} {waitingDays === 1 ? 'day' : 'days'} old)
-                    </span>
-                  </p>
-                  {item.tags.length > 0 && (
-                    <div className="mt-1 text-xs text-text-secondary">
-                      {item.tags.map((tag) => (
-                        <span key={tag} className="mr-6">
-                          #{tag}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <div className="flex items-center gap-6 flex-shrink-0">
-                  <button
-                    onClick={() => handleReschedule(item.id)}
-                    className="w-18 h-18 flex items-center justify-center hover:opacity-70 active:opacity-50"
-                    title="Reschedule"
-                  >
-                    <span className="text-sm">↷</span>
-                  </button>
-                  <button
-                    onClick={() => handleComplete(item.id)}
-                    className="w-18 h-18 flex items-center justify-center hover:opacity-70 active:opacity-50"
-                    title="Complete"
-                  >
-                    <span className="text-sm">✓</span>
-                  </button>
-                  <button
-                    onClick={() => handleCancel(item.id)}
-                    className="w-18 h-18 flex items-center justify-center hover:opacity-70 active:opacity-50 text-text-secondary"
-                    title="Cancel"
-                  >
-                    <span className="text-sm">×</span>
-                  </button>
-                </div>
-              </div>
-            )}
+            </div>
           </div>
         ))}
       </div>
