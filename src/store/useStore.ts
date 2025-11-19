@@ -73,7 +73,6 @@ export const useStore = create<AppState>()(
           id: newId,
           userId: 'user-1',
           content: parsed.content,
-          tags: parsed.tags,
           createdAt: now,
           createdDate,
           updatedAt: now,

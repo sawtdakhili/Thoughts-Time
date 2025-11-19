@@ -20,7 +20,6 @@ This app enforces a strict scheduling philosophy: **every single task, event, an
 #### ✅ Completed Features (MVP)
 - [x] Basic capture system with prefix detection (t, e, r, n)
 - [x] Four item types: Todo, Event, Routine, Note
-- [x] Tag extraction and display (#tag)
 - [x] Natural language time parsing (via chrono library)
 - [x] Todo subtasks (1 level deep, checking parent checks children)
 - [x] Note sub-items (2 levels deep, Org Mode style with prefixes)
@@ -48,10 +47,13 @@ This app enforces a strict scheduling philosophy: **every single task, event, an
 
 **Philosophy Alignment**: Since all items in this app must be scheduled (see Core Philosophy above), Daily Review shows all incomplete scheduled todos from previous days that need to be rescheduled or completed.
 
+**Completed**:
+- [x] Track handled items (items disappear after action)
+- [x] Pagination for 10+ items ("Show more" button)
+- [x] Header indicator (■→□) when all handled
+
 **Additional Requirements**:
-- [ ] Track handled items for auto-completion
 - [ ] Auto-complete Daily Review when all items handled
-- [ ] Pagination for 10+ items ("Load next 10" button)
 - [ ] Display subtasks nested in review items
 
 **Files to modify**:
@@ -60,7 +62,7 @@ This app enforces a strict scheduling philosophy: **every single task, event, an
 
 ---
 
-#### 2. Subtasks Enhancements (Feature 5)
+#### 2. Subtasks Enhancements
 **Status**: Partially implemented
 
 **Completed**:
@@ -71,10 +73,7 @@ This app enforces a strict scheduling philosophy: **every single task, event, an
 - [x] Max 1 level depth enforcement
 
 **Missing**:
-- [ ] Drag parent brings all subtasks along
-- [ ] Prevent dragging individual subtasks
 - [ ] Metadata displays AFTER all subtasks (currently may not be consistent)
-- [ ] Subtasks inherit parent tags
 - [ ] Subtasks cannot have own deadlines (validation)
 - [ ] Subtasks cannot have own scheduled times (validation)
 - [ ] Completed subtasks show strikethrough but stay visible
@@ -82,46 +81,12 @@ This app enforces a strict scheduling philosophy: **every single task, event, an
 **Files to modify**:
 - `src/components/ItemDisplay.tsx`
 - `src/store/useStore.ts` (add validation)
-- Future: drag and drop integration
-
----
-
-#### 3. Drag & Drop System (Feature 9) 🔵
-**Status**: Not implemented - **Deferred (not a priority for now)**
-
-**Note**: Cross-pane drag & drop (from Thoughts to Time) is not a priority at this stage. Items can be scheduled through other means (Daily Review reschedule, direct scheduling interface). Within-pane reordering may be implemented in the future.
-
-**Future Requirements** (when implemented):
-
-**Desktop**:
-- [ ] Install @dnd-kit/core library
-- [ ] Hover cursor changes to grab hand
-- [ ] Item lifts with shadow, opacity 0.7, 2deg rotation
-- [ ] Within-pane reordering (if needed)
-
-**Mobile**:
-- [ ] Long-press detection (500ms)
-- [ ] Haptic feedback on drag start
-- [ ] Touch-based reordering
-
-**Constraints**:
-- [ ] Cannot drag completed items (opacity 0.4, not draggable)
-- [ ] Cannot drag items within Daily Review (use [↷] button)
-- [ ] Dragging parent todo brings all subtasks
-- [ ] Cannot drag subtasks independently
-
-**Files to create/modify** (future):
-- Install: `npm install @dnd-kit/core @dnd-kit/utilities`
-- `src/components/ThoughtsPane.tsx` (draggable items)
-- `src/components/TimePane.tsx` (drop zones)
-- `src/hooks/useDragAndDrop.ts` (new file)
-- `src/styles/drag.css` (drag visual feedback)
 
 ---
 
 ### 🟡 Medium Priority (Phase 2)
 
-#### 4. Search Functionality
+#### 3. Search Functionality
 **Status**: Not implemented
 
 **Requirements**:
@@ -129,8 +94,7 @@ This app enforces a strict scheduling philosophy: **every single task, event, an
 - [ ] Keyboard shortcut: Cmd/Ctrl + F
 - [ ] Scope: searches both panes simultaneously (Thoughts & Time)
 - [ ] Full-text search capability
-- [ ] Tag search with # symbol
-- [ ] Results show date, time, full item with symbol, tags
+- [ ] Results show date, time, full item with symbol
 - [ ] Results grouped by pane (Thoughts results, then Time results)
 - [ ] Highlight matching text
 - [ ] Click result navigates to day and scrolls to item
@@ -144,7 +108,7 @@ This app enforces a strict scheduling philosophy: **every single task, event, an
 
 ---
 
-#### 5. Event Auto-Split Logic
+#### 4. Event Auto-Split Logic
 **Status**: Not implemented
 
 **Requirements**:
@@ -153,7 +117,6 @@ This app enforces a strict scheduling philosophy: **every single task, event, an
 - [ ] Single ↹ symbol when no items between
 - [ ] Start shows full duration
 - [ ] End shows "(end)" marker
-- [ ] Both show same tags
 - [ ] Editing start updates end automatically
 - [ ] Deleting start deletes end
 - [ ] Cache split state for performance
@@ -180,7 +143,7 @@ if (itemsDuring.length > 0) {
 
 ---
 
-#### 6. URL Link Previews for Notes
+#### 5. URL Link Previews for Notes
 **Status**: Not implemented
 
 **Requirements**:
@@ -212,7 +175,7 @@ domain: 13px, #6A6A6A
 
 ---
 
-#### 7. Note Embedding in Todos
+#### 6. Note Embedding in Todos
 **Status**: Not implemented
 
 **Requirements**:
@@ -225,7 +188,7 @@ domain: 13px, #6A6A6A
 
 **Card Specs**:
 ```
-□ Meeting prep #work
+□ Meeting prep
   ┌─────────────────────────────┐
   │ ↝ Agenda points from Oct 12 │
   │   [View full note →]        │
@@ -241,7 +204,7 @@ domain: 13px, #6A6A6A
 
 ### 🟢 Lower Priority (Phase 3)
 
-#### 8. Completion Linking System
+#### 7. Completion Linking System
 **Status**: Partially implemented in store, not in UI - **Not a priority**
 
 **Requirements**:
@@ -257,11 +220,11 @@ domain: 13px, #6A6A6A
 **Visual Specs**:
 ```
 Oct 12 Thoughts:
-☑ ~~Call mom~~ #family
+☑ ~~Call mom~~
   completed on Oct 14 →
 
 Oct 14 Thoughts:
-☑ ~~Call mom (completed)~~ #family
+☑ ~~Call mom (completed)~~
   ← from Oct 12
 ```
 
@@ -273,7 +236,7 @@ Oct 14 Thoughts:
 
 ---
 
-#### 9. Database Backend (Supabase)
+#### 8. Database Backend (Supabase)
 **Status**: Not implemented (currently localStorage only)
 
 **Requirements**:
@@ -302,13 +265,12 @@ Oct 14 Thoughts:
 
 ---
 
-#### 10. Mobile Responsive Optimizations
+#### 9. Mobile Responsive Optimizations
 **Status**: Partially responsive, needs improvements
 
 **Requirements**:
 - [ ] Swipeable panes (swipe left/right to switch)
 - [ ] Touch gesture detection
-- [ ] Long-press drag (500ms + haptic)
 - [ ] Mobile tap targets (44×44px minimum)
 - [ ] Mobile-optimized spacing (24px instead of 48px)
 - [ ] Virtual keyboard handling
@@ -323,7 +285,7 @@ Oct 14 Thoughts:
 
 ---
 
-#### 11. Notifications System
+#### 10. Notifications System
 **Status**: Not implemented
 
 **Requirements**:
@@ -345,7 +307,7 @@ Oct 14 Thoughts:
 
 ---
 
-#### 12. Performance Optimizations
+#### 11. Performance Optimizations
 **Status**: Not implemented
 
 **Requirements**:
@@ -361,7 +323,6 @@ Oct 14 Thoughts:
 **Performance Targets**:
 - Initial load: < 2s
 - Search results: < 500ms
-- Drag responsiveness: < 16ms (60fps)
 - Timeline scroll: 60fps smooth
 - Database query: < 100ms average
 
@@ -373,7 +334,7 @@ Oct 14 Thoughts:
 
 ---
 
-#### 13. Accessibility Improvements
+#### 12. Accessibility Improvements
 **Status**: Basic accessibility, needs WCAG 2.1 compliance
 
 **Requirements**:
@@ -455,7 +416,6 @@ Oct 14 Thoughts:
 - Parent todo → child todos (max 1 level)
 - No prefixes (always todos)
 - Checking parent checks all children
-- All subtasks come along when dragging
 
 **Note Sub-Items** (Org Mode):
 - Parent note → any type via prefixes (max 2 levels)
@@ -469,7 +429,6 @@ Oct 14 Thoughts:
 
 ### Unit Tests
 - [ ] Item creation with prefixes
-- [ ] Tag extraction
 - [ ] Daily Review generation
 - [ ] Subtask cascade completion
 - [ ] Event splitting logic
@@ -479,13 +438,11 @@ Oct 14 Thoughts:
 ### Integration Tests
 - [ ] Capture to Timeline flow
 - [ ] Daily Review to Completion flow
-- [ ] Drag and drop scheduling
 - [ ] Search and navigation
 
 ### E2E Tests (Playwright)
 - [ ] User can create and schedule todo
 - [ ] Daily Review workflow
-- [ ] Drag and drop interaction
 - [ ] Theme switching
 - [ ] View mode switching
 
@@ -523,9 +480,8 @@ Oct 14 Thoughts:
 ### Long Term (Next Quarter)
 1. Database backend (Supabase)
 2. Notifications system
-3. Drag & Drop system (if needed)
-4. Accessibility audit and improvements
-5. Beta testing and polish
+3. Accessibility audit and improvements
+4. Beta testing and polish
 
 ---
 

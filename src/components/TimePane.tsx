@@ -54,11 +54,6 @@ function TimePane({
       return true;
     }
 
-    // Check tags
-    if (item.tags.some(tag => tag.toLowerCase().includes(lowerQuery))) {
-      return true;
-    }
-
     // Recursively check sub-items
     const subItemIds = item.type === 'note'
       ? (item as Note).subItems
@@ -317,7 +312,6 @@ function TimePane({
       // Create new item with parsed data
       const newItemData = {
         content: parsed.content,
-        tags: parsed.tags,
         type: parsed.type,
         createdAt: currentItem.createdAt, // Preserve original creation time
         createdDate: currentItem.createdDate,
@@ -361,7 +355,7 @@ function TimePane({
       addItem(newItemData as any);
     } else {
       // Same type, just update
-      const updates: Partial<Item> = { content: parsed.content, tags: parsed.tags };
+      const updates: Partial<Item> = { content: parsed.content };
 
       if (currentItem.type === 'todo') {
         Object.assign(updates, {
@@ -433,7 +427,6 @@ function TimePane({
       // Create new item with parsed data
       const newItemData = {
         content: parsed.content,
-        tags: parsed.tags,
         type: parsed.type,
         createdAt: currentItem.createdAt, // Preserve original creation time
         createdDate: currentItem.createdDate,
@@ -473,7 +466,7 @@ function TimePane({
       addItem(newItemData as any);
     } else {
       // Same type, just update
-      const updates: Partial<Item> = { content: parsed.content, tags: parsed.tags };
+      const updates: Partial<Item> = { content: parsed.content };
 
       if (currentItem.type === 'todo') {
         Object.assign(updates, {
@@ -669,15 +662,6 @@ function TimePane({
                     </div>
                   )}
                 </div>
-                {item.tags.length > 0 && (
-                  <div className="mt-2 text-xs text-text-secondary">
-                    {item.tags.map((tag) => (
-                      <span key={tag} className="mr-6">
-                        #{tag}
-                      </span>
-                    ))}
-                  </div>
-                )}
               </div>
             </div>
           )}
@@ -747,15 +731,6 @@ function TimePane({
                     </div>
                   )}
                 </div>
-                {item.tags.length > 0 && (
-                  <div className="mt-2 text-xs text-text-secondary">
-                    {item.tags.map((tag) => (
-                      <span key={tag} className="mr-6">
-                        #{tag}
-                      </span>
-                    ))}
-                  </div>
-                )}
               </div>
             </div>
           )}
@@ -825,15 +800,6 @@ function TimePane({
                     </div>
                   )}
                 </div>
-                {item.tags.length > 0 && (
-                  <div className="mt-2 text-xs text-text-secondary">
-                    {item.tags.map((tag) => (
-                      <span key={tag} className="mr-6">
-                        #{tag}
-                      </span>
-                    ))}
-                  </div>
-                )}
               </div>
             </div>
           )}

@@ -222,15 +222,6 @@ export function removePrefix(input: string): string {
   return input;
 }
 
-/**
- * Extract tags from content
- * Pattern: # followed by alphanumeric characters
- */
-export function extractTags(content: string): string[] {
-  const tagPattern = /#(\w+)/g;
-  const matches = content.matchAll(tagPattern);
-  return Array.from(matches, (m) => m[1]);
-}
 
 /**
  * Extract embedded note references from content
@@ -410,7 +401,6 @@ export function parseDeadline(content: string): Date | null {
 export function parseInput(input: string): ParsedInput {
   const type = detectItemType(input);
   const content = removePrefix(input);
-  const tags = extractTags(content);
   const embeddedNotes = extractEmbeddedNotes(content);
 
   let scheduledTime: Date | null = null;
@@ -468,7 +458,6 @@ export function parseInput(input: string): ParsedInput {
   return {
     type,
     content,
-    tags,
     scheduledTime,
     endTime,
     hasTime,

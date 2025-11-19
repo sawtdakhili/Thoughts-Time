@@ -45,11 +45,6 @@ function ThoughtsPane({
       return true;
     }
 
-    // Check tags
-    if (item.tags.some(tag => tag.toLowerCase().includes(lowerQuery))) {
-      return true;
-    }
-
     // Recursively check sub-items
     const subItemIds = item.type === 'note'
       ? (item as Note).subItems

@@ -175,15 +175,6 @@ function DailyReview() {
                         ({waitingDays} {waitingDays === 1 ? 'day' : 'days'} old)
                       </span>
                     </p>
-                    {item.tags.length > 0 && (
-                      <div className="mt-1 text-xs text-text-secondary">
-                        {item.tags.map((tag) => (
-                          <span key={tag} className="mr-6">
-                            #{tag}
-                          </span>
-                        ))}
-                      </div>
-                    )}
                   </div>
                 )}
               </div>

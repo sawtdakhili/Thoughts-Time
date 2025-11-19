@@ -7,7 +7,6 @@ export interface BaseItem {
   userId: string;
   type: ItemType;
   content: string;
-  tags: string[];
   createdAt: Date;
   createdDate: string; // YYYY-MM-DD
   updatedAt: Date;
@@ -87,7 +86,6 @@ export type Item = Todo | Event | Routine | Note;
 export interface ParsedInput {
   type: ItemType;
   content: string;
-  tags: string[];
   scheduledTime: Date | null;
   endTime?: Date | null;
   hasTime: boolean;
