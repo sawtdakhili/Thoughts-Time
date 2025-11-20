@@ -20,6 +20,12 @@ export function useKeyboardShortcuts(shortcuts: KeyboardShortcut[], enabled = tr
     if (!enabled) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
+      // Ignore shortcuts when focused on input elements
+      const target = event.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+        return;
+      }
+
       for (const shortcut of shortcuts) {
         const keyMatches = event.key.toLowerCase() === shortcut.key.toLowerCase();
 
