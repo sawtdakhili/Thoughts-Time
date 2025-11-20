@@ -85,7 +85,7 @@ export function useUndoRedo() {
             if (action.updates) {
               Object.keys(action.updates).forEach((key) => {
                 const k = key as keyof Item;
-                revertUpdates[k] = action.oldItem![k] as any;
+                (revertUpdates as Record<string, unknown>)[k] = (action.oldItem as Record<string, unknown>)[k];
               });
             }
             updateItem(action.itemId, revertUpdates);

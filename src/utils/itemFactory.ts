@@ -126,6 +126,6 @@ export function createItem(params: CreateItemParams): Item {
     case 'note':
       return createNoteItem(params);
     default:
-      throw new Error(`Unknown item type: ${(parsed as any).type}`);
+      throw new Error(`Unknown item type: ${parsed.type}`);
   }
 }

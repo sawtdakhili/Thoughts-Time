@@ -223,17 +223,19 @@ function TimePane({
   useEffect(() => {
     const scrollEl = scrollRef.current;
     if (scrollEl && viewMode === 'book') {
-      scrollEl.addEventListener('wheel', handleWheel as any);
-      return () => scrollEl.removeEventListener('wheel', handleWheel as any);
+      scrollEl.addEventListener('wheel', handleWheel as EventListener);
+      return () => scrollEl.removeEventListener('wheel', handleWheel as EventListener);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [viewMode, onNextDay, onPreviousDay]);
 
   // Get symbol for item type
   const getSymbol = (item: Item) => {
     switch (item.type) {
-      case 'todo':
+      case 'todo': {
         const todo = item as Todo;
         return todo.completedAt ? '☑' : '□';
+      }
       case 'event':
         return '↹';
       case 'routine':

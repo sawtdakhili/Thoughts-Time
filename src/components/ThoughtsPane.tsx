@@ -282,6 +282,7 @@ function ThoughtsPane({
     if (scrollRef.current && isAtBottom) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleWheel = (e: WheelEvent) => {
@@ -351,9 +352,10 @@ function ThoughtsPane({
   useEffect(() => {
     const scrollEl = scrollRef.current;
     if (scrollEl && viewMode === 'book') {
-      scrollEl.addEventListener('wheel', handleWheel as any);
-      return () => scrollEl.removeEventListener('wheel', handleWheel as any);
+      scrollEl.addEventListener('wheel', handleWheel as EventListener);
+      return () => scrollEl.removeEventListener('wheel', handleWheel as EventListener);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [viewMode, onNextDay, onPreviousDay]);
 
   const handleTimePromptModalSubmit = (time: string, endTime?: string) => {
