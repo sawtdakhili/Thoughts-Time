@@ -8,15 +8,17 @@ import { Item, Todo, Note } from '../types';
  * Must be called once in the app root
  */
 export function useUndoRedo() {
-  const { items, addItemDirect, updateItem, deleteItem, toggleTodoComplete, setSkipHistory } = useStore();
+  const { addItemDirect, updateItem, deleteItem, toggleTodoComplete, setSkipHistory } = useStore();
   const { setUndoHandler, setRedoHandler, undoStack, redoStack } = useHistory();
 
   useEffect(() => {
     // Setup undo handler
     setUndoHandler(() => {
-      if (undoStack.length === 0) return;
+      // Get latest state from store (not stale closure values)
+      const currentUndoStack = useHistory.getState().undoStack;
+      if (currentUndoStack.length === 0) return;
 
-      const action = undoStack[undoStack.length - 1];
+      const action = currentUndoStack[currentUndoStack.length - 1];
 
       // Set skipHistory to prevent recording undo operations
       setSkipHistory(true);
@@ -40,7 +42,9 @@ export function useUndoRedo() {
             // Restore parent-child relationships
             action.deletedItems.forEach((item) => {
               if (item.parentId) {
-                const parent = items.find(i => i.id === item.parentId);
+                // Get latest items from store
+                const currentItems = useStore.getState().items;
+                const parent = currentItems.find(i => i.id === item.parentId);
                 if (parent) {
                   if (parent.type === 'todo') {
                     const parentTodo = parent as Todo;
@@ -104,9 +108,11 @@ export function useUndoRedo() {
 
     // Setup redo handler
     setRedoHandler(() => {
-      if (redoStack.length === 0) return;
+      // Get latest state from store (not stale closure values)
+      const currentRedoStack = useHistory.getState().redoStack;
+      if (currentRedoStack.length === 0) return;
 
-      const action = redoStack[redoStack.length - 1];
+      const action = currentRedoStack[currentRedoStack.length - 1];
 
       // Set skipHistory to prevent recording redo operations
       setSkipHistory(true);
@@ -157,9 +163,6 @@ export function useUndoRedo() {
       }
     });
   }, [
-    undoStack,
-    redoStack,
-    items,
     setUndoHandler,
     setRedoHandler,
     addItemDirect,
