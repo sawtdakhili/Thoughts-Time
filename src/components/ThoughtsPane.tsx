@@ -413,6 +413,13 @@ function ThoughtsPane({
         }`}
         style={viewMode === 'book' ? { height: 'calc(100vh - 60px - 90px)' } : undefined}
       >
+        {/* No results found state */}
+        {searchQuery && itemsByDate.size === 0 && (
+          <div className="flex flex-col items-center justify-center h-full text-text-secondary">
+            <p className="text-lg font-serif mb-2">No results found</p>
+            <p className="text-sm">Try a different search term</p>
+          </div>
+        )}
         {(viewMode === 'book' && currentDate ? [currentDate] : dates).map((date) => {
           const items = itemsByDate.get(date) || [];
           const isToday = date === today;

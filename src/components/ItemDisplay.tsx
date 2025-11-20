@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import { format } from 'date-fns';
 import { Item, Todo, Routine, Note, Event } from '../types';
 import { useStore } from '../store/useStore';
@@ -342,4 +342,4 @@ function ItemDisplay({ item, depth = 0, showTime = true, sourcePane = 'thoughts'
   );
 }
 
-export default ItemDisplay;
+export default memo(ItemDisplay);
