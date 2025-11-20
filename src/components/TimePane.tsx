@@ -1,14 +1,15 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { format, subDays, addDays, parseISO } from 'date-fns';
 import { useStore } from '../store/useStore';
 import { useSettingsStore } from '../store/useSettingsStore';
 import DailyReview from './DailyReview';
 import TimePromptModal from './TimePromptModal';
 import ConfirmDialog from './ConfirmDialog';
+import EditEntryInput from './EditEntryInput';
 import { Item, Todo, Event as EventType, Routine } from '../types';
 import { parseInput } from '../utils/parser';
 import { createItem } from '../utils/itemFactory';
-import { symbolsToPrefix, formatTimeForDisplay } from '../utils/formatting';
+import { symbolsToPrefix, formatTimeForDisplay, prefixToSymbol, symbolToPrefix } from '../utils/formatting';
 import { matchesSearch } from '../utils/search.tsx';
 
 type TimelineEntry = {
@@ -58,88 +59,95 @@ function TimePane({
   const [confirmDelete, setConfirmDelete] = useState<{ isOpen: boolean; itemId: string | null }>({ isOpen: false, itemId: null });
 
   // Filter items based on search query
-  const filteredItems = searchQuery
-    ? items.filter(item => matchesSearch(item, searchQuery, items))
-    : items;
+  const filteredItems = useMemo(() =>
+    searchQuery
+      ? items.filter(item => matchesSearch(item, searchQuery, items))
+      : items,
+    [items, searchQuery]
+  );
 
-  // Compute timeline entries grouped by date
-  const entriesByDate = new Map<string, TimelineEntry[]>();
-
-  // First, collect all scheduled todos for checking event overlaps
+  // Collect all scheduled todos for checking event overlaps (memoized for performance)
   // Use ALL items (not filtered) to ensure split detection works during search
-  const scheduledTodos: Array<{ time: Date; item: Todo }> = [];
-  items.forEach((item) => {
-    if (item.type === 'todo') {
-      const todo = item as Todo;
-      if (todo.scheduledTime) {
-        scheduledTodos.push({ time: new Date(todo.scheduledTime), item: todo });
-      }
-    }
-  });
-
-  // Helper function to check if event has items within its timeframe
-  const hasItemsWithinEvent = (event: EventType): boolean => {
-    const startTime = new Date(event.startTime);
-    const endTime = new Date(event.endTime);
-
-    return scheduledTodos.some(({ time }) => {
-      return time > startTime && time < endTime;
-    });
-  };
-
-  // Now process all items
-  filteredItems.forEach((item) => {
-    if (item.type === 'todo') {
-      const todo = item as Todo;
-      if (todo.scheduledTime) {
-        const dateKey = format(new Date(todo.scheduledTime), 'yyyy-MM-dd');
-        if (!entriesByDate.has(dateKey)) {
-          entriesByDate.set(dateKey, []);
+  const scheduledTodos = useMemo(() => {
+    const todos: Array<{ time: Date; item: Todo }> = [];
+    items.forEach((item) => {
+      if (item.type === 'todo') {
+        const todo = item as Todo;
+        if (todo.scheduledTime) {
+          todos.push({ time: new Date(todo.scheduledTime), item: todo });
         }
-        entriesByDate.get(dateKey)!.push({
-          time: new Date(todo.scheduledTime),
-          timeKey: formatTime(new Date(todo.scheduledTime)),
-          type: 'todo',
-          item,
-        });
       }
-    } else if (item.type === 'event') {
-      const event = item as EventType;
+    });
+    return todos;
+  }, [items]);
+
+  // Compute timeline entries grouped by date (memoized for performance)
+  const entriesByDate = useMemo(() => {
+    const map = new Map<string, TimelineEntry[]>();
+
+    // Helper function to check if event has items within its timeframe
+    const hasItemsWithinEvent = (event: EventType): boolean => {
       const startTime = new Date(event.startTime);
       const endTime = new Date(event.endTime);
-      const dateKey = format(startTime, 'yyyy-MM-dd');
+      return scheduledTodos.some(({ time }) => time > startTime && time < endTime);
+    };
 
-      if (!entriesByDate.has(dateKey)) {
-        entriesByDate.set(dateKey, []);
+    // Process all filtered items
+    filteredItems.forEach((item) => {
+      if (item.type === 'todo') {
+        const todo = item as Todo;
+        if (todo.scheduledTime) {
+          const dateKey = format(new Date(todo.scheduledTime), 'yyyy-MM-dd');
+          if (!map.has(dateKey)) {
+            map.set(dateKey, []);
+          }
+          map.get(dateKey)!.push({
+            time: new Date(todo.scheduledTime),
+            timeKey: formatTime(new Date(todo.scheduledTime)),
+            type: 'todo',
+            item,
+          });
+        }
+      } else if (item.type === 'event') {
+        const event = item as EventType;
+        const startTime = new Date(event.startTime);
+        const endTime = new Date(event.endTime);
+        const dateKey = format(startTime, 'yyyy-MM-dd');
+
+        if (!map.has(dateKey)) {
+          map.set(dateKey, []);
+        }
+
+        // Check if event should be split
+        if (hasItemsWithinEvent(event)) {
+          // Split event: add start and end markers
+          map.get(dateKey)!.push({
+            time: startTime,
+            timeKey: formatTime(startTime),
+            type: 'event-start',
+            item,
+          });
+
+          map.get(dateKey)!.push({
+            time: endTime,
+            timeKey: formatTime(endTime),
+            type: 'event-end',
+            item,
+          });
+        } else {
+          // Single event: no split
+          map.get(dateKey)!.push({
+            time: startTime,
+            timeKey: formatTime(startTime),
+            type: 'event-single',
+            item,
+          });
+        }
       }
+    });
 
-      // Check if event should be split
-      if (hasItemsWithinEvent(event)) {
-        // Split event: add start and end markers
-        entriesByDate.get(dateKey)!.push({
-          time: startTime,
-          timeKey: formatTime(startTime),
-          type: 'event-start',
-          item,
-        });
-
-        entriesByDate.get(dateKey)!.push({
-          time: endTime,
-          timeKey: formatTime(endTime),
-          type: 'event-end',
-          item,
-        });
-      } else {
-        // Single event: no split
-        entriesByDate.get(dateKey)!.push({
-          time: startTime,
-          timeKey: formatTime(startTime),
-          type: 'event-single',
-          item,
-        });
-      }
-    }
-  });
+    return map;
+  }, [filteredItems, scheduledTodos, timeFormat]);
 
   // Generate date range: 30 days past to 30 days future
   const today = format(new Date(), 'yyyy-MM-dd');
@@ -352,13 +360,6 @@ function TimePane({
       const beforeSpace = newValue.substring(0, cursorPos - 1).trim();
 
       // Check if it matches a prefix
-      const prefixToSymbol: { [key: string]: string } = {
-        'e': '↹',
-        't': '□',
-        'r': '↻',
-        '*': '↝',
-      };
-
       if (prefixToSymbol[beforeSpace]) {
         // Replace prefix with symbol
         const symbol = prefixToSymbol[beforeSpace];
@@ -398,14 +399,6 @@ function TimePane({
 
       // If we're deleting a space after a symbol, revert to prefix
       if (charBeforeCursor === ' ' && selectionStart! === 2) {
-        const symbolToPrefix: { [key: string]: string } = {
-          '↹': 'e',
-          '□': 't',
-          '☑': 't',
-          '↻': 'r',
-          '↝': '*',
-        };
-
         if (charBeforeThat && symbolToPrefix[charBeforeThat]) {
           // Revert symbol + space to prefix
           e.preventDefault();
@@ -448,30 +441,13 @@ function TimePane({
           onMouseLeave={() => setHoveredItem(null)}
         >
           {isEditing ? (
-            <div className="flex items-center gap-8">
-              <input
-                type="text"
-                value={editContent}
-                onChange={handleInputChange}
-                onKeyDown={(e) => handleKeyDown(e, item.id)}
-                className="flex-1 px-8 py-4 bg-hover-bg border border-border-subtle rounded-sm font-serif text-base"
-                autoFocus
-              />
-              <button
-                onClick={() => handleSaveEdit(item.id)}
-                className="text-sm text-text-secondary hover:text-text-primary"
-                title="Save (Enter)"
-              >
-                ✓
-              </button>
-              <button
-                onClick={handleCancelEdit}
-                className="text-sm text-text-secondary hover:text-text-primary"
-                title="Cancel (Esc)"
-              >
-                ✕
-              </button>
-            </div>
+            <EditEntryInput
+              value={editContent}
+              onChange={handleInputChange}
+              onKeyDown={(e) => handleKeyDown(e, item.id)}
+              onSave={() => handleSaveEdit(item.id)}
+              onCancel={handleCancelEdit}
+            />
           ) : (
             <div className={`flex items-start gap-3 ${isCompleted ? 'opacity-40' : ''}`}>
               <button
@@ -522,30 +498,13 @@ function TimePane({
           onMouseLeave={() => setHoveredItem(null)}
         >
           {isEditing ? (
-            <div className="flex items-center gap-8">
-              <input
-                type="text"
-                value={editContent}
-                onChange={handleInputChange}
-                onKeyDown={(e) => handleKeyDown(e, item.id)}
-                className="flex-1 px-8 py-4 bg-hover-bg border border-border-subtle rounded-sm font-serif text-base"
-                autoFocus
-              />
-              <button
-                onClick={() => handleSaveEdit(item.id)}
-                className="text-sm text-text-secondary hover:text-text-primary"
-                title="Save (Enter)"
-              >
-                ✓
-              </button>
-              <button
-                onClick={handleCancelEdit}
-                className="text-sm text-text-secondary hover:text-text-primary"
-                title="Cancel (Esc)"
-              >
-                ✕
-              </button>
-            </div>
+            <EditEntryInput
+              value={editContent}
+              onChange={handleInputChange}
+              onKeyDown={(e) => handleKeyDown(e, item.id)}
+              onSave={() => handleSaveEdit(item.id)}
+              onCancel={handleCancelEdit}
+            />
           ) : (
             <div className="flex items-start gap-3">
               <span className="text-base leading-book flex-shrink-0">↹</span>
@@ -591,30 +550,13 @@ function TimePane({
           onMouseLeave={() => setHoveredItem(null)}
         >
           {isEditing ? (
-            <div className="flex items-center gap-8">
-              <input
-                type="text"
-                value={editContent}
-                onChange={handleInputChange}
-                onKeyDown={(e) => handleKeyDown(e, item.id)}
-                className="flex-1 px-8 py-4 bg-hover-bg border border-border-subtle rounded-sm font-serif text-base"
-                autoFocus
-              />
-              <button
-                onClick={() => handleSaveEdit(item.id)}
-                className="text-sm text-text-secondary hover:text-text-primary"
-                title="Save (Enter)"
-              >
-                ✓
-              </button>
-              <button
-                onClick={handleCancelEdit}
-                className="text-sm text-text-secondary hover:text-text-primary"
-                title="Cancel (Esc)"
-              >
-                ✕
-              </button>
-            </div>
+            <EditEntryInput
+              value={editContent}
+              onChange={handleInputChange}
+              onKeyDown={(e) => handleKeyDown(e, item.id)}
+              onSave={() => handleSaveEdit(item.id)}
+              onCancel={handleCancelEdit}
+            />
           ) : (
             <div className="flex items-start gap-3">
               <span className="text-base leading-book flex-shrink-0">⇤</span>
@@ -661,30 +603,13 @@ function TimePane({
           onMouseLeave={() => setHoveredItem(null)}
         >
           {isEditing ? (
-            <div className="flex items-center gap-8">
-              <input
-                type="text"
-                value={editContent}
-                onChange={handleInputChange}
-                onKeyDown={(e) => handleKeyDown(e, item.id)}
-                className="flex-1 px-8 py-4 bg-hover-bg border border-border-subtle rounded-sm font-serif text-base"
-                autoFocus
-              />
-              <button
-                onClick={() => handleSaveEdit(item.id)}
-                className="text-sm text-text-secondary hover:text-text-primary"
-                title="Save (Enter)"
-              >
-                ✓
-              </button>
-              <button
-                onClick={handleCancelEdit}
-                className="text-sm text-text-secondary hover:text-text-primary"
-                title="Cancel (Esc)"
-              >
-                ✕
-              </button>
-            </div>
+            <EditEntryInput
+              value={editContent}
+              onChange={handleInputChange}
+              onKeyDown={(e) => handleKeyDown(e, item.id)}
+              onSave={() => handleSaveEdit(item.id)}
+              onCancel={handleCancelEdit}
+            />
           ) : (
             <div className="flex items-start gap-3">
               <span className="text-base leading-book flex-shrink-0">⇥</span>
