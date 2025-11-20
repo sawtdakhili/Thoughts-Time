@@ -218,6 +218,7 @@ function ItemDisplay({ item, depth = 0, showTime = true, sourcePane = 'thoughts'
         isOpen={!!timePrompt}
         isEvent={timePrompt?.isEvent || false}
         content={timePrompt?.content || ''}
+        timeFormat={timeFormat}
         onSubmit={handleTimePromptSubmit}
         onCancel={handleTimePromptCancel}
       />

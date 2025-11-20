@@ -390,6 +390,7 @@ function ThoughtsPane({
         isOpen={!!timePrompt}
         isEvent={timePrompt?.isEvent || false}
         content={timePrompt?.line || ''}
+        timeFormat={timeFormat}
         onSubmit={handleTimePromptModalSubmit}
         onCancel={handleTimePromptCancel}
       />

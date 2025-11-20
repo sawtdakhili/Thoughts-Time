@@ -777,6 +777,7 @@ function TimePane({
         isOpen={!!timePrompt}
         isEvent={timePrompt?.isEvent || false}
         content={timePrompt?.content || ''}
+        timeFormat={timeFormat}
         onSubmit={handleTimePromptModalSubmit}
         onCancel={handleTimePromptCancel}
       />

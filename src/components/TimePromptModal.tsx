@@ -1,9 +1,11 @@
 import { useState } from 'react';
+import { formatTimeForDisplay } from '../utils/formatting';
 
 interface TimePromptModalProps {
   isOpen: boolean;
   isEvent: boolean;
   content: string;
+  timeFormat?: '12h' | '24h';
   onSubmit: (time: string, endTime?: string) => void;
   onCancel: () => void;
 }
@@ -12,9 +14,12 @@ interface TimePromptModalProps {
  * Modal dialog for prompting users to enter time(s) for items.
  * Shows single time input for todos/routines, or start/end for events.
  */
-function TimePromptModal({ isOpen, isEvent, content, onSubmit, onCancel }: TimePromptModalProps) {
+function TimePromptModal({ isOpen, isEvent, content, timeFormat = '12h', onSubmit, onCancel }: TimePromptModalProps) {
   const [time, setTime] = useState('');
   const [endTime, setEndTime] = useState('');
+
+  // Format time for display in user's preferred format
+  const formatPreview = (t: string) => t ? formatTimeForDisplay(t, timeFormat) : '';
 
   if (!isOpen) return null;
 
@@ -52,35 +57,56 @@ function TimePromptModal({ isOpen, isEvent, content, onSubmit, onCancel }: TimeP
           <div className="space-y-12">
             <div>
               <label className="block text-xs font-mono text-text-secondary mb-4">Start time</label>
-              <input
-                type="time"
-                value={time}
-                onChange={(e) => setTime(e.target.value)}
-                className="w-full px-12 py-8 bg-hover-bg border border-border-subtle rounded-sm font-mono text-sm"
-                autoFocus
-                onKeyDown={handleKeyDown}
-              />
+              <div className="flex items-center gap-8">
+                <input
+                  type="time"
+                  value={time}
+                  onChange={(e) => setTime(e.target.value)}
+                  className="flex-1 px-12 py-8 bg-hover-bg border border-border-subtle rounded-sm font-mono text-sm"
+                  autoFocus
+                  onKeyDown={handleKeyDown}
+                />
+                {time && (
+                  <span className="text-sm font-mono text-text-secondary whitespace-nowrap">
+                    {formatPreview(time)}
+                  </span>
+                )}
+              </div>
             </div>
             <div>
               <label className="block text-xs font-mono text-text-secondary mb-4">End time</label>
-              <input
-                type="time"
-                value={endTime}
-                onChange={(e) => setEndTime(e.target.value)}
-                className="w-full px-12 py-8 bg-hover-bg border border-border-subtle rounded-sm font-mono text-sm mb-16"
-                onKeyDown={handleKeyDown}
-              />
+              <div className="flex items-center gap-8">
+                <input
+                  type="time"
+                  value={endTime}
+                  onChange={(e) => setEndTime(e.target.value)}
+                  className="flex-1 px-12 py-8 bg-hover-bg border border-border-subtle rounded-sm font-mono text-sm"
+                  onKeyDown={handleKeyDown}
+                />
+                {endTime && (
+                  <span className="text-sm font-mono text-text-secondary whitespace-nowrap">
+                    {formatPreview(endTime)}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         ) : (
-          <input
-            type="time"
-            value={time}
-            onChange={(e) => setTime(e.target.value)}
-            className="w-full px-12 py-8 bg-hover-bg border border-border-subtle rounded-sm font-mono text-sm mb-16"
-            autoFocus
-            onKeyDown={handleKeyDown}
-          />
+          <div className="flex items-center gap-8 mb-16">
+            <input
+              type="time"
+              value={time}
+              onChange={(e) => setTime(e.target.value)}
+              className="flex-1 px-12 py-8 bg-hover-bg border border-border-subtle rounded-sm font-mono text-sm"
+              autoFocus
+              onKeyDown={handleKeyDown}
+            />
+            {time && (
+              <span className="text-sm font-mono text-text-secondary whitespace-nowrap">
+                {formatPreview(time)}
+              </span>
+            )}
+          </div>
         )}
 
         <div className="flex gap-8 justify-end mt-16">
