@@ -48,7 +48,7 @@ This app enforces a strict scheduling philosophy: **every single task, event, an
 - [x] Undo button in delete toasts
 - [x] Custom TimeInput component (replaces native browser picker)
 - [x] Event auto-split (shows ⇤/⇥ markers when items exist within event)
-- [x] Virtualized lists for Time Pane (via @tanstack/react-virtual)
+- [x] Virtualized lists for both panes (via @tanstack/react-virtual)
 - [x] Data export/import (JSON backup in Settings)
 - [x] E2E tests with Playwright (15 test cases)
 
@@ -414,7 +414,7 @@ Oct 14 Thoughts:
 **Status**: Partially completed ✅
 
 **Completed**:
-- [x] Virtualized lists with @tanstack/react-virtual (Time Pane)
+- [x] Virtualized lists with @tanstack/react-virtual (both panes)
 - [x] Only render visible items in infinite scroll mode
 - [x] Overscan 3 items above/below viewport
 - [x] Debounced search (300ms)
@@ -422,7 +422,6 @@ Oct 14 Thoughts:
 - [x] Memoized event split detection
 
 **Remaining**:
-- [ ] Virtualization for Thoughts Pane
 - [ ] Lazy loading (30 days at a time)
 - [ ] Database indexes (if using Supabase)
 
@@ -583,13 +582,11 @@ Oct 14 Thoughts:
 
 ### Immediate (This Week)
 1. URL link previews for notes
-2. Note embedding in todos
-3. Virtualization for Thoughts Pane
+2. Mobile responsive optimizations (swipe gestures, tap targets)
 
 ### Short Term (Next 2 Weeks)
-1. Mobile responsive optimizations (swipe gestures, tap targets)
-2. Integration tests for key user flows
-3. Completion linking system (if needed)
+1. Integration tests for key user flows
+2. Completion linking system (if needed)
 
 ### Medium Term (Next Month)
 1. Database backend (Supabase)
