@@ -130,17 +130,23 @@ const ThoughtsPane = forwardRef<ThoughtsPaneHandle, ThoughtsPaneProps>(({
   // Expose imperative methods
   useImperativeHandle(ref, () => ({
     scrollToDate: (date: string) => {
+      console.log('scrollToDate called with:', date);
+      console.log('visibleDates:', visibleDates);
+      console.log('viewMode:', viewMode);
       const dateIndex = visibleDates.findIndex(d => d === date);
+      console.log('dateIndex found:', dateIndex);
       if (dateIndex >= 0) {
+        console.log('Scrolling to index:', dateIndex);
         virtualizer.scrollToIndex(dateIndex, { align: 'start' });
       } else {
+        console.log('Date not found, scrolling to top');
         // If date not in visible dates, scroll to top
         if (scrollRef.current) {
           scrollRef.current.scrollTop = 0;
         }
       }
     },
-  }), [visibleDates, virtualizer]);
+  }), [visibleDates, virtualizer, viewMode]);
 
   // Auto-scroll to today on mount for infinite mode
   useEffect(() => {
