@@ -64,26 +64,24 @@ function TimePromptModal({ isOpen, isEvent, content, timeFormat = '12h', onSubmi
 
   // Direct submit handlers that receive the value immediately
   const handleTimeEnter = (value: string) => {
-    timeRef.current = value;
-    setTime(value);
     if (!isEvent) {
-      // For non-events, submit immediately
+      // For non-events, submit immediately - modal will close from onSubmit
       onSubmit(value);
-      setTime('');
-      timeRef.current = '';
+    } else {
+      // For events, store start time and wait for end time
+      timeRef.current = value;
+      setTime(value);
     }
   };
 
   const handleEndTimeEnter = (value: string) => {
-    endTimeRef.current = value;
-    setEndTime(value);
     // For events, submit when we have both times
     if (timeRef.current) {
       onSubmit(timeRef.current, value);
-      setTime('');
-      setEndTime('');
-      timeRef.current = '';
-      endTimeRef.current = '';
+    } else {
+      // Store end time if start time not set yet
+      endTimeRef.current = value;
+      setEndTime(value);
     }
   };
 
