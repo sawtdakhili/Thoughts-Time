@@ -66,8 +66,8 @@ function TimeInput({ value, onChange, timeFormat, autoFocus, onKeyDown }: TimeIn
     if (val === '' || (parseInt(val) >= 0 && parseInt(val) <= max)) {
       setHours(val);
 
-      // Auto-advance to minutes after 2 digits or if value exceeds single digit threshold
-      if (val.length === 2 || (timeFormat === '24h' && parseInt(val) > 2) || (timeFormat === '12h' && parseInt(val) > 1)) {
+      // Auto-advance to minutes after 2 digits
+      if (val.length === 2) {
         minutesRef.current?.focus();
       }
 
