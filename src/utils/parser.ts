@@ -62,26 +62,41 @@ customChrono.parsers.push({
   }
 });
 
-// Add parser for 24-hour time format like "at 13:55" or "at 09:30"
-// Uses assign() to mark hour/minute as certain (not implied)
-customChrono.parsers.push({
-  pattern: () => /\bat\s+(\d{1,2}):(\d{2})\b/i,
-  extract: (context, match) => {
-    const hour = parseInt(match[1]);
-    const minute = parseInt(match[2]);
+// Add refiner for 24-hour time format like "at 13:55" or "at 09:30"
+// This runs after parsing and marks hour/minute as certain
+customChrono.refiners.push({
+  refine: (context, results) => {
+    // Check if the text contains "at HH:MM" pattern
+    const timeMatch = context.text.match(/\bat\s+(\d{1,2}):(\d{2})\b/i);
+    if (timeMatch) {
+      const hour = parseInt(timeMatch[1]);
+      const minute = parseInt(timeMatch[2]);
 
-    // Validate 24h format
-    if (hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59) {
-      const now = context.refDate || new Date();
-      const component = context.createParsingComponents();
-      component.assign('year', now.getFullYear());
-      component.assign('month', now.getMonth() + 1);
-      component.assign('day', now.getDate());
-      component.assign('hour', hour);
-      component.assign('minute', minute);
-      return component;
+      if (hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59) {
+        // If no results yet, create one
+        if (results.length === 0) {
+          const now = context.refDate || new Date();
+          const result = new chrono.ParsingResult(
+            context.refDate,
+            timeMatch.index!,
+            timeMatch[0]
+          );
+          result.start.assign('year', now.getFullYear());
+          result.start.assign('month', now.getMonth() + 1);
+          result.start.assign('day', now.getDate());
+          result.start.assign('hour', hour);
+          result.start.assign('minute', minute);
+          results.push(result);
+        } else {
+          // Update existing result to mark time as certain
+          results.forEach((result) => {
+            result.start.assign('hour', hour);
+            result.start.assign('minute', minute);
+          });
+        }
+      }
     }
-    return null;
+    return results;
   }
 });
 
