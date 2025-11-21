@@ -133,6 +133,11 @@ const ThoughtsPane = forwardRef<ThoughtsPaneHandle, ThoughtsPaneProps>(({
       const dateIndex = visibleDates.findIndex(d => d === date);
       if (dateIndex >= 0) {
         virtualizer.scrollToIndex(dateIndex, { align: 'start' });
+      } else {
+        // If date not in visible dates, scroll to top
+        if (scrollRef.current) {
+          scrollRef.current.scrollTop = 0;
+        }
       }
     },
   }), [visibleDates, virtualizer]);
