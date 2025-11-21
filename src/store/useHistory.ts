@@ -8,8 +8,10 @@ export interface HistoryAction {
   timestamp: Date;
   // For create
   item?: Item;
+  originalIndex?: number; // For restoring at original position
   // For delete (need to restore item + all children)
   deletedItems?: Item[];
+  deletedIndices?: number[]; // Original indices of deleted items
   // For edit
   itemId?: string;
   oldContent?: string;

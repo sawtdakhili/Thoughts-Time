@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { formatTimeForDisplay } from '../utils/formatting';
+import { useState, useRef } from 'react';
+import TimeInput from './TimeInput';
 
 interface TimePromptModalProps {
   isOpen: boolean;
@@ -18,30 +18,70 @@ function TimePromptModal({ isOpen, isEvent, content, timeFormat = '12h', onSubmi
   const [time, setTime] = useState('');
   const [endTime, setEndTime] = useState('');
 
-  // Format time for display in user's preferred format
-  const formatPreview = (t: string) => t ? formatTimeForDisplay(t, timeFormat) : '';
+  // Use refs to track latest values for immediate access in handlers
+  const timeRef = useRef('');
+  const endTimeRef = useRef('');
 
   if (!isOpen) return null;
 
+  const handleTimeChange = (value: string) => {
+    setTime(value);
+    timeRef.current = value;
+  };
+
+  const handleEndTimeChange = (value: string) => {
+    setEndTime(value);
+    endTimeRef.current = value;
+  };
+
   const handleSubmit = () => {
-    if (!time) return;
-    if (isEvent && !endTime) return;
-    onSubmit(time, isEvent ? endTime : undefined);
+    // Use refs for immediate access to latest values
+    const currentTime = timeRef.current;
+    const currentEndTime = endTimeRef.current;
+
+    if (!currentTime) return;
+    if (isEvent && !currentEndTime) return;
+    onSubmit(currentTime, isEvent ? currentEndTime : undefined);
     setTime('');
     setEndTime('');
+    timeRef.current = '';
+    endTimeRef.current = '';
   };
 
   const handleCancel = () => {
     setTime('');
     setEndTime('');
+    timeRef.current = '';
+    endTimeRef.current = '';
     onCancel();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleSubmit();
-    } else if (e.key === 'Escape') {
+    if (e.key === 'Escape') {
       handleCancel();
+    }
+  };
+
+  // Direct submit handlers that receive the value immediately
+  const handleTimeEnter = (value: string) => {
+    if (!isEvent) {
+      // For non-events, submit immediately - modal will close from onSubmit
+      onSubmit(value);
+    } else {
+      // For events, store start time and wait for end time
+      timeRef.current = value;
+      setTime(value);
+    }
+  };
+
+  const handleEndTimeEnter = (value: string) => {
+    // For events, submit when we have both times
+    if (timeRef.current) {
+      onSubmit(timeRef.current, value);
+    } else {
+      // Store end time if start time not set yet
+      endTimeRef.current = value;
+      setEndTime(value);
     }
   };
 
@@ -57,55 +97,36 @@ function TimePromptModal({ isOpen, isEvent, content, timeFormat = '12h', onSubmi
           <div className="space-y-12">
             <div>
               <label className="block text-xs font-mono text-text-secondary mb-4">Start time</label>
-              <div className="flex items-center gap-8">
-                <input
-                  type="time"
-                  value={time}
-                  onChange={(e) => setTime(e.target.value)}
-                  className="flex-1 px-12 py-8 bg-hover-bg border border-border-subtle rounded-sm font-mono text-sm"
-                  autoFocus
-                  onKeyDown={handleKeyDown}
-                />
-                {time && (
-                  <span className="text-sm font-mono text-text-secondary whitespace-nowrap">
-                    {formatPreview(time)}
-                  </span>
-                )}
-              </div>
+              <TimeInput
+                value={time}
+                onChange={handleTimeChange}
+                timeFormat={timeFormat}
+                autoFocus
+                onKeyDown={handleKeyDown}
+                onEnterWithValue={handleTimeEnter}
+              />
             </div>
             <div>
               <label className="block text-xs font-mono text-text-secondary mb-4">End time</label>
-              <div className="flex items-center gap-8">
-                <input
-                  type="time"
-                  value={endTime}
-                  onChange={(e) => setEndTime(e.target.value)}
-                  className="flex-1 px-12 py-8 bg-hover-bg border border-border-subtle rounded-sm font-mono text-sm"
-                  onKeyDown={handleKeyDown}
-                />
-                {endTime && (
-                  <span className="text-sm font-mono text-text-secondary whitespace-nowrap">
-                    {formatPreview(endTime)}
-                  </span>
-                )}
-              </div>
+              <TimeInput
+                value={endTime}
+                onChange={handleEndTimeChange}
+                timeFormat={timeFormat}
+                onKeyDown={handleKeyDown}
+                onEnterWithValue={handleEndTimeEnter}
+              />
             </div>
           </div>
         ) : (
-          <div className="flex items-center gap-8 mb-16">
-            <input
-              type="time"
+          <div className="mb-16">
+            <TimeInput
               value={time}
-              onChange={(e) => setTime(e.target.value)}
-              className="flex-1 px-12 py-8 bg-hover-bg border border-border-subtle rounded-sm font-mono text-sm"
+              onChange={handleTimeChange}
+              timeFormat={timeFormat}
               autoFocus
               onKeyDown={handleKeyDown}
+              onEnterWithValue={handleTimeEnter}
             />
-            {time && (
-              <span className="text-sm font-mono text-text-secondary whitespace-nowrap">
-                {formatPreview(time)}
-              </span>
-            )}
           </div>
         )}
 

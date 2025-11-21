@@ -33,6 +33,13 @@ interface AppState {
   addItemDirect: (item: Item) => void;
 
   /**
+   * Add a pre-constructed item at a specific index (used by undo to restore position).
+   * @param item - Complete item object to add
+   * @param index - Position to insert at
+   */
+  addItemAtIndex: (item: Item, index: number) => void;
+
+  /**
    * Update an existing item's properties.
    * @param id - Item ID to update
    * @param updates - Partial item properties to merge
@@ -250,6 +257,16 @@ export const useStore = create<AppState>()(
         }));
       },
 
+      addItemAtIndex: (item: Item, index: number) => {
+        set((state) => {
+          const newItems = [...state.items];
+          // Clamp index to valid range
+          const insertIndex = Math.max(0, Math.min(index, newItems.length));
+          newItems.splice(insertIndex, 0, item);
+          return { items: newItems };
+        });
+      },
+
       updateItem: (id: string, updates: Partial<Item>) => {
         const { skipHistory, items } = get();
         const oldItem = items.find(i => i.id === id);
@@ -296,8 +313,15 @@ export const useStore = create<AppState>()(
 
         collectDescendants(id);
 
-        // Collect all items to delete for history
-        const deletedItems = items.filter(item => idsToDelete.has(item.id));
+        // Collect all items to delete for history with their original indices
+        const deletedItems: Item[] = [];
+        const deletedIndices: number[] = [];
+        items.forEach((item, index) => {
+          if (idsToDelete.has(item.id)) {
+            deletedItems.push(item);
+            deletedIndices.push(index);
+          }
+        });
 
         // Record history before deletion
         if (!skipHistory) {
@@ -305,6 +329,7 @@ export const useStore = create<AppState>()(
             type: 'delete',
             timestamp: new Date(),
             deletedItems,
+            deletedIndices,
           });
         }
 

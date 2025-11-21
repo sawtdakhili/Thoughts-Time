@@ -10,7 +10,7 @@ import { Item, Todo, Event as EventType, Routine } from '../types';
 import { parseInput } from '../utils/parser';
 import { createItem } from '../utils/itemFactory';
 import { symbolsToPrefix, formatTimeForDisplay, prefixToSymbol, symbolToPrefix } from '../utils/formatting';
-import { matchesSearch } from '../utils/search.tsx';
+import { matchesSearch, highlightMatches } from '../utils/search.tsx';
 import { ANIMATION, DATE_RANGE } from '../constants';
 
 type TimelineEntry = {
@@ -460,7 +460,7 @@ function TimePane({
               <div className="flex-1">
                 <div className="flex items-start gap-8">
                   <p className={`flex-1 text-base font-serif leading-book ${isCompleted ? 'line-through' : ''}`}>
-                    {item.content}
+                    {searchQuery ? highlightMatches(item.content, searchQuery) : item.content}
                   </p>
                   {isHovered && (
                     <div className="flex gap-4 flex-shrink-0">
@@ -512,7 +512,7 @@ function TimePane({
               <div className="flex-1">
                 <div className="flex items-start gap-8">
                   <p className="flex-1 text-base font-serif leading-book font-semibold">
-                    {item.content} ({startTime} - {endTime})
+                    {searchQuery ? highlightMatches(item.content, searchQuery) : item.content} ({startTime} - {endTime})
                   </p>
                   {isHovered && (
                     <div className="flex gap-4 flex-shrink-0">
@@ -564,7 +564,7 @@ function TimePane({
               <div className="flex-1">
                 <div className="flex items-start gap-8">
                   <p className="flex-1 text-base font-serif leading-book font-semibold">
-                    {item.content} ({startTime} - {endTime})
+                    {searchQuery ? highlightMatches(item.content, searchQuery) : item.content} ({startTime} - {endTime})
                   </p>
                   {isHovered && (
                     <div className="flex gap-4 flex-shrink-0">
@@ -591,56 +591,13 @@ function TimePane({
         </div>
       );
     } else {
-      // event-end
-      const event = item as EventType;
-      const startTime = formatTime(new Date(event.startTime));
-      const endTime = formatTime(new Date(event.endTime));
-      const isEditing = editingItem === item.id;
-      const isHovered = hoveredItem === item.id;
-
+      // event-end - simplified display, no edit/delete (use start marker for that)
       return (
-        <div
-          onMouseEnter={() => setHoveredItem(item.id)}
-          onMouseLeave={() => setHoveredItem(null)}
-        >
-          {isEditing ? (
-            <EditEntryInput
-              value={editContent}
-              onChange={handleInputChange}
-              onKeyDown={(e) => handleKeyDown(e, item.id)}
-              onSave={() => handleSaveEdit(item.id)}
-              onCancel={handleCancelEdit}
-            />
-          ) : (
-            <div className="flex items-start gap-3">
-              <span className="text-base leading-book flex-shrink-0">⇥</span>
-              <div className="flex-1">
-                <div className="flex items-start gap-8">
-                  <p className="flex-1 text-base font-serif leading-book font-semibold">
-                    {item.content} ({startTime} - {endTime})
-                  </p>
-                  {isHovered && (
-                    <div className="flex gap-4 flex-shrink-0">
-                      <button
-                        onClick={() => handleEdit(item.id, item)}
-                        className="text-xs text-text-secondary hover:text-text-primary"
-                        title="Edit"
-                      >
-                        ✎
-                      </button>
-                      <button
-                        onClick={() => handleDelete(item.id)}
-                        className="text-xs text-text-secondary hover:text-text-primary"
-                        title="Delete"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
+        <div className="flex items-start gap-3 opacity-60">
+          <span className="text-base leading-book flex-shrink-0">⇥</span>
+          <p className="text-base font-serif leading-book">
+            {item.content} (end)
+          </p>
         </div>
       );
     }
@@ -727,11 +684,6 @@ function TimePane({
       />
 
       <div className="h-full flex flex-col">
-        {/* Pane Header */}
-        <div className="h-[36px] border-b border-border-subtle flex items-center px-24">
-          <h2 className="text-xs font-serif uppercase tracking-wider">Time</h2>
-        </div>
-
       {/* Timeline - Scrollable through all days */}
       <div
         ref={scrollRef}
@@ -743,6 +695,13 @@ function TimePane({
         }`}
         style={viewMode === 'book' ? { height: 'calc(100vh - 60px - 90px)' } : undefined}
       >
+        {/* No results found state */}
+        {searchQuery && entriesByDate.size === 0 && (
+          <div className="flex flex-col items-center justify-center h-full text-text-secondary">
+            <p className="text-lg font-serif mb-2">No results found</p>
+            <p className="text-sm">Try a different search term</p>
+          </div>
+        )}
         {(viewMode === 'book' && currentDate ? [currentDate] : dates).map((date) => {
           const entries = entriesByDate.get(date) || [];
           const isToday = date === today;

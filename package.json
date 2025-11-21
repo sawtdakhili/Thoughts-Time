@@ -13,6 +13,7 @@
     "test:coverage": "vitest --coverage"
   },
   "dependencies": {
+    "@tanstack/react-virtual": "^3.13.12",
     "chrono-node": "^2.9.0",
     "date-fns": "^4.1.0",
     "react": "^19.2.0",

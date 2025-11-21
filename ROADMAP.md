@@ -1,6 +1,6 @@
 # Thoughts & Time - Development Roadmap
 
-**Last Updated**: November 20, 2025
+**Last Updated**: November 21, 2025
 **Current Status**: MVP with core features ✅
 
 ---
@@ -46,6 +46,7 @@ This app enforces a strict scheduling philosophy: **every single task, event, an
 - [x] Comprehensive test suite (115 tests with Vitest)
 - [x] Undo/Redo system (tracks all actions with Cmd/Ctrl+Z/Shift+Z)
 - [x] Undo button in delete toasts
+- [x] Custom TimeInput component (replaces native browser picker)
 
 ---
 
@@ -96,14 +97,21 @@ This app enforces a strict scheduling philosophy: **every single task, event, an
 - [x] Applied to all timeline displays in TimePane
 - [x] Applied to time prompt displays
 - [x] Shared utility function for consistent formatting
+- [x] Custom TimeInput component (replaces native browser picker)
+- [x] TimeInput respects 12h/24h setting with matching aesthetics
+- [x] 24h time format parsing (at HH:MM patterns)
+- [x] Enter key submission in time prompt modal
 
 **Files modified**:
 - `src/store/useSettingsStore.ts` (added timeFormat state)
 - `src/components/Settings.tsx` (added UI toggle)
 - `src/utils/formatting.ts` (formatTimeForDisplay function)
 - `src/components/ItemDisplay.tsx` (timestamp formatting)
-- `src/components/ThoughtsPane.tsx` (time prompt formatting)
+- `src/components/ThoughtsPane.tsx` (time prompt formatting, closure fix)
 - `src/components/TimePane.tsx` (timeline formatting)
+- `src/components/TimeInput.tsx` (new custom time input component)
+- `src/components/TimePromptModal.tsx` (updated to use TimeInput)
+- `src/utils/parser.ts` (24h time format recognition)
 
 ---
 
@@ -605,4 +613,4 @@ Oct 14 Thoughts:
 
 ---
 
-Last updated: November 20, 2025
+Last updated: November 21, 2025

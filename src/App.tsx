@@ -114,9 +114,9 @@ function App() {
       <Settings isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
 
       {/* Header */}
-      <header className="h-[60px] border-b border-border-subtle flex items-center justify-between px-48">
+      <header className="h-[60px] border-b border-border-subtle flex items-center justify-center px-48 relative">
         <h1 className="text-lg font-serif">Thoughts & Time</h1>
-        <div className="flex items-center gap-16">
+        <div className="absolute right-48 flex items-center gap-16">
           {isSearchOpen && (
             <input
               type="text"

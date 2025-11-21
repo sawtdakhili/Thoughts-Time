@@ -7,6 +7,7 @@ describe('TimePromptModal', () => {
     isOpen: true,
     isEvent: false,
     content: 'Test content',
+    timeFormat: '24h' as const,
     onSubmit: vi.fn(),
     onCancel: vi.fn(),
   };
@@ -30,7 +31,8 @@ describe('TimePromptModal', () => {
   describe('task mode (single time)', () => {
     it('shows single time input for non-events', () => {
       const { container } = render(<TimePromptModal {...defaultProps} />);
-      const timeInputs = container.querySelectorAll('input[type="time"]');
+      // Custom TimeInput uses text input
+      const timeInputs = container.querySelectorAll('input[type="text"]');
       expect(timeInputs).toHaveLength(1);
     });
 
@@ -48,7 +50,8 @@ describe('TimePromptModal', () => {
   describe('event mode (start and end time)', () => {
     it('shows two time inputs for events', () => {
       const { container } = render(<TimePromptModal {...defaultProps} isEvent={true} />);
-      const timeInputs = container.querySelectorAll('input[type="time"]');
+      // Custom TimeInput uses text input
+      const timeInputs = container.querySelectorAll('input[type="text"]');
       expect(timeInputs).toHaveLength(2);
     });
 
@@ -72,7 +75,8 @@ describe('TimePromptModal', () => {
 
     it('calls onSubmit with time when Add Time button is clicked', () => {
       const { container } = render(<TimePromptModal {...defaultProps} />);
-      const timeInput = container.querySelector('input[type="time"]')!;
+      const timeInput = container.querySelector('input[type="text"]')!;
+      // Simulate typing "14:30"
       fireEvent.change(timeInput, { target: { value: '14:30' } });
       fireEvent.click(screen.getByText('Add Time'));
       expect(defaultProps.onSubmit).toHaveBeenCalledWith('14:30', undefined);
@@ -80,7 +84,7 @@ describe('TimePromptModal', () => {
 
     it('calls onSubmit with start and end times for events', () => {
       const { container } = render(<TimePromptModal {...defaultProps} isEvent={true} />);
-      const timeInputs = container.querySelectorAll('input[type="time"]');
+      const timeInputs = container.querySelectorAll('input[type="text"]');
       fireEvent.change(timeInputs[0], { target: { value: '09:00' } });
       fireEvent.change(timeInputs[1], { target: { value: '10:00' } });
       fireEvent.click(screen.getByText('Add Times'));
@@ -95,7 +99,7 @@ describe('TimePromptModal', () => {
 
     it('does not call onSubmit when event end time is empty', () => {
       const { container } = render(<TimePromptModal {...defaultProps} isEvent={true} />);
-      const timeInputs = container.querySelectorAll('input[type="time"]');
+      const timeInputs = container.querySelectorAll('input[type="text"]');
       fireEvent.change(timeInputs[0], { target: { value: '09:00' } });
       fireEvent.click(screen.getByText('Add Times'));
       expect(defaultProps.onSubmit).not.toHaveBeenCalled();
@@ -105,17 +109,17 @@ describe('TimePromptModal', () => {
   describe('keyboard shortcuts', () => {
     it('calls onCancel when Escape is pressed', () => {
       const { container } = render(<TimePromptModal {...defaultProps} />);
-      const timeInput = container.querySelector('input[type="time"]')!;
+      const timeInput = container.querySelector('input[type="text"]')!;
       fireEvent.keyDown(timeInput, { key: 'Escape' });
       expect(defaultProps.onCancel).toHaveBeenCalledOnce();
     });
 
     it('submits on Enter when time is filled', () => {
       const { container } = render(<TimePromptModal {...defaultProps} />);
-      const timeInput = container.querySelector('input[type="time"]')!;
+      const timeInput = container.querySelector('input[type="text"]')!;
       fireEvent.change(timeInput, { target: { value: '15:00' } });
       fireEvent.keyDown(timeInput, { key: 'Enter' });
-      expect(defaultProps.onSubmit).toHaveBeenCalledWith('15:00', undefined);
+      expect(defaultProps.onSubmit).toHaveBeenCalledWith('15:00');
     });
   });
 });

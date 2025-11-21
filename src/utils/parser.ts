@@ -62,6 +62,44 @@ customChrono.parsers.push({
   }
 });
 
+// Add refiner for 24-hour time format like "at 13:55" or "at 09:30"
+// This runs after parsing and marks hour/minute as certain
+customChrono.refiners.push({
+  refine: (context, results) => {
+    // Check if the text contains "at HH:MM" pattern
+    const timeMatch = context.text.match(/\bat\s+(\d{1,2}):(\d{2})\b/i);
+    if (timeMatch) {
+      const hour = parseInt(timeMatch[1]);
+      const minute = parseInt(timeMatch[2]);
+
+      if (hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59) {
+        // If no results yet, create one
+        if (results.length === 0) {
+          const now = context.refDate || new Date();
+          const result = new chrono.ParsingResult(
+            context.refDate,
+            timeMatch.index!,
+            timeMatch[0]
+          );
+          result.start.assign('year', now.getFullYear());
+          result.start.assign('month', now.getMonth() + 1);
+          result.start.assign('day', now.getDate());
+          result.start.assign('hour', hour);
+          result.start.assign('minute', minute);
+          results.push(result);
+        } else {
+          // Update existing result to mark time as certain
+          results.forEach((result) => {
+            result.start.assign('hour', hour);
+            result.start.assign('minute', minute);
+          });
+        }
+      }
+    }
+    return results;
+  }
+});
+
 // Custom refiner for "between X and Y" to properly parse both start and end times
 customChrono.refiners.push({
   refine: (context, results) => {
@@ -346,7 +384,26 @@ export function detectRecurrencePattern(content: string): RecurrencePattern | nu
 export function parseDateTime(content: string): { date: Date | null; hasTime: boolean; refText: string; endDate?: Date | null } {
   const results = customChrono.parse(content);
 
+  // Check for 24h time pattern "at HH:MM" that chrono might miss entirely
+  const time24Match = content.match(/\bat\s+(\d{1,2}):(\d{2})\b/i);
+  let has24hTime = false;
+  if (time24Match) {
+    const hour = parseInt(time24Match[1]);
+    const minute = parseInt(time24Match[2]);
+    if (hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59) {
+      has24hTime = true;
+    }
+  }
+
   if (results.length === 0) {
+    // Even with no chrono results, if we found 24h time pattern, create a date for today
+    if (has24hTime) {
+      const now = new Date();
+      const hour = parseInt(time24Match![1]);
+      const minute = parseInt(time24Match![2]);
+      now.setHours(hour, minute, 0, 0);
+      return { date: now, hasTime: true, refText: time24Match![0] };
+    }
     return { date: null, hasTime: false, refText: '' };
   }
 
@@ -354,7 +411,12 @@ export function parseDateTime(content: string): { date: Date | null; hasTime: bo
   const date = result.start.date();
 
   // Check if time component was specified
-  const hasTime = result.start.isCertain('hour') && result.start.isCertain('minute');
+  let hasTime = result.start.isCertain('hour') && result.start.isCertain('minute');
+
+  // Fallback: use 24h time pattern if chrono didn't mark time as certain
+  if (!hasTime && has24hTime) {
+    hasTime = true;
+  }
 
   // Check for end time (for events with duration like "2-4pm")
   const endDate = result.end ? result.end.date() : null;
@@ -396,11 +458,19 @@ export function parseInput(input: string): ParsedInput {
   }
 
   // Determine if we need to prompt for time
-  // For todos and events with a date but no specific time, we'll prompt
-  const needsTimePrompt =
+  // For todos and events without a date OR without a specific time, we'll prompt
+  let needsTimePrompt =
     (type === 'todo' || type === 'event') &&
-    scheduledTime !== null &&
-    !hasTime;
+    (scheduledTime === null || !hasTime);
+
+  // Final override: if content contains "at HH:MM" pattern, don't prompt
+  // This catches any cases where parseDateTime didn't properly detect the time
+  if (needsTimePrompt) {
+    const time24Override = content.match(/\bat\s+\d{1,2}:\d{2}\b/i);
+    if (time24Override) {
+      needsTimePrompt = false;
+    }
+  }
 
   // For all-day events, set to midnight-to-midnight
   if (type === 'event' && scheduledTime && !hasTime) {

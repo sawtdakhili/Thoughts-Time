@@ -195,10 +195,11 @@ function ThoughtsPane({
     }
   };
 
-  const handleSubmit = (e: React.FormEvent | React.KeyboardEvent) => {
+  const handleSubmit = (e: React.FormEvent | React.KeyboardEvent, inputOverride?: string) => {
     e.preventDefault();
-    if (input.trim()) {
-      const lines = input.split('\n');
+    const inputToProcess = inputOverride ?? input;
+    if (inputToProcess.trim()) {
+      const lines = inputToProcess.split('\n');
 
       // First pass: check if any line needs time prompt
       for (let i = 0; i < lines.length; i++) {
@@ -222,12 +223,13 @@ function ThoughtsPane({
       }
 
       // If we get here, no prompts needed - create all items
-      createItems();
+      createItems(inputOverride);
     }
   };
 
-  const createItems = () => {
-    const lines = input.split('\n');
+  const createItems = (inputOverride?: string) => {
+    const inputToProcess = inputOverride ?? input;
+    const lines = inputToProcess.split('\n');
     const itemStack: Array<{ id: string; level: number }> = [];
 
     lines.forEach((line) => {
@@ -381,13 +383,15 @@ function ThoughtsPane({
     const leadingSpaces = lines[timePrompt.index].match(/^(\s*)/)?.[0] || '';
     lines[timePrompt.index] = leadingSpaces + updatedLine;
 
-    setInput(lines.join('\n'));
+    const newInput = lines.join('\n');
+    setInput(newInput);
     setTimePrompt(null);
 
-    // Re-submit after a brief delay
+    // Re-submit after a brief delay with the new input value
+    // (can't rely on state due to closure capturing old value)
     setTimeout(() => {
       const syntheticEvent = { preventDefault: () => {} } as React.FormEvent;
-      handleSubmit(syntheticEvent);
+      handleSubmit(syntheticEvent, newInput);
     }, 50);
   };
 
@@ -402,11 +406,6 @@ function ThoughtsPane({
         onCancel={handleTimePromptCancel}
       />
 
-      {/* Pane Header */}
-      <div className="h-[36px] border-b border-border-subtle flex items-center px-24">
-        <h2 className="text-xs font-serif uppercase tracking-wider">Thoughts</h2>
-      </div>
-
       {/* Items Area - Scrollable through all days */}
       <div
         ref={scrollRef}
@@ -418,6 +417,13 @@ function ThoughtsPane({
         }`}
         style={viewMode === 'book' ? { height: 'calc(100vh - 60px - 90px)' } : undefined}
       >
+        {/* No results found state */}
+        {searchQuery && itemsByDate.size === 0 && (
+          <div className="flex flex-col items-center justify-center h-full text-text-secondary">
+            <p className="text-lg font-serif mb-2">No results found</p>
+            <p className="text-sm">Try a different search term</p>
+          </div>
+        )}
         {(viewMode === 'book' && currentDate ? [currentDate] : dates).map((date) => {
           const items = itemsByDate.get(date) || [];
           const isToday = date === today;
