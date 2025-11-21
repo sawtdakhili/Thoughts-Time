@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback, forwardRef, useImperativeHandle } from 'react';
 import { format, subDays, addDays, parseISO } from 'date-fns';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useStore } from '../store/useStore';
@@ -17,15 +17,21 @@ interface ThoughtsPaneProps {
   currentDate?: string;
   onNextDay?: () => void;
   onPreviousDay?: () => void;
+  highlightedItemId?: string | null;
 }
 
-function ThoughtsPane({
+export interface ThoughtsPaneHandle {
+  scrollToDate: (date: string) => void;
+}
+
+const ThoughtsPane = forwardRef<ThoughtsPaneHandle, ThoughtsPaneProps>(({
   searchQuery = '',
   viewMode = 'infinite',
   currentDate,
   onNextDay,
   onPreviousDay,
-}: ThoughtsPaneProps) {
+  highlightedItemId,
+}, ref) => {
   const [input, setInput] = useState('');
   const addItem = useStore((state) => state.addItem);
   const items = useStore((state) => state.items);
@@ -120,6 +126,16 @@ function ThoughtsPane({
     estimateSize,
     overscan: 3,
   });
+
+  // Expose imperative methods
+  useImperativeHandle(ref, () => ({
+    scrollToDate: (date: string) => {
+      const dateIndex = visibleDates.findIndex(d => d === date);
+      if (dateIndex >= 0) {
+        virtualizer.scrollToIndex(dateIndex, { align: 'start' });
+      }
+    },
+  }), [visibleDates, virtualizer]);
 
   // Auto-scroll to today on mount for infinite mode
   useEffect(() => {
@@ -512,6 +528,7 @@ function ThoughtsPane({
                           item={item}
                           sourcePane="thoughts"
                           searchQuery={searchQuery}
+                          highlightedItemId={highlightedItemId}
                         />
                       ))}
                     </div>
@@ -558,6 +575,7 @@ function ThoughtsPane({
                       item={item}
                       sourcePane="thoughts"
                       searchQuery={searchQuery}
+                      highlightedItemId={highlightedItemId}
                     />
                   ))}
                 </div>
@@ -582,6 +600,8 @@ function ThoughtsPane({
       </form>
     </div>
   );
-}
+});
+
+ThoughtsPane.displayName = 'ThoughtsPane';
 
 export default ThoughtsPane;

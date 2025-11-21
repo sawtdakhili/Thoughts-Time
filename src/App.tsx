@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { format, subDays, addDays } from 'date-fns';
-import ThoughtsPane from './components/ThoughtsPane';
+import ThoughtsPane, { ThoughtsPaneHandle } from './components/ThoughtsPane';
 import TimePane from './components/TimePane';
 import Settings from './components/Settings';
 import ToastContainer from './components/Toast';
@@ -8,6 +8,7 @@ import { useSettingsStore } from './store/useSettingsStore';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useUndoRedo } from './hooks/useUndoRedo';
 import { useDebouncedSearch } from './hooks/useDebouncedSearch';
+import { Item } from './types';
 
 function App() {
   const [searchInput, setSearchInput] = useState('');
@@ -15,9 +16,25 @@ function App() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const viewMode = useSettingsStore((state) => state.viewMode);
+  const [highlightedItemId, setHighlightedItemId] = useState<string | null>(null);
+  const thoughtsPaneRef = useRef<ThoughtsPaneHandle>(null);
 
   // Setup undo/redo
   const { undo, redo } = useUndoRedo();
+
+  // Handle jump to source from Time pane
+  const handleJumpToSource = (item: Item) => {
+    // Scroll ThoughtsPane to item's creation date
+    thoughtsPaneRef.current?.scrollToDate(item.createdDate);
+
+    // Highlight the item
+    setHighlightedItemId(item.id);
+
+    // Clear highlight after animation
+    setTimeout(() => {
+      setHighlightedItemId(null);
+    }, 2000);
+  };
 
   // Book mode: track current day for each pane independently
   const [thoughtsDayIndex, setThoughtsDayIndex] = useState(30); // Start at today (index 30 in 60-day range)
@@ -161,11 +178,13 @@ function App() {
         {/* Thoughts Pane - Left */}
         <div className="w-1/2 border-r border-border-subtle">
           <ThoughtsPane
+            ref={thoughtsPaneRef}
             searchQuery={searchQuery}
             viewMode={viewMode}
             currentDate={thoughtsCurrentDate}
             onNextDay={goToNextDayThoughts}
             onPreviousDay={goToPreviousDayThoughts}
+            highlightedItemId={highlightedItemId}
           />
         </div>
 
@@ -177,6 +196,7 @@ function App() {
             currentDate={timeCurrentDate}
             onNextDay={goToNextDayTime}
             onPreviousDay={goToPreviousDayTime}
+            onJumpToSource={handleJumpToSource}
           />
         </div>
       </div>

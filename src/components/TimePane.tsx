@@ -27,6 +27,7 @@ interface TimePaneProps {
   currentDate?: string;
   onNextDay?: () => void;
   onPreviousDay?: () => void;
+  onJumpToSource?: (item: Item) => void;
 }
 
 function TimePane({
@@ -35,6 +36,7 @@ function TimePane({
   currentDate,
   onNextDay,
   onPreviousDay,
+  onJumpToSource,
 }: TimePaneProps) {
   const items = useStore((state) => state.items);
   const timeFormat = useSettingsStore((state) => state.timeFormat);
@@ -512,6 +514,15 @@ function TimePane({
                   </p>
                   {isHovered && (
                     <div className="flex gap-4 flex-shrink-0">
+                      {onJumpToSource && (
+                        <button
+                          onClick={() => onJumpToSource(item)}
+                          className="text-xs text-text-secondary hover:text-text-primary"
+                          title="Jump to source"
+                        >
+                          ↸
+                        </button>
+                      )}
                       <button
                         onClick={() => handleEdit(item.id, item)}
                         className="text-xs text-text-secondary hover:text-text-primary"
@@ -564,6 +575,15 @@ function TimePane({
                   </p>
                   {isHovered && (
                     <div className="flex gap-4 flex-shrink-0">
+                      {onJumpToSource && (
+                        <button
+                          onClick={() => onJumpToSource(item)}
+                          className="text-xs text-text-secondary hover:text-text-primary"
+                          title="Jump to source"
+                        >
+                          ↸
+                        </button>
+                      )}
                       <button
                         onClick={() => handleEdit(item.id, item)}
                         className="text-xs text-text-secondary hover:text-text-primary"
@@ -616,6 +636,15 @@ function TimePane({
                   </p>
                   {isHovered && (
                     <div className="flex gap-4 flex-shrink-0">
+                      {onJumpToSource && (
+                        <button
+                          onClick={() => onJumpToSource(item)}
+                          className="text-xs text-text-secondary hover:text-text-primary"
+                          title="Jump to source"
+                        >
+                          ↸
+                        </button>
+                      )}
                       <button
                         onClick={() => handleEdit(item.id, item)}
                         className="text-xs text-text-secondary hover:text-text-primary"

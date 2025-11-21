@@ -150,6 +150,24 @@
     animation: slideIn 0.3s ease-out;
   }
 
+  /* Highlight flash animation for jump-to-source */
+  @keyframes highlightFlash {
+    0% {
+      background-color: transparent;
+    }
+    20% {
+      background-color: var(--color-hover-bg);
+    }
+    100% {
+      background-color: transparent;
+    }
+  }
+
+  .highlight-flash {
+    animation: highlightFlash 2s ease-out;
+    border-radius: 4px;
+  }
+
   /* Focus indicators for accessibility */
   *:focus-visible {
     outline: 2px solid var(--color-text-primary);
