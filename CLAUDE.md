@@ -34,16 +34,17 @@ e2e/                # Playwright end-to-end tests
 
 ### Item Types
 
-- **Todo** (`t` prefix): Tasks with optional scheduled time, can have subtasks
-- **Event** (`e` prefix): Time-bound with start/end times
-- **Routine** (`r` prefix): Recurring items with recurrence patterns
-- **Note** (`*` or no prefix): Thoughts/ideas, can contain any item type as children
+- **Todo** (`t` prefix): Tasks with optional scheduled time, can have children (todos, notes)
+- **Event** (`e` prefix): Time-bound with start/end times, can have children (todos, notes)
+- **Routine** (`r` prefix): Recurring items with recurrence patterns, can have children (notes)
+- **Note** (`n` prefix or no prefix): Thoughts/ideas, can contain any item type as children
 
 ### Data Model
 
 - All items extend `BaseItem` with id, userId, type, content, dates
 - Items support nesting with `parentId`, `parentType`, `depthLevel`
-- Max depth: 1 level for todo subtasks, 2 levels for note sub-items
+- All item types use unified `children` field for sub-items
+- Max depth: 2 levels for all item types
 - Items stored in flat array, relationships via IDs
 
 ### State Management
@@ -99,7 +100,9 @@ npm run lint         # ESLint
 ### Input Parsing
 
 - `parseInput()` in `src/utils/parser.ts` handles natural language
-- Prefix detection: `t `, `e `, `r `, `* ` or `n `
+- `parseMultiLine()` for multi-line input with Tab-based hierarchy
+- Prefix detection: `t `, `e `, `r `, `n `
+- Tab after prefix indicates nesting level
 - Time parsing via chrono-node
 
 ## Testing Guidelines
