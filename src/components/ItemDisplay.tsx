@@ -1,11 +1,11 @@
 import { useState, memo } from 'react';
 import { format } from 'date-fns';
-import { Item, Todo, Routine, Note, Event } from '../types';
+import { Item, Todo, Routine, Event } from '../types';
 import { useStore } from '../store/useStore';
 import { useSettingsStore } from '../store/useSettingsStore';
-import { parseInput } from '../utils/parser';
+import { parseInput, parseMultiLine } from '../utils/parser';
 import { createItem } from '../utils/itemFactory';
-import { symbolsToPrefix, formatTimeForDisplay } from '../utils/formatting';
+import { symbolsToPrefix, formatTimeForDisplay, typeToSymbol } from '../utils/formatting';
 import { useToast } from '../hooks/useToast';
 import { useHistory } from '../store/useHistory';
 import { highlightMatches } from '../utils/search.tsx';
@@ -21,6 +21,7 @@ interface ItemDisplayProps {
   sourcePane?: 'thoughts' | 'time';
   searchQuery?: string;
   onJumpToSource?: (item: Item) => void;
+  onNavigateToDate?: (date: string) => void;
   highlightedItemId?: string | null;
 }
 
@@ -35,6 +36,7 @@ function ItemDisplay({
   sourcePane = 'thoughts',
   searchQuery = '',
   onJumpToSource,
+  onNavigateToDate,
   highlightedItemId,
 }: ItemDisplayProps) {
   const toggleTodoComplete = useStore((state) => state.toggleTodoComplete);
@@ -90,12 +92,32 @@ function ItemDisplay({
     setIsEditing(true);
   };
 
-  const getEditInitialContent = () => {
-    const symbol = getSymbol();
-    if (symbol && item.type !== 'note') {
-      return `${symbol} ${item.content}`;
+  // Serialize item and all children into multi-line format with tabs
+  const serializeItemWithChildren = (
+    targetItem: Item,
+    allItems: Item[],
+    level: number = 0
+  ): string => {
+    const symbol = typeToSymbol[targetItem.type] || '';
+    const tabs = '\t'.repeat(level);
+    let line =
+      level === 0 ? `${symbol} ${targetItem.content}` : `${symbol}${tabs} ${targetItem.content}`;
+
+    const childIds =
+      'children' in targetItem ? (targetItem as { children: string[] }).children : [];
+    if (childIds.length > 0) {
+      const childLines = childIds
+        .map((childId: string) => allItems.find((i) => i.id === childId))
+        .filter(Boolean)
+        .map((child) => serializeItemWithChildren(child as Item, allItems, level + 1));
+      line += '\n' + childLines.join('\n');
     }
-    return item.content;
+
+    return line;
+  };
+
+  const getEditInitialContent = () => {
+    return serializeItemWithChildren(item, items, 0);
   };
 
   const handleSaveEdit = (editContent: string) => {
@@ -104,7 +126,85 @@ function ItemDisplay({
       return;
     }
 
-    const contentWithPrefix = symbolsToPrefix(editContent.trim());
+    // Convert symbols to prefixes for each line
+    const lines = editContent.split('\n').map((line) => symbolsToPrefix(line));
+    const contentWithPrefix = lines.join('\n');
+
+    // Check if this is multi-line content
+    if (lines.length > 1) {
+      // Parse multi-line content
+      const { lines: parsedLines, errors } = parseMultiLine(contentWithPrefix);
+
+      if (errors.length > 0) {
+        addToast(errors[0], 'error');
+        return;
+      }
+
+      if (parsedLines.length === 0) {
+        setIsEditing(false);
+        return;
+      }
+
+      // Delete old children first
+      const oldChildIds = 'children' in item ? (item as { children: string[] }).children : [];
+      oldChildIds.forEach((childId: string) => {
+        deleteItem(childId);
+      });
+
+      // Update main item with first parsed line
+      const firstLine = parsedLines[0];
+      const mainUpdates: Partial<Item> = {
+        content: firstLine.content,
+        children: [],
+      };
+
+      if (item.type === 'todo') {
+        Object.assign(mainUpdates, {
+          scheduledTime: firstLine.scheduledTime ?? (item as Todo).scheduledTime,
+          hasTime: firstLine.hasTime,
+        });
+      } else if (item.type === 'event') {
+        Object.assign(mainUpdates, {
+          startTime: firstLine.scheduledTime || (item as Event).startTime,
+          endTime: firstLine.endTime || firstLine.scheduledTime || (item as Event).endTime,
+          hasTime: firstLine.hasTime,
+        });
+      }
+
+      updateItem(item.id, mainUpdates);
+
+      // Create children using addItems with proper parenting
+      if (parsedLines.length > 1) {
+        const childContent = parsedLines
+          .slice(1)
+          .map((line) => {
+            const prefix =
+              line.type === 'note'
+                ? 'n'
+                : line.type === 'todo'
+                  ? 't'
+                  : line.type === 'event'
+                    ? 'e'
+                    : 'r';
+            const tabs = '\t'.repeat(line.level);
+            return `${prefix}${tabs} ${line.content}`;
+          })
+          .join('\n');
+
+        // We need to add these as children of the current item
+        const addItems = useStore.getState().addItems;
+        const result = addItems(childContent, item.id, item.depthLevel);
+
+        if (result.errors.length > 0) {
+          addToast(result.errors[0], 'error');
+        }
+      }
+
+      setIsEditing(false);
+      return;
+    }
+
+    // Single line edit - use original logic
     const parsed = parseInput(contentWithPrefix);
 
     if (parsed.needsTimePrompt) {
@@ -192,17 +292,12 @@ function ItemDisplay({
   };
 
   const handleDelete = () => {
-    const subItemIds =
-      item.type === 'note'
-        ? (item as Note).subItems
-        : item.type === 'todo'
-          ? (item as Todo).subtasks
-          : [];
+    const childIds = 'children' in item ? item.children : [];
 
-    const hasChildren = subItemIds.length > 0;
+    const hasChildren = childIds.length > 0;
     let message = 'Are you sure you want to delete this item?';
     if (hasChildren) {
-      message = `This will also delete ${subItemIds.length} sub-item${subItemIds.length > 1 ? 's' : ''}. Continue?`;
+      message = `This will also delete ${childIds.length} sub-item${childIds.length > 1 ? 's' : ''}. Continue?`;
     }
 
     setConfirmDelete({ isOpen: true, message, hasChildren });
@@ -216,14 +311,11 @@ function ItemDisplay({
 
   const isCompleted = item.type === 'todo' && (item as Todo).completedAt;
 
-  const subItemIds =
-    item.type === 'note'
-      ? (item as Note).subItems
-      : item.type === 'todo'
-        ? (item as Todo).subtasks
-        : [];
+  const childIds = 'children' in item ? item.children : [];
 
-  const subItems = subItemIds.map((id) => items.find((i) => i.id === id)).filter(Boolean) as Item[];
+  const subItems = childIds
+    .map((id: string) => items.find((i) => i.id === id))
+    .filter(Boolean) as Item[];
 
   const indentPx = depth * 16;
 
@@ -310,6 +402,29 @@ function ItemDisplay({
                 </div>
               )}
 
+              {/* Completion link for completed todos */}
+              {item.type === 'todo' && (item as Todo).completedAt && (
+                <div className="mt-1 text-xs font-mono text-text-secondary">
+                  {(item as Todo).completionLinkId ? (
+                    <button
+                      onClick={() => {
+                        const linkedItem = items.find(
+                          (i) => i.id === (item as Todo).completionLinkId
+                        );
+                        if (linkedItem && onNavigateToDate) {
+                          onNavigateToDate(linkedItem.createdDate);
+                        }
+                      }}
+                      className="hover:text-text-primary transition-colors"
+                    >
+                      completed on {format(new Date((item as Todo).completedAt!), 'MMM d')} →
+                    </button>
+                  ) : (
+                    <span>completed {format(new Date((item as Todo).completedAt!), 'MMM d')}</span>
+                  )}
+                </div>
+              )}
+
               {(item.type === 'todo' || item.type === 'event' || item.type === 'routine') &&
                 'embeddedItems' in item &&
                 item.embeddedItems.length > 0 && (
@@ -361,6 +476,7 @@ function ItemDisplay({
                 sourcePane={sourcePane}
                 searchQuery={searchQuery}
                 onJumpToSource={onJumpToSource}
+                onNavigateToDate={onNavigateToDate}
                 highlightedItemId={highlightedItemId}
               />
             ))}

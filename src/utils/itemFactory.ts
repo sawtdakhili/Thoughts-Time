@@ -31,7 +31,7 @@ export function createTodoItem(params: CreateItemParams): Todo {
     parentId: null,
     parentType: null,
     depthLevel: 0,
-    subtasks: [],
+    children: [],
     embeddedItems: parsed.embeddedNotes,
     completionLinkId: null,
   };
@@ -60,6 +60,7 @@ export function createEventItem(params: CreateItemParams): Event {
     parentId: null,
     parentType: null,
     depthLevel: 0,
+    children: [],
   };
 }
 
@@ -85,6 +86,7 @@ export function createRoutineItem(params: CreateItemParams): Routine {
     parentId: null,
     parentType: null,
     depthLevel: 0,
+    children: [],
   };
 }
 
@@ -102,7 +104,7 @@ export function createNoteItem(params: CreateItemParams): Note {
     completedAt: null,
     cancelledAt: null,
     linkPreviews: [],
-    subItems: [],
+    children: [],
     parentId: null,
     parentType: null,
     depthLevel: 0,

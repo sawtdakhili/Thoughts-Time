@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useStore } from '../store/useStore';
 import { useHistory, moveToRedo, moveToUndo } from '../store/useHistory';
-import { Item, Todo, Note } from '../types';
+import { Item } from '../types';
 
 /**
  * Hook to setup undo/redo handlers
@@ -60,21 +60,11 @@ export function useUndoRedo() {
                   // Get latest items from store
                   const currentItems = useStore.getState().items;
                   const parent = currentItems.find((i) => i.id === item.parentId);
-                  if (parent) {
-                    if (parent.type === 'todo') {
-                      const parentTodo = parent as Todo;
-                      if (!parentTodo.subtasks.includes(item.id)) {
-                        updateItem(parent.id, {
-                          subtasks: [...parentTodo.subtasks, item.id],
-                        });
-                      }
-                    } else if (parent.type === 'note') {
-                      const parentNote = parent as Note;
-                      if (!parentNote.subItems.includes(item.id)) {
-                        updateItem(parent.id, {
-                          subItems: [...parentNote.subItems, item.id],
-                        });
-                      }
+                  if (parent && 'children' in parent) {
+                    if (!parent.children.includes(item.id)) {
+                      updateItem(parent.id, {
+                        children: [...parent.children, item.id],
+                      } as Partial<typeof parent>);
                     }
                   }
                 }

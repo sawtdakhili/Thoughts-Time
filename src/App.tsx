@@ -3,6 +3,7 @@ import ThoughtsPane, { ThoughtsPaneHandle } from './components/ThoughtsPane';
 import TimePane from './components/TimePane';
 import Settings from './components/Settings';
 import ToastContainer from './components/Toast';
+import PaneErrorBoundary from './components/PaneErrorBoundary';
 import { useSettingsStore } from './store/useSettingsStore';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useUndoRedo } from './hooks/useUndoRedo';
@@ -154,6 +155,14 @@ function App() {
 
   return (
     <div className="h-full flex flex-col bg-background text-text-primary">
+      {/* Skip Navigation Link for Accessibility */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:px-4 focus:py-2 focus:bg-text-primary focus:text-background focus:rounded-sm"
+      >
+        Skip to main content
+      </a>
+
       {/* Settings Modal */}
       <Settings isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
 
@@ -201,32 +210,36 @@ function App() {
       </header>
 
       {/* Two-pane layout */}
-      <div className="flex-1 flex overflow-hidden">
+      <main id="main-content" className="flex-1 flex overflow-hidden">
         {/* Thoughts Pane - Left */}
         <div className="w-1/2 border-r border-border-subtle">
-          <ThoughtsPane
-            ref={thoughtsPaneRef}
-            searchQuery={searchQuery}
-            viewMode={viewMode}
-            currentDate={thoughtsCurrentDate}
-            onNextDay={goToNextDayThoughts}
-            onPreviousDay={goToPreviousDayThoughts}
-            highlightedItemId={highlightedItemId}
-          />
+          <PaneErrorBoundary paneName="Thoughts Pane">
+            <ThoughtsPane
+              ref={thoughtsPaneRef}
+              searchQuery={searchQuery}
+              viewMode={viewMode}
+              currentDate={thoughtsCurrentDate}
+              onNextDay={goToNextDayThoughts}
+              onPreviousDay={goToPreviousDayThoughts}
+              highlightedItemId={highlightedItemId}
+            />
+          </PaneErrorBoundary>
         </div>
 
         {/* Time Pane - Right */}
         <div className="w-1/2">
-          <TimePane
-            searchQuery={searchQuery}
-            viewMode={viewMode}
-            currentDate={timeCurrentDate}
-            onNextDay={goToNextDayTime}
-            onPreviousDay={goToPreviousDayTime}
-            onJumpToSource={handleJumpToSource}
-          />
+          <PaneErrorBoundary paneName="Time Pane">
+            <TimePane
+              searchQuery={searchQuery}
+              viewMode={viewMode}
+              currentDate={timeCurrentDate}
+              onNextDay={goToNextDayTime}
+              onPreviousDay={goToPreviousDayTime}
+              onJumpToSource={handleJumpToSource}
+            />
+          </PaneErrorBoundary>
         </div>
-      </div>
+      </main>
 
       {/* Toast Notifications */}
       <ToastContainer />

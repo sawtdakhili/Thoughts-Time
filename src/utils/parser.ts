@@ -1,6 +1,12 @@
 import * as chrono from 'chrono-node';
 import { addMinutes, addHours } from 'date-fns';
-import { ItemType, ParsedInput, RecurrencePattern } from '../types';
+import {
+  ItemType,
+  ParsedInput,
+  ParsedLine,
+  MultiLineParseResult,
+  RecurrencePattern,
+} from '../types';
 
 // Create custom Chrono instance with enhanced parsing
 const customChrono = chrono.casual.clone();
@@ -245,22 +251,14 @@ export function detectItemType(input: string): ItemType {
   if (input.startsWith('e ')) return 'event';
   if (input.startsWith('r ')) return 'routine';
   if (input.startsWith('n ')) return 'note';
-  if (input.startsWith('* ')) return 'note';
   return 'note'; // Default to note
-}
-
-/**
- * Check if input has an explicit note prefix
- */
-export function hasExplicitNotePrefix(input: string): boolean {
-  return input.startsWith('* ') || input.startsWith('n ');
 }
 
 /**
  * Remove prefix from content
  */
 export function removePrefix(input: string): string {
-  const prefixes = ['t ', 'e ', 'r ', 'n ', '* '];
+  const prefixes = ['t ', 'e ', 'r ', 'n '];
   for (const prefix of prefixes) {
     if (input.startsWith(prefix)) {
       return input.slice(2);
@@ -526,4 +524,139 @@ export function parseInput(input: string): ParsedInput {
     embeddedNotes,
     needsTimePrompt,
   };
+}
+
+/**
+ * Type constraints: what children each parent type can have
+ */
+export const TYPE_CONSTRAINTS: Record<ItemType, ItemType[]> = {
+  todo: ['todo', 'note'],
+  note: ['todo', 'note', 'event'],
+  event: ['todo', 'note'],
+  routine: ['note'],
+};
+
+/**
+ * Validate if a child type is allowed under a parent type
+ */
+export function isValidChildType(parentType: ItemType, childType: ItemType): boolean {
+  return TYPE_CONSTRAINTS[parentType].includes(childType);
+}
+
+/**
+ * Count leading tabs in a string
+ */
+function countLeadingTabs(line: string): number {
+  let count = 0;
+  for (const char of line) {
+    if (char === '\t') {
+      count++;
+    } else {
+      break;
+    }
+  }
+  return count;
+}
+
+/**
+ * Parse multi-line input with hierarchy detection
+ * Format: prefix [Tab...] content
+ * - Tab count after prefix determines nesting level
+ * - Max 2 levels deep
+ */
+export function parseMultiLine(input: string): MultiLineParseResult {
+  const lines: ParsedLine[] = [];
+  const errors: string[] = [];
+
+  const rawLines = input.split('\n').filter((line) => line.trim() !== '');
+
+  if (rawLines.length === 0) {
+    return { lines: [], errors: ['Input is empty'] };
+  }
+
+  for (let i = 0; i < rawLines.length; i++) {
+    const rawLine = rawLines[i];
+    const lineNum = i + 1;
+
+    // Detect prefix first (t , e , r , n )
+    const prefixMatch = rawLine.match(/^([tern]) /);
+    if (!prefixMatch) {
+      errors.push(`Line ${lineNum}: Missing prefix (t, e, r, or n)`);
+      continue;
+    }
+
+    // Get content after prefix (which includes tabs for level detection)
+    const afterPrefix = rawLine.slice(2); // Remove "x "
+
+    // Count tabs to determine level
+    const level = countLeadingTabs(afterPrefix);
+
+    // Remove tabs from content
+    const contentWithoutTabs = afterPrefix.slice(level);
+
+    // Validate level
+    if (level > 2) {
+      errors.push(`Line ${lineNum}: Maximum nesting depth is 2 levels`);
+      continue;
+    }
+
+    // Check for orphans (first line with tabs)
+    if (i === 0 && level > 0) {
+      errors.push(`Line ${lineNum}: First item cannot be nested`);
+      continue;
+    }
+
+    // Check for skipped levels
+    if (i > 0 && lines.length > 0) {
+      const prevLevel = lines[lines.length - 1].level;
+      if (level > prevLevel + 1) {
+        errors.push(`Line ${lineNum}: Cannot skip nesting levels`);
+        continue;
+      }
+    }
+
+    // Reconstruct full line for parsing (prefix + content without tabs)
+    const fullLine = prefixMatch[0] + contentWithoutTabs;
+    const parsed = parseInput(fullLine);
+
+    // Validate type constraints
+    if (level > 0 && lines.length > 0) {
+      // Find parent (most recent item at level - 1)
+      let parentIndex = -1;
+      for (let j = lines.length - 1; j >= 0; j--) {
+        if (lines[j].level === level - 1) {
+          parentIndex = j;
+          break;
+        }
+      }
+
+      if (parentIndex >= 0) {
+        const parentType = lines[parentIndex].type;
+        if (!isValidChildType(parentType, parsed.type)) {
+          errors.push(`Line ${lineNum}: ${parsed.type} cannot be a child of ${parentType}`);
+          continue;
+        }
+      }
+    }
+
+    // Routines cannot be nested
+    if (parsed.type === 'routine' && level > 0) {
+      errors.push(`Line ${lineNum}: Routines cannot be nested`);
+      continue;
+    }
+
+    lines.push({
+      type: parsed.type,
+      content: parsed.content,
+      level,
+      scheduledTime: parsed.scheduledTime,
+      endTime: parsed.endTime,
+      hasTime: parsed.hasTime,
+      recurrencePattern: parsed.recurrencePattern,
+      embeddedNotes: parsed.embeddedNotes,
+      needsTimePrompt: parsed.needsTimePrompt,
+    });
+  }
+
+  return { lines, errors };
 }

@@ -20,7 +20,7 @@
 src/
 ├── components/     # React components (TimePane, ThoughtsPane, ItemDisplay, etc.)
 ├── store/          # Zustand stores (useStore.ts, useHistory.ts, useSettingsStore.ts)
-├── hooks/          # Custom hooks (useKeyboardShortcuts, useDebouncedSearch, etc.)
+├── hooks/          # Custom hooks (useKeyboardShortcuts, useWheelNavigation, useFocusTrap, etc.)
 ├── utils/          # Utilities (parser.ts, formatting.ts, itemFactory.ts, search.tsx)
 ├── constants/      # App constants
 ├── test/           # Test setup
@@ -33,18 +33,22 @@ e2e/                # Playwright end-to-end tests
 ## Key Concepts
 
 ### Item Types
-- **Todo** (`t` prefix): Tasks with optional scheduled time, can have subtasks
-- **Event** (`e` prefix): Time-bound with start/end times
-- **Routine** (`r` prefix): Recurring items with recurrence patterns
-- **Note** (`*` or no prefix): Thoughts/ideas, can contain any item type as children
+
+- **Todo** (`t` prefix): Tasks with optional scheduled time, can have children (todos, notes)
+- **Event** (`e` prefix): Time-bound with start/end times, can have children (todos, notes)
+- **Routine** (`r` prefix): Recurring items with recurrence patterns, can have children (notes)
+- **Note** (`n` prefix or no prefix): Thoughts/ideas, can contain any item type as children
 
 ### Data Model
+
 - All items extend `BaseItem` with id, userId, type, content, dates
 - Items support nesting with `parentId`, `parentType`, `depthLevel`
-- Max depth: 1 level for todo subtasks, 2 levels for note sub-items
+- All item types use unified `children` field for sub-items
+- Max depth: 2 levels for all item types
 - Items stored in flat array, relationships via IDs
 
 ### State Management
+
 - `useStore` (src/store/useStore.ts): Main app state with items CRUD
 - `useHistory` (src/store/useHistory.ts): Undo/redo functionality
 - `useSettingsStore`: Theme and view mode preferences
@@ -75,34 +79,42 @@ npm run lint         # ESLint
 ## Code Conventions
 
 ### Component Patterns
+
 - Functional components with hooks
 - Props interfaces defined inline or in types.ts
 - Event handlers prefixed with `handle` (e.g., `handleSubmit`)
 - Tailwind classes for styling, inline in JSX
 
 ### File Naming
+
 - Components: PascalCase (`ItemDisplay.tsx`)
 - Utilities: camelCase (`parser.ts`)
 - Tests: Same name with `.test.ts(x)` suffix
 
 ### State Updates
+
 - Use store actions for state changes
 - `skipHistory` flag prevents recording during undo/redo
 - Record history before mutations for proper undo
 
 ### Input Parsing
+
 - `parseInput()` in `src/utils/parser.ts` handles natural language
-- Prefix detection: `t `, `e `, `r `, `* ` or `n `
+- `parseMultiLine()` for multi-line input with Tab-based hierarchy
+- Prefix detection: `t `, `e `, `r `, `n `
+- Tab after prefix indicates nesting level
 - Time parsing via chrono-node
 
 ## Testing Guidelines
 
 ### Unit Tests (Vitest)
+
 - Located alongside source files (`*.test.ts`)
 - Use `@testing-library/react` for component tests
 - Setup in `src/test/setup.ts`
 
 ### E2E Tests (Playwright)
+
 - Located in `e2e/` directory
 - Config in `playwright.config.ts`
 - Test user flows and interactions
@@ -111,14 +123,19 @@ npm run lint         # ESLint
 
 - `src/types.ts` - All TypeScript interfaces
 - `src/store/useStore.ts` - Core state management
+- `src/store/useHistory.ts` - Undo/redo history management
 - `src/utils/parser.ts` - Input parsing logic
 - `src/components/ThoughtsPane.tsx` - Left pane (thoughts)
 - `src/components/TimePane.tsx` - Right pane (timeline)
 - `src/components/ItemDisplay.tsx` - Item rendering
+- `src/components/PaneErrorBoundary.tsx` - Error isolation for panes
+- `src/hooks/useWheelNavigation.ts` - Shared wheel navigation for book mode
+- `src/hooks/useFocusTrap.ts` - Focus trap for modals
 
 ## Common Tasks
 
 ### Adding a New Item Type
+
 1. Add type to `ItemType` union in `types.ts`
 2. Create interface extending `BaseItem`
 3. Update `parseInput()` for prefix detection
@@ -126,12 +143,14 @@ npm run lint         # ESLint
 5. Update `ItemDisplay.tsx` for rendering
 
 ### Modifying Store Logic
+
 1. Update interface in store file
 2. Implement action with history recording
 3. Test undo/redo behavior
 4. Add unit tests
 
 ### Adding UI Components
+
 1. Create component in `src/components/`
 2. Use Tailwind for styling
 3. Connect to store via hooks
@@ -156,3 +175,6 @@ npm run lint         # ESLint
 4. **Natural language parsing** - chrono-node handles date/time extraction
 5. **Parent-child relationships** - maintain consistency when modifying items
 6. **localStorage persistence** - changes auto-persist via Zustand middleware
+7. **Error boundaries** - Each pane has its own error boundary for isolation
+8. **Accessibility** - App includes skip navigation link and ARIA labels
+9. **Test coverage** - 238 tests covering stores, hooks, and components

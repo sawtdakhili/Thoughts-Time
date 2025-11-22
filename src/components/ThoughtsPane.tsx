@@ -22,7 +22,9 @@ import {
   symbolToPrefix as symbolToPrefixMap,
 } from '../utils/formatting';
 import { matchesSearch } from '../utils/search.tsx';
-import { ANIMATION, DATE_RANGE } from '../constants';
+import { useWheelNavigation } from '../hooks/useWheelNavigation';
+import { useToast } from '../hooks/useToast';
+import { DATE_RANGE } from '../constants';
 
 interface ThoughtsPaneProps {
   searchQuery?: string;
@@ -50,9 +52,10 @@ const ThoughtsPane = forwardRef<ThoughtsPaneHandle, ThoughtsPaneProps>(
     ref
   ) => {
     const [input, setInput] = useState('');
-    const addItem = useStore((state) => state.addItem);
+    const addItems = useStore((state) => state.addItems);
     const items = useStore((state) => state.items);
     const timeFormat = useSettingsStore((state) => state.timeFormat);
+    const { addToast } = useToast();
     const scrollRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const [timePrompt, setTimePrompt] = useState<{
@@ -61,9 +64,6 @@ const ThoughtsPane = forwardRef<ThoughtsPaneHandle, ThoughtsPaneProps>(
       isEvent: boolean;
     } | null>(null);
     const [isPageFlipping, setIsPageFlipping] = useState(false);
-    const lastScrollTop = useRef(0);
-    const isTransitioning = useRef(false);
-    const wheelDeltaY = useRef(0);
 
     // Filter items based on search query (memoized for performance)
     const filteredItems = useMemo(
@@ -171,6 +171,15 @@ const ThoughtsPane = forwardRef<ThoughtsPaneHandle, ThoughtsPaneProps>(
       }
     }, [todayIndex, viewMode, virtualizer]);
 
+    // Use shared wheel navigation hook
+    const { handleScroll } = useWheelNavigation({
+      scrollRef: scrollRef as React.RefObject<HTMLDivElement>,
+      viewMode,
+      onNextDay,
+      onPreviousDay,
+      setIsPageFlipping,
+    });
+
     const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       const newValue = e.target.value;
       const cursorPos = e.target.selectionStart;
@@ -243,39 +252,44 @@ const ThoughtsPane = forwardRef<ThoughtsPaneHandle, ThoughtsPaneProps>(
         }
       }
 
-      // Tab: insert indentation (2 spaces)
+      // Tab: insert tab character for indentation
       if (e.key === 'Tab' && !e.shiftKey) {
         e.preventDefault();
-        const newValue = value.substring(0, selectionStart) + '  ' + value.substring(selectionEnd);
+        const newValue = value.substring(0, selectionStart) + '\t' + value.substring(selectionEnd);
         setInput(newValue);
 
-        // Move cursor after the inserted spaces
+        // Move cursor after the inserted tab
         setTimeout(() => {
-          textarea.selectionStart = textarea.selectionEnd = selectionStart + 2;
+          textarea.selectionStart = textarea.selectionEnd = selectionStart + 1;
         }, 0);
         return;
       }
 
-      // Shift+Tab: remove indentation from current line
+      // Shift+Tab: remove tab from current line (after prefix)
       if (e.key === 'Tab' && e.shiftKey) {
         e.preventDefault();
 
         // Find start of current line
         const lineStart = value.lastIndexOf('\n', selectionStart - 1) + 1;
-        const lineText = value.substring(lineStart, selectionStart);
+        const lineContent = value.substring(lineStart);
 
-        // Check if line starts with 2 spaces
-        if (lineText.startsWith('  ')) {
-          const newValue = value.substring(0, lineStart) + value.substring(lineStart + 2);
-          setInput(newValue);
+        // Find position after prefix (symbol + space or prefix + space)
+        const prefixMatch = lineContent.match(/^[□☑↹⇤⇥↻↝■\-*tern] /);
+        if (prefixMatch) {
+          const afterPrefix = lineStart + prefixMatch[0].length;
+          // Check if there's a tab after the prefix
+          if (value[afterPrefix] === '\t') {
+            const newValue = value.substring(0, afterPrefix) + value.substring(afterPrefix + 1);
+            setInput(newValue);
 
-          // Move cursor back 2 positions
-          setTimeout(() => {
-            textarea.selectionStart = textarea.selectionEnd = Math.max(
-              lineStart,
-              selectionStart - 2
-            );
-          }, 0);
+            // Move cursor back 1 position
+            setTimeout(() => {
+              textarea.selectionStart = textarea.selectionEnd = Math.max(
+                lineStart,
+                selectionStart - 1
+              );
+            }, 0);
+          }
         }
         return;
       }
@@ -322,41 +336,42 @@ const ThoughtsPane = forwardRef<ThoughtsPaneHandle, ThoughtsPaneProps>(
     const createItems = (inputOverride?: string) => {
       const inputToProcess = inputOverride ?? input;
       const lines = inputToProcess.split('\n');
-      const itemStack: Array<{ id: string; level: number }> = [];
 
-      lines.forEach((line) => {
-        if (!line.trim()) return; // Skip empty lines
+      // Convert input to format expected by parseMultiLine
+      // Format: prefix [Tab...] content
+      const formattedLines = lines
+        .map((line) => {
+          if (!line.trim()) return '';
 
-        // Detect indentation level (2 spaces = 1 level)
-        const leadingSpaces = line.match(/^(\s*)/)?.[0].length || 0;
-        const indentLevel = Math.floor(leadingSpaces / 2);
-        const contentWithoutIndent = line.trimStart();
-        // Convert symbols back to prefixes before parsing
-        const contentWithPrefix = symbolsToPrefix(contentWithoutIndent);
+          // Find prefix/symbol and content
+          const match = line.match(/^([□☑↹⇤⇥↻↝■\-*tern] )(\t*)(.*)/);
+          if (match) {
+            const symbolOrPrefix = match[1].trim();
+            const tabs = match[2];
+            const content = match[3];
 
-        // Find parent based on indent level
-        let parentId: string | null = null;
-        if (indentLevel > 0) {
-          // Find the closest parent at indentLevel - 1
-          for (let i = itemStack.length - 1; i >= 0; i--) {
-            if (itemStack[i].level === indentLevel - 1) {
-              parentId = itemStack[i].id;
-              break;
-            }
+            // Convert symbol to prefix if needed
+            const prefix = symbolsToPrefix(symbolOrPrefix + ' ').trim();
+
+            // Reconstruct: prefix + space + tabs + content
+            return `${prefix} ${tabs}${content}`;
           }
-        }
 
-        // Create item with detected parent and depth
-        const newItemId = addItem(contentWithPrefix, parentId, indentLevel);
+          // No prefix found - treat as note
+          const contentWithPrefix = symbolsToPrefix(line.trimStart());
+          return contentWithPrefix;
+        })
+        .filter((line) => line.trim() !== '')
+        .join('\n');
 
-        // Update stack
-        // Remove items at same or deeper level
-        while (itemStack.length > 0 && itemStack[itemStack.length - 1].level >= indentLevel) {
-          itemStack.pop();
-        }
-        // Add this item to stack
-        itemStack.push({ id: newItemId, level: indentLevel });
-      });
+      // Use the new addItems for batch creation
+      const result = addItems(formattedLines);
+
+      if (result.errors.length > 0) {
+        // Show first error as toast
+        addToast(result.errors[0], 'error');
+        return;
+      }
 
       setInput('');
 
@@ -365,7 +380,7 @@ const ThoughtsPane = forwardRef<ThoughtsPaneHandle, ThoughtsPaneProps>(
         textareaRef.current.style.height = '56px';
       }
 
-      // Scroll to bottom after adding item
+      // Scroll to bottom after adding items
       setTimeout(() => {
         if (scrollRef.current) {
           scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -376,84 +391,6 @@ const ThoughtsPane = forwardRef<ThoughtsPaneHandle, ThoughtsPaneProps>(
     const handleTimePromptCancel = () => {
       setTimePrompt(null);
     };
-
-    const handleWheel = (e: WheelEvent) => {
-      if (
-        !scrollRef.current ||
-        viewMode !== 'book' ||
-        !onNextDay ||
-        !onPreviousDay ||
-        isTransitioning.current
-      )
-        return;
-
-      const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
-      const isScrollable = scrollHeight > clientHeight;
-
-      // Detect if we're at boundaries
-      const atBottom = scrollTop + clientHeight >= scrollHeight - 5;
-      const atTop = scrollTop <= 5;
-
-      // For non-scrollable content OR at boundaries, use wheel delta accumulation
-      if (!isScrollable || atBottom || atTop) {
-        wheelDeltaY.current += e.deltaY;
-
-        // Threshold to prevent accidental triggers - requires intentional over-scroll
-        if (wheelDeltaY.current > ANIMATION.WHEEL_DELTA_THRESHOLD) {
-          // Scroll down = next day
-          wheelDeltaY.current = 0;
-          isTransitioning.current = true;
-          setIsPageFlipping(true);
-          setTimeout(() => {
-            onNextDay();
-            setTimeout(() => {
-              if (scrollRef.current) scrollRef.current.scrollTop = 0;
-              setTimeout(() => {
-                setIsPageFlipping(false);
-                isTransitioning.current = false;
-              }, ANIMATION.PAGE_FLIP_DURATION);
-            }, ANIMATION.SCROLL_RESET_DELAY);
-          }, ANIMATION.SCROLL_RESET_DELAY);
-        } else if (wheelDeltaY.current < -ANIMATION.WHEEL_DELTA_THRESHOLD) {
-          // Scroll up = previous day
-          wheelDeltaY.current = 0;
-          isTransitioning.current = true;
-          setIsPageFlipping(true);
-          setTimeout(() => {
-            onPreviousDay();
-            setTimeout(() => {
-              if (scrollRef.current) scrollRef.current.scrollTop = 0;
-              setTimeout(() => {
-                setIsPageFlipping(false);
-                isTransitioning.current = false;
-              }, ANIMATION.PAGE_FLIP_DURATION);
-            }, ANIMATION.SCROLL_RESET_DELAY);
-          }, ANIMATION.SCROLL_RESET_DELAY);
-        }
-      } else {
-        // Reset delta when scrolling normally (not at boundaries)
-        wheelDeltaY.current = 0;
-      }
-    };
-
-    const handleScroll = () => {
-      if (!scrollRef.current) return;
-
-      const { scrollTop } = scrollRef.current;
-
-      // Track scroll position for reference
-      lastScrollTop.current = scrollTop;
-    };
-
-    // Add wheel event listener for non-scrollable content
-    useEffect(() => {
-      const scrollEl = scrollRef.current;
-      if (scrollEl && viewMode === 'book') {
-        scrollEl.addEventListener('wheel', handleWheel as EventListener);
-        return () => scrollEl.removeEventListener('wheel', handleWheel as EventListener);
-      }
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [viewMode, onNextDay, onPreviousDay]);
 
     const handleTimePromptModalSubmit = (time: string, endTime?: string) => {
       if (!timePrompt) return;

@@ -19,9 +19,9 @@ export interface Todo extends BaseItem {
   scheduledTime: Date | null; // null = unscheduled
   hasTime: boolean; // whether scheduledTime has a specific time or just date
   parentId: string | null; // for subtasks
-  parentType: 'todo' | 'note' | null;
+  parentType: 'todo' | 'note' | 'event' | null;
   depthLevel: number; // 0 = top, 1 = sub, 2 = sub-sub
-  subtasks: string[]; // child IDs
+  children: string[]; // child IDs (notes, todos)
   embeddedItems: string[]; // note IDs
   completionLinkId: string | null;
 }
@@ -38,6 +38,7 @@ export interface Event extends BaseItem {
   parentId: string | null; // can be sub-item of note
   parentType: 'note' | null;
   depthLevel: number; // 0 = top, 1 = sub, 2 = sub-sub
+  children: string[]; // child IDs (notes, todos)
 }
 
 export interface RecurrencePattern {
@@ -57,17 +58,18 @@ export interface Routine extends BaseItem {
   streak: number;
   lastCompleted: Date | null;
   embeddedItems: string[];
-  parentId: string | null; // can be sub-item of note
-  parentType: 'note' | null;
-  depthLevel: number; // 0 = top, 1 = sub, 2 = sub-sub
+  parentId: string | null; // routines are always top-level
+  parentType: null; // routines cannot be children
+  depthLevel: number; // always 0 for routines
+  children: string[]; // child IDs (notes only)
 }
 
 export interface Note extends BaseItem {
   type: 'note';
   linkPreviews: LinkPreview[];
-  subItems: string[]; // Can contain ANY item type (notes, todos, events, routines)
-  parentId: string | null; // can be sub-item of another note
-  parentType: 'note' | null;
+  children: string[]; // child IDs (todos, notes, events)
+  parentId: string | null; // can be sub-item of todo, note, event, or routine
+  parentType: 'todo' | 'note' | 'event' | 'routine' | null;
   depthLevel: number; // 0 = top, 1 = sub, 2 = sub-sub (max 2 levels)
   orderIndex: number; // For ordering sub-items
 }
@@ -91,4 +93,21 @@ export interface ParsedInput {
   recurrencePattern: RecurrencePattern | null;
   embeddedNotes: string[]; // IDs of notes to embed
   needsTimePrompt: boolean; // True if date exists but no specific time
+}
+
+export interface ParsedLine {
+  type: ItemType;
+  content: string;
+  level: number; // 0 = top, 1 = child, 2 = grandchild
+  scheduledTime: Date | null;
+  endTime?: Date | null;
+  hasTime: boolean;
+  recurrencePattern: RecurrencePattern | null;
+  embeddedNotes: string[];
+  needsTimePrompt: boolean;
+}
+
+export interface MultiLineParseResult {
+  lines: ParsedLine[];
+  errors: string[];
 }

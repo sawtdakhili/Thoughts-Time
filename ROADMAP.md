@@ -22,8 +22,9 @@ This app enforces a strict scheduling philosophy: **every single task, event, an
 - [x] Basic capture system with prefix detection (t, e, r, n)
 - [x] Four item types: Todo, Event, Routine, Note
 - [x] Natural language time parsing (via chrono library)
-- [x] Todo subtasks (1 level deep, checking parent checks children)
-- [x] Note sub-items (2 levels deep, Org Mode style with prefixes)
+- [x] Unified children field for all item types
+- [x] Multi-line input with Tab-based hierarchy (max 2 levels)
+- [x] Edit mode shows item + children in textarea
 - [x] Depth validation and enforcement
 - [x] Two view modes: Infinite Scrolling & Book Style
 - [x] Theme system (Light/Dark)
@@ -44,7 +45,7 @@ This app enforces a strict scheduling philosophy: **every single task, event, an
 - [x] Error boundary with graceful error handling
 - [x] Keyboard shortcuts (Cmd/Ctrl+F, Escape, Cmd/Ctrl+Z, Cmd/Ctrl+Shift+Z)
 - [x] Accessibility improvements (ARIA labels, focus indicators)
-- [x] Comprehensive test suite (115 tests with Vitest)
+- [x] Comprehensive test suite (238 tests with Vitest)
 - [x] Undo/Redo system (tracks all actions with Cmd/Ctrl+Z/Shift+Z)
 - [x] Undo button in delete toasts
 - [x] Custom TimeInput component (replaces native browser picker)
@@ -82,19 +83,26 @@ This app enforces a strict scheduling philosophy: **every single task, event, an
 
 ---
 
-#### 2. Subtasks Enhancements
+#### 2. Hierarchy System
 
-**Status**: Completed ✅
+**Status**: Refactored ✅
 
 **Completed**:
 
 - [x] Tab/Shift+Tab for indent/outdent
-- [x] Visual indent (32px)
-- [x] Parent-child relationship in DB
-- [x] Checking parent checks all children
-- [x] Max 1 level depth enforcement
+- [x] Visual indent with left border styling
+- [x] Unified `children` field for all item types
+- [x] Type constraints (which children each type can have)
+- [x] Max 2 levels depth for all types
+- [x] Multi-line input with Shift+Enter
+- [x] Edit mode shows item + all children
 
-**Note**: Metadata positioning item removed as todos no longer have metadata to display, and routines don't have subtasks.
+**Type Constraints**:
+
+- Todo → todos, notes
+- Note → todos, notes, events
+- Event → todos, notes (displayed within event timeframe)
+- Routine → notes
 
 ---
 
@@ -242,12 +250,11 @@ This app enforces a strict scheduling philosophy: **every single task, event, an
 - [x] Hides empty days in book mode when searching
 - [x] Clear search with × button
 
-**Not implemented** (lower priority):
+**Completed** (November 2025 update):
 
-- [ ] Keyboard shortcut: Cmd/Ctrl + F
-- [ ] Highlight matching text
-- [ ] Click result navigates to day and scrolls to item
-- [ ] Show "No results found" empty state
+- [x] Keyboard shortcut: Cmd/Ctrl + F
+- [x] Highlight matching text in results
+- [x] Show "No results found" empty state
 
 **Files modified**:
 
@@ -348,43 +355,7 @@ domain: 13px, #6A6A6A
 
 ### 🟢 Lower Priority (Phase 3)
 
-#### 11. Completion Linking System
-
-**Status**: Partially implemented in store, not in UI - **Not a priority**
-
-**Requirements**:
-
-- [ ] Create CompletionLink on todo completion
-- [ ] Original item shows "completed on Oct 14 →"
-- [ ] Completion entry created in today's Thoughts
-- [ ] Completion entry shows "← from Oct 12"
-- [ ] Click links to navigate between days
-- [ ] Uncompleting removes completion entry and link
-- [ ] Deleting original deletes completion entry
-- [ ] Deleting completion reverts original to uncompleted
-
-**Visual Specs**:
-
-```
-Oct 12 Thoughts:
-☑ ~~Call mom~~
-  completed on Oct 14 →
-
-Oct 14 Thoughts:
-☑ ~~Call mom (completed)~~
-  ← from Oct 12
-```
-
-**Files to create/modify**:
-
-- `src/types.ts` (add CompletionLink interface)
-- `src/store/useStore.ts` (add completion linking logic)
-- `src/components/ItemDisplay.tsx` (show completion links)
-- `src/components/DailyReview.tsx` (create links on complete)
-
----
-
-#### 12. Database Backend (Supabase)
+#### 11. Database Backend (Supabase)
 
 **Status**: Not implemented (currently localStorage only)
 
@@ -417,7 +388,7 @@ Oct 14 Thoughts:
 
 ---
 
-#### 13. Mobile Responsive Optimizations
+#### 12. Mobile Responsive Optimizations
 
 **Status**: Partially responsive, needs improvements
 
@@ -440,7 +411,7 @@ Oct 14 Thoughts:
 
 ---
 
-#### 14. Notifications System
+#### 13. Notifications System
 
 **Status**: Not implemented
 
@@ -495,7 +466,7 @@ Oct 14 Thoughts:
 
 ---
 
-#### 16. Accessibility Improvements
+#### 15. Accessibility Improvements
 
 **Status**: Significantly improved ✅
 
@@ -513,8 +484,8 @@ Oct 14 Thoughts:
 
 **Remaining for full WCAG 2.1 AA**:
 
-- [ ] Full accessibility audit
-- [ ] Skip navigation link
+- [x] Skip navigation link (added November 2025)
+- [ ] Full accessibility audit (manual testing)
 
 **Files modified**:
 
@@ -562,7 +533,6 @@ Oct 14 Thoughts:
 - ↻ Routine - U+21BB
 - ↝ Note - U+219D
 - ■ Daily Review - U+25A0
-- - Note sub-item - U+002A
 - ↸ Jump to Source - U+21B8
 
 ---
@@ -576,29 +546,44 @@ Oct 14 Thoughts:
 3. **Oldest to newest** - Items flow upward in Thoughts pane
 4. **Daily Review auto-completion** - Only when ALL items handled
 5. **Event splitting is dynamic** - Recalculate on every render
-6. **Todo subtasks: max depth 1, todos only** - No prefixes, always todos
-7. **Note sub-items: max depth 2, any type** - Use prefixes \* t e r
-8. **Org Mode inspiration** - Freedom to mix types within notes
+6. **Unified children field** - All item types use `children` array
+7. **Max 2 levels for all types** - Use prefixes n t e r with Tab indentation
+8. **Org Mode inspiration** - Freedom to mix types within items (with constraints)
 9. **Search scope** - Searches both panes simultaneously (Thoughts & Time)
 10. **No unscheduled items** - Every task, event, and routine must have a date and time
 11. **Waiting days** - Calculate from created_date, not scheduled_time
-12. **Hierarchy validation** - Enforce depth limits and type constraints
+12. **Type constraints** - Enforce which child types are allowed per parent
 13. **Order preservation** - Use order_index for sub-item sequencing
 
-### Two Hierarchy Systems
+### Unified Hierarchy System
 
-**Todo Subtasks**:
+**All item types now use the same `children` field and hierarchy rules**:
 
-- Parent todo → child todos (max 1 level)
-- No prefixes (always todos)
-- Checking parent checks all children
+- Max 2 levels of nesting for all types
+- Prefixes: `n` (note), `t` (todo), `e` (event), `r` (routine)
+- Tab after prefix indicates nesting level
+- Multi-line input with Shift+Enter, batch submit with Enter
 
-**Note Sub-Items** (Org Mode):
+**Type Constraints for Children**:
 
-- Parent note → any type via prefixes (max 2 levels)
-- Prefixes: \* (note), t (todo), e (event), r (routine)
-- Independent items (checking doesn't cascade)
-- Maximum flexibility
+- Todo → notes, todos
+- Note → todos, notes, events
+- Event → todos, notes (displayed within event timeframe in TimePane)
+- Routine → notes
+
+**Input Format** (Org Mode inspired):
+
+```
+t Main task
+t	First subtask (Tab = level 1)
+n		Subnote (two Tabs = level 2)
+```
+
+**Edit Mode**:
+
+- Shows item + all children in textarea
+- Tab/Shift+Tab for indentation control
+- Enter saves, Shift+Enter adds new line
 
 ---
 
@@ -777,23 +762,163 @@ Oct 14 Thoughts:
 
 ---
 
+## Code Quality Improvements (November 22, 2025)
+
+### ✅ Completed Improvements
+
+#### 1. Hook Test Coverage
+
+- [x] Added comprehensive tests for `useHistory.ts` (14 tests)
+- [x] Added tests for `useFocusTrap.ts` (6 tests)
+- [x] Added tests for `useKeyboardShortcuts.ts` (17 tests)
+- [x] Total test count increased from 176 to 238 tests
+
+**Files Created:**
+
+- `src/store/useHistory.test.ts`
+- `src/hooks/useFocusTrap.test.ts`
+- `src/hooks/useKeyboardShortcuts.test.ts`
+
+#### 2. Accessibility Improvements
+
+- [x] Added skip navigation link for keyboard users
+- [x] Changed main content wrapper to `<main>` with `id="main-content"`
+
+**Files Modified:**
+
+- `src/App.tsx` - Added skip nav link, semantic main element
+
+#### 3. Component-Level Error Boundaries
+
+- [x] Created `PaneErrorBoundary` component for isolating pane errors
+- [x] Wrapped ThoughtsPane and TimePane with error boundaries
+- [x] One pane can crash without affecting the other
+
+**Files Created:**
+
+- `src/components/PaneErrorBoundary.tsx`
+
+**Files Modified:**
+
+- `src/App.tsx` - Wrapped panes with error boundaries
+
+#### 4. Refactored Duplicated Code
+
+- [x] Extracted wheel navigation logic into `useWheelNavigation` hook
+- [x] Removed ~120 lines of duplicated code from ThoughtsPane and TimePane
+
+**Files Created:**
+
+- `src/hooks/useWheelNavigation.ts`
+
+**Files Modified:**
+
+- `src/components/ThoughtsPane.tsx` - Uses shared hook
+- `src/components/TimePane.tsx` - Uses shared hook
+
+#### 5. Completion Linking UI
+
+- [x] Added completion date display for completed todos
+- [x] Clickable "completed on [date] →" links when `completionLinkId` exists
+- [x] Added `onNavigateToDate` prop to ItemDisplay
+
+**Files Modified:**
+
+- `src/components/ItemDisplay.tsx`
+
+#### 6. Component Tests for Complex UI
+
+- [x] Added tests for `DailyReview` component (11 tests)
+- [x] Added tests for `ThoughtsPane` component (7 tests)
+- [x] Added tests for `TimePane` component (7 tests)
+- [x] Tests cover rendering, props, accessibility, interactions
+
+**Files Created:**
+
+- `src/components/DailyReview.test.tsx`
+- `src/components/ThoughtsPane.test.tsx`
+- `src/components/TimePane.test.tsx`
+
+#### 7. DailyReview Accessibility
+
+- [x] Added ARIA labels to action buttons (Reschedule, Complete, Cancel)
+- [x] Added semantic structure with `<section>` and heading
+- [x] Added `role="group"` for related action buttons
+- [x] Used `aria-hidden` on decorative icons
+
+**Files Modified:**
+
+- `src/components/DailyReview.tsx`
+
+---
+
+## Input System Refactoring (November 22, 2025)
+
+### ✅ Completed Changes
+
+#### 1. Unified Children Field
+
+- [x] Replaced `subtasks` and `subItems` with unified `children` field
+- [x] All item types (Todo, Event, Routine, Note) now use `children`
+- [x] Updated types.ts with new field structure
+- [x] Updated all store operations for new field
+
+#### 2. Multi-Line Input System
+
+- [x] Created `parseMultiLine()` function for batch parsing
+- [x] Tab-based hierarchy detection (Tab = level 1, Tab+Tab = level 2)
+- [x] Shift+Enter for new lines, Enter to submit all
+- [x] Type constraints validation per parent type
+- [x] Added `TYPE_CONSTRAINTS` and `isValidChildType()` utilities
+
+#### 3. Edit Mode Enhancements
+
+- [x] ItemEditor converted from input to textarea
+- [x] Auto-resize textarea based on content
+- [x] Tab/Shift+Tab for indentation control
+- [x] Serializes item + all children for editing
+- [x] Parses and updates hierarchy on save
+
+#### 4. TimePane Event Children
+
+- [x] Events now display child todos/notes in timeline
+- [x] Children rendered with left border for visual hierarchy
+- [x] Supports both event-single and event-start entry types
+
+#### 5. Prefix System Update
+
+- [x] Changed note prefix from `*` to `n`
+- [x] Updated symbolToPrefix mapping
+- [x] Updated all tests for new prefix
+
+**Files Modified:**
+
+- `src/types.ts` - Unified children field, ParsedLine types
+- `src/utils/parser.ts` - parseMultiLine, TYPE_CONSTRAINTS
+- `src/store/useStore.ts` - addItems with rootParentId support
+- `src/components/ThoughtsPane.tsx` - Tab handling, batch creation
+- `src/components/ItemDisplay.tsx` - Multi-line edit save
+- `src/components/ItemEditor.tsx` - Textarea with indentation
+- `src/components/TimePane.tsx` - Event children rendering
+- `src/utils/formatting.ts` - Note symbol mapping, typeToSymbol
+
+---
+
 ## Next Steps
 
 ### Immediate (This Week)
 
-1. URL link previews for notes
-2. Mobile responsive optimizations (swipe gestures, tap targets)
+1. Mobile responsive optimizations (swipe gestures, tap targets)
+2. Full accessibility audit (manual testing)
 
 ### Short Term (Next 2 Weeks)
 
-1. Completion linking system (if needed)
-2. Full accessibility audit for WCAG 2.1 AA compliance
+1. URL link previews for notes
 
 ### Medium Term (Next Month)
 
 1. Database backend (Supabase)
 2. Notifications system
-3. WCAG 2.1 accessibility audit
 
 ### Long Term (Next Quarter)
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Item, Todo, Note } from '../types';
+import { Item } from '../types';
 
 /**
  * Recursively checks if an item or any of its children match the search query.
@@ -22,16 +22,12 @@ export function matchesSearch(item: Item, query: string, items: Item[]): boolean
     return true;
   }
 
-  // Recursively check sub-items
-  const subItemIds = item.type === 'note'
-    ? (item as Note).subItems
-    : item.type === 'todo'
-      ? (item as Todo).subtasks
-      : [];
+  // Recursively check children
+  const childIds = 'children' in item ? item.children : [];
 
-  for (const subId of subItemIds) {
-    const subItem = items.find(i => i.id === subId);
-    if (subItem && matchesSearch(subItem, query, items)) {
+  for (const childId of childIds) {
+    const childItem = items.find((i) => i.id === childId);
+    if (childItem && matchesSearch(childItem, query, items)) {
       return true;
     }
   }
