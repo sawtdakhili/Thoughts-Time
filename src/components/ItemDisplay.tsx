@@ -21,6 +21,7 @@ interface ItemDisplayProps {
   sourcePane?: 'thoughts' | 'time';
   searchQuery?: string;
   onJumpToSource?: (item: Item) => void;
+  onNavigateToDate?: (date: string) => void;
   highlightedItemId?: string | null;
 }
 
@@ -35,6 +36,7 @@ function ItemDisplay({
   sourcePane = 'thoughts',
   searchQuery = '',
   onJumpToSource,
+  onNavigateToDate,
   highlightedItemId,
 }: ItemDisplayProps) {
   const toggleTodoComplete = useStore((state) => state.toggleTodoComplete);
@@ -310,6 +312,29 @@ function ItemDisplay({
                 </div>
               )}
 
+              {/* Completion link for completed todos */}
+              {item.type === 'todo' && (item as Todo).completedAt && (
+                <div className="mt-1 text-xs font-mono text-text-secondary">
+                  {(item as Todo).completionLinkId ? (
+                    <button
+                      onClick={() => {
+                        const linkedItem = items.find(
+                          (i) => i.id === (item as Todo).completionLinkId
+                        );
+                        if (linkedItem && onNavigateToDate) {
+                          onNavigateToDate(linkedItem.createdDate);
+                        }
+                      }}
+                      className="hover:text-text-primary transition-colors"
+                    >
+                      completed on {format(new Date((item as Todo).completedAt!), 'MMM d')} →
+                    </button>
+                  ) : (
+                    <span>completed {format(new Date((item as Todo).completedAt!), 'MMM d')}</span>
+                  )}
+                </div>
+              )}
+
               {(item.type === 'todo' || item.type === 'event' || item.type === 'routine') &&
                 'embeddedItems' in item &&
                 item.embeddedItems.length > 0 && (
@@ -361,6 +386,7 @@ function ItemDisplay({
                 sourcePane={sourcePane}
                 searchQuery={searchQuery}
                 onJumpToSource={onJumpToSource}
+                onNavigateToDate={onNavigateToDate}
                 highlightedItemId={highlightedItemId}
               />
             ))}

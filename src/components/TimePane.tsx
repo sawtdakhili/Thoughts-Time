@@ -17,7 +17,8 @@ import {
   symbolToPrefix,
 } from '../utils/formatting';
 import { matchesSearch, highlightMatches } from '../utils/search.tsx';
-import { ANIMATION, DATE_RANGE } from '../constants';
+import { useWheelNavigation } from '../hooks/useWheelNavigation';
+import { DATE_RANGE } from '../constants';
 
 type TimelineEntry = {
   time: Date;
@@ -61,9 +62,6 @@ function TimePane({
   const [editingItem, setEditingItem] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
   const [isPageFlipping, setIsPageFlipping] = useState(false);
-  const lastScrollTop = useRef(0);
-  const isTransitioning = useRef(false);
-  const wheelDeltaY = useRef(0);
   const [timePrompt, setTimePrompt] = useState<{
     content: string;
     isEvent: boolean;
@@ -161,6 +159,7 @@ function TimePane({
     });
 
     return map;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filteredItems, scheduledTodos, timeFormat]);
 
   // Generate date range: past to future days (memoized to prevent recreation)
@@ -232,83 +231,14 @@ function TimePane({
     }
   }, [todayIndex, viewMode, virtualizer]);
 
-  const handleWheel = (e: WheelEvent) => {
-    if (
-      !scrollRef.current ||
-      viewMode !== 'book' ||
-      !onNextDay ||
-      !onPreviousDay ||
-      isTransitioning.current
-    )
-      return;
-
-    const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
-    const isScrollable = scrollHeight > clientHeight;
-
-    // Detect if we're at boundaries
-    const atBottom = scrollTop + clientHeight >= scrollHeight - 5;
-    const atTop = scrollTop <= 5;
-
-    // For non-scrollable content OR at boundaries, use wheel delta accumulation
-    if (!isScrollable || atBottom || atTop) {
-      wheelDeltaY.current += e.deltaY;
-
-      // Threshold to prevent accidental triggers - requires intentional over-scroll
-      if (wheelDeltaY.current > ANIMATION.WHEEL_DELTA_THRESHOLD) {
-        // Scroll down = next day
-        wheelDeltaY.current = 0;
-        isTransitioning.current = true;
-        setIsPageFlipping(true);
-        setTimeout(() => {
-          onNextDay();
-          setTimeout(() => {
-            if (scrollRef.current) scrollRef.current.scrollTop = 0;
-            setTimeout(() => {
-              setIsPageFlipping(false);
-              isTransitioning.current = false;
-            }, ANIMATION.PAGE_FLIP_DURATION);
-          }, ANIMATION.SCROLL_RESET_DELAY);
-        }, ANIMATION.SCROLL_RESET_DELAY);
-      } else if (wheelDeltaY.current < -ANIMATION.WHEEL_DELTA_THRESHOLD) {
-        // Scroll up = previous day
-        wheelDeltaY.current = 0;
-        isTransitioning.current = true;
-        setIsPageFlipping(true);
-        setTimeout(() => {
-          onPreviousDay();
-          setTimeout(() => {
-            if (scrollRef.current) scrollRef.current.scrollTop = 0;
-            setTimeout(() => {
-              setIsPageFlipping(false);
-              isTransitioning.current = false;
-            }, ANIMATION.PAGE_FLIP_DURATION);
-          }, ANIMATION.SCROLL_RESET_DELAY);
-        }, ANIMATION.SCROLL_RESET_DELAY);
-      }
-    } else {
-      // Reset delta when scrolling normally (not at boundaries)
-      wheelDeltaY.current = 0;
-    }
-  };
-
-  const handleScroll = () => {
-    if (!scrollRef.current) return;
-
-    const { scrollTop } = scrollRef.current;
-
-    // Track scroll position for reference
-    lastScrollTop.current = scrollTop;
-  };
-
-  // Add wheel event listener for non-scrollable content
-  useEffect(() => {
-    const scrollEl = scrollRef.current;
-    if (scrollEl && viewMode === 'book') {
-      scrollEl.addEventListener('wheel', handleWheel as EventListener);
-      return () => scrollEl.removeEventListener('wheel', handleWheel as EventListener);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [viewMode, onNextDay, onPreviousDay]);
+  // Use shared wheel navigation hook
+  const { handleScroll } = useWheelNavigation({
+    scrollRef: scrollRef as React.RefObject<HTMLDivElement>,
+    viewMode,
+    onNextDay,
+    onPreviousDay,
+    setIsPageFlipping,
+  });
 
   // Get symbol for item type
   const getSymbol = (item: Item) => {
