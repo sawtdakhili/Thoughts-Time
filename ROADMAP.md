@@ -51,6 +51,7 @@ This app enforces a strict scheduling philosophy: **every single task, event, an
 - [x] Virtualized lists for both panes (via @tanstack/react-virtual)
 - [x] Data export/import (JSON backup in Settings)
 - [x] E2E tests with Playwright (15 test cases)
+- [x] Jump to Source (↸ button to navigate from Time pane to original item in Thoughts)
 
 ---
 
@@ -280,9 +281,11 @@ domain: 13px, #6A6A6A
 ---
 
 #### 10. Note Embedding in Todos
-**Status**: Not implemented
+**Status**: Replaced by Jump to Source ✅
 
-**Requirements**:
+**Note**: Instead of embedding notes in todos, we implemented "Jump to Source" (↸ button) which allows users to navigate from any Time pane item to its original location in the Thoughts pane. This provides context viewing without the complexity of note embedding.
+
+**Original Requirements** (not implemented):
 - [ ] Click "Link" button on note → copies ID to clipboard
 - [ ] Paste link into todo content
 - [ ] Detect link pattern in todo
@@ -491,6 +494,7 @@ Oct 14 Thoughts:
 - ↝ Note - U+219D
 - ■ Daily Review - U+25A0
 - * Note sub-item - U+002A
+- ↸ Jump to Source - U+21B8
 
 ---
 
