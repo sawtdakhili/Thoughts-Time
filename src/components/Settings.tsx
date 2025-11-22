@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { useStore } from '../store/useStore';
 import { useToast } from '../hooks/useToast';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 import { Item, ItemTypes } from '../types';
 
 interface SettingsProps {
@@ -77,6 +78,7 @@ function Settings({ isOpen, onClose }: SettingsProps) {
   const items = useStore((state) => state.items);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const addToast = useToast((state) => state.addToast);
+  const focusTrapRef = useFocusTrap<HTMLDivElement>(isOpen);
 
   const handleExport = () => {
     const exportData: ExportData = {
@@ -168,11 +170,19 @@ function Settings({ isOpen, onClose }: SettingsProps) {
       <div className="fixed inset-0 bg-black bg-opacity-50 z-40" onClick={onClose} />
 
       {/* Modal */}
-      <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-background border border-border-subtle rounded-sm shadow-lg z-50 w-[400px]">
+      <div
+        ref={focusTrapRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="settings-title"
+        className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-background border border-border-subtle rounded-sm shadow-lg z-50 w-[400px]"
+      >
         {/* Header */}
         <div className="border-b border-border-subtle px-24 py-16">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-serif">Settings</h2>
+            <h2 id="settings-title" className="text-base font-serif">
+              Settings
+            </h2>
             <button
               onClick={onClose}
               className="text-text-secondary hover:text-text-primary text-lg"

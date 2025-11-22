@@ -479,7 +479,7 @@ Oct 14 Thoughts:
 
 **Remaining**:
 
-- [ ] Lazy loading (30 days at a time)
+- [x] Lazy loading (14 days initially, expanding in chunks up to 90 days)
 - [ ] Database indexes (if using Supabase)
 
 **Performance Targets**:
@@ -497,23 +497,32 @@ Oct 14 Thoughts:
 
 #### 16. Accessibility Improvements
 
-**Status**: Basic accessibility, needs WCAG 2.1 compliance
+**Status**: Significantly improved ✅
 
-**Requirements**:
+**Completed**:
 
-- [ ] WCAG 2.1 Level AA compliance
-- [ ] Keyboard navigation for all actions
-- [ ] ARIA labels for interactive elements
-- [ ] Focus indicators
-- [ ] Screen reader support
-- [ ] Alt text for symbols
-- [ ] Color contrast validation (currently good with monochrome)
-- [ ] Reduced motion support
+- [x] Keyboard navigation for all actions
+- [x] ARIA labels for all interactive elements
+- [x] Focus indicators (`:focus-visible` styles)
+- [x] Screen reader support with ARIA live regions
+- [x] Alt text for symbols
+- [x] Color contrast validation (good with monochrome)
+- [x] Reduced motion support (`prefers-reduced-motion` media query)
+- [x] Focus trap in all modals (Settings, ConfirmDialog, TimePromptModal)
+- [x] ARIA dialog roles and labels
 
-**Files to modify**:
+**Remaining for full WCAG 2.1 AA**:
 
-- All component files (add ARIA labels)
-- `src/styles/index.css` (focus indicators, reduced motion)
+- [ ] Full accessibility audit
+- [ ] Skip navigation link
+
+**Files modified**:
+
+- `src/components/Settings.tsx` - Focus trap, ARIA labels
+- `src/components/ConfirmDialog.tsx` - Focus trap
+- `src/components/TimePromptModal.tsx` - Focus trap, ARIA labels
+- `src/index.css` - Reduced motion support
+- `src/hooks/useFocusTrap.ts` - New focus trap hook
 
 ---
 
@@ -605,11 +614,19 @@ Oct 14 Thoughts:
 - [x] Depth validation
 - [x] 158 tests total with Vitest
 
-### Integration Tests
+### Integration Tests ✅
 
-- [ ] Capture to Timeline flow
-- [ ] Daily Review to Completion flow
-- [ ] Search and navigation
+- [x] Capture to Timeline flow (todo with time, event, note)
+- [x] Daily Review to Completion flow (complete/uncomplete todos)
+- [x] Undo/Redo multi-step flows (multiple actions, delete undo, completion undo)
+- [x] Edit flow with persistence
+- [x] Search flow (filtering, clearing)
+- [x] Cross-pane interaction (jump to source)
+- [x] Data persistence flow (items and settings)
+
+**Files created**:
+
+- `e2e/integration.spec.ts` - Comprehensive integration test suite
 
 ### E2E Tests (Playwright) ✅
 
@@ -708,6 +725,58 @@ Oct 14 Thoughts:
 
 ---
 
+## Accessibility & Performance Improvements (November 2025)
+
+### ✅ Completed Improvements
+
+#### 1. Integration Tests
+
+- [x] Created comprehensive integration test suite in `e2e/integration.spec.ts`
+- [x] Tests cover: Capture→Timeline, Daily Review→Completion, Undo/Redo, Edit, Search, Cross-pane, Persistence
+
+#### 2. Focus Trap for Modals
+
+- [x] Created `useFocusTrap` hook for keyboard accessibility
+- [x] Applied to Settings, ConfirmDialog, and TimePromptModal
+- [x] Restores focus to previous element on close
+- [x] Traps Tab/Shift+Tab within modal
+
+#### 3. ARIA Live Regions
+
+- [x] Toast container has `aria-live="polite"` for screen reader announcements
+- [x] Individual toasts have `role="alert"` and `aria-atomic="true"`
+- [x] All modals have proper `role="dialog"` and `aria-modal="true"`
+
+#### 4. Reduced Motion Support
+
+- [x] Added `@media (prefers-reduced-motion: reduce)` styles
+- [x] Disables all animations for users who prefer reduced motion
+- [x] Applies to page-flip, slide-in, and highlight-flash animations
+
+#### 5. Lazy Loading for Dates
+
+- [x] Created `useLazyDates` hook for performance
+- [x] Starts with 14 days past/future (28 total vs previous 60)
+- [x] Loads more in chunks of 14 days as user navigates
+- [x] Maximum 90 days past/future (180 total)
+- [x] Automatic loading when near date boundaries in book mode
+
+**Files Created:**
+
+- `src/hooks/useFocusTrap.ts` - Focus trap hook
+- `src/hooks/useLazyDates.ts` - Lazy date loading hook
+- `e2e/integration.spec.ts` - Integration tests
+
+**Files Modified:**
+
+- `src/components/Settings.tsx` - Focus trap, ARIA labels
+- `src/components/ConfirmDialog.tsx` - Focus trap
+- `src/components/TimePromptModal.tsx` - Focus trap, ARIA labels
+- `src/index.css` - Reduced motion support
+- `src/App.tsx` - Lazy date loading integration
+
+---
+
 ## Next Steps
 
 ### Immediate (This Week)
@@ -717,8 +786,8 @@ Oct 14 Thoughts:
 
 ### Short Term (Next 2 Weeks)
 
-1. Integration tests for key user flows
-2. Completion linking system (if needed)
+1. Completion linking system (if needed)
+2. Full accessibility audit for WCAG 2.1 AA compliance
 
 ### Medium Term (Next Month)
 

@@ -1,5 +1,4 @@
 import { useState, useRef } from 'react';
-import { format, subDays, addDays } from 'date-fns';
 import ThoughtsPane, { ThoughtsPaneHandle } from './components/ThoughtsPane';
 import TimePane from './components/TimePane';
 import Settings from './components/Settings';
@@ -8,6 +7,7 @@ import { useSettingsStore } from './store/useSettingsStore';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useUndoRedo } from './hooks/useUndoRedo';
 import { useDebouncedSearch } from './hooks/useDebouncedSearch';
+import { useLazyDates } from './hooks/useLazyDates';
 import { Item } from './types';
 
 function App() {
@@ -22,26 +22,25 @@ function App() {
   // Setup undo/redo
   const { undo, redo } = useUndoRedo();
 
-  // Book mode: track current day for each pane independently
-  const [thoughtsDayIndex, setThoughtsDayIndex] = useState(30); // Start at today (index 30 in 60-day range)
-  const [timeDayIndex, setTimeDayIndex] = useState(30);
+  // Lazy load dates for better performance
+  const { dates, loadMorePast, loadMoreFuture, canLoadMorePast, canLoadMoreFuture, todayIndex } =
+    useLazyDates({
+      initialPastDays: 14,
+      initialFutureDays: 14,
+      loadChunkSize: 14,
+      maxPastDays: 90,
+      maxFutureDays: 90,
+    });
 
-  // Generate date range: 30 days past to 30 days future
-  const dates: string[] = [];
-  for (let i = -30; i <= 30; i++) {
-    const date = i === 0
-      ? new Date()
-      : i < 0
-        ? subDays(new Date(), Math.abs(i))
-        : addDays(new Date(), i);
-    dates.push(format(date, 'yyyy-MM-dd'));
-  }
+  // Book mode: track current day for each pane independently
+  const [thoughtsDayIndex, setThoughtsDayIndex] = useState(todayIndex);
+  const [timeDayIndex, setTimeDayIndex] = useState(todayIndex);
 
   // Handle jump to source from Time pane
   const handleJumpToSource = (item: Item) => {
     // In book mode, navigate to the date
     if (viewMode === 'book') {
-      const dateIndex = dates.findIndex(d => d === item.createdDate);
+      const dateIndex = dates.findIndex((d) => d === item.createdDate);
       if (dateIndex >= 0) {
         setThoughtsDayIndex(dateIndex);
       }
@@ -66,12 +65,22 @@ function App() {
   const goToNextDayThoughts = () => {
     if (thoughtsDayIndex < dates.length - 1) {
       setThoughtsDayIndex(thoughtsDayIndex + 1);
+      // Load more future dates when near the end
+      if (thoughtsDayIndex >= dates.length - 3 && canLoadMoreFuture) {
+        loadMoreFuture();
+      }
     }
   };
 
   const goToPreviousDayThoughts = () => {
     if (thoughtsDayIndex > 0) {
       setThoughtsDayIndex(thoughtsDayIndex - 1);
+      // Load more past dates when near the beginning
+      if (thoughtsDayIndex <= 2 && canLoadMorePast) {
+        loadMorePast();
+        // Adjust index to account for newly loaded dates
+        setThoughtsDayIndex((prev) => prev + 14);
+      }
     }
   };
 
@@ -79,12 +88,22 @@ function App() {
   const goToNextDayTime = () => {
     if (timeDayIndex < dates.length - 1) {
       setTimeDayIndex(timeDayIndex + 1);
+      // Load more future dates when near the end
+      if (timeDayIndex >= dates.length - 3 && canLoadMoreFuture) {
+        loadMoreFuture();
+      }
     }
   };
 
   const goToPreviousDayTime = () => {
     if (timeDayIndex > 0) {
       setTimeDayIndex(timeDayIndex - 1);
+      // Load more past dates when near the beginning
+      if (timeDayIndex <= 2 && canLoadMorePast) {
+        loadMorePast();
+        // Adjust index to account for newly loaded dates
+        setTimeDayIndex((prev) => prev + 14);
+      }
     }
   };
 
@@ -166,7 +185,7 @@ function App() {
             }}
             className="text-base hover:opacity-70 transition-opacity"
             title="Search"
-            aria-label={isSearchOpen ? "Close search" : "Open search"}
+            aria-label={isSearchOpen ? 'Close search' : 'Open search'}
           >
             🔍
           </button>

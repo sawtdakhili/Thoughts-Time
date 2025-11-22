@@ -7,21 +7,21 @@
 @layer base {
   /* Dark theme (default) */
   :root,
-  [data-theme="dark"] {
-    --color-background: #0A0A0A;
-    --color-text-primary: #F5F5F5;
-    --color-text-secondary: #6A6A6A;
-    --color-border-subtle: #1A1A1A;
-    --color-hover-bg: #0F0F0F;
+  [data-theme='dark'] {
+    --color-background: #0a0a0a;
+    --color-text-primary: #f5f5f5;
+    --color-text-secondary: #6a6a6a;
+    --color-border-subtle: #1a1a1a;
+    --color-hover-bg: #0f0f0f;
   }
 
   /* Light theme */
-  [data-theme="light"] {
-    --color-background: #FAFAF8;
-    --color-text-primary: #1A1A1A;
-    --color-text-secondary: #6A6A6A;
-    --color-border-subtle: #E5E5E5;
-    --color-hover-bg: #F0F0EE;
+  [data-theme='light'] {
+    --color-background: #fafaf8;
+    --color-text-primary: #1a1a1a;
+    --color-text-secondary: #6a6a6a;
+    --color-border-subtle: #e5e5e5;
+    --color-hover-bg: #f0f0ee;
   }
 
   :root {
@@ -40,7 +40,7 @@
   }
 
   body {
-    font-family: "Crimson Text", Lora, Georgia, "Times New Roman", serif;
+    font-family: 'Crimson Text', Lora, Georgia, 'Times New Roman', serif;
     font-size: var(--text-base);
     line-height: var(--line-height);
     background-color: var(--color-background);
@@ -49,7 +49,9 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  html, body, #root {
+  html,
+  body,
+  #root {
     height: 100%;
     overflow: hidden;
   }
@@ -89,7 +91,7 @@
 
 @layer utilities {
   .font-mono {
-    font-family: "Courier Prime", "Courier New", monospace;
+    font-family: 'Courier Prime', 'Courier New', monospace;
   }
 
   /* Page-flip animation for book mode */
@@ -148,6 +150,29 @@
 
   .animate-slideIn {
     animation: slideIn 0.3s ease-out;
+  }
+
+  /* Reduced motion support for accessibility */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+
+    .page-flip,
+    .page-flip-left,
+    .animate-slideIn {
+      animation: none !important;
+    }
+
+    .highlight-flash {
+      animation: none !important;
+      background-color: rgba(255, 255, 0, 0.3);
+    }
   }
 
   /* Highlight flash animation for jump-to-source */

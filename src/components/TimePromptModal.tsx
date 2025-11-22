@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import TimeInput from './TimeInput';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 
 interface TimePromptModalProps {
   isOpen: boolean;
@@ -14,9 +15,17 @@ interface TimePromptModalProps {
  * Modal dialog for prompting users to enter time(s) for items.
  * Shows single time input for todos/routines, or start/end for events.
  */
-function TimePromptModal({ isOpen, isEvent, content, timeFormat = '12h', onSubmit, onCancel }: TimePromptModalProps) {
+function TimePromptModal({
+  isOpen,
+  isEvent,
+  content,
+  timeFormat = '12h',
+  onSubmit,
+  onCancel,
+}: TimePromptModalProps) {
   const [time, setTime] = useState('');
   const [endTime, setEndTime] = useState('');
+  const focusTrapRef = useFocusTrap<HTMLDivElement>(isOpen);
 
   // Use refs to track latest values for immediate access in handlers
   const timeRef = useRef('');
@@ -87,8 +96,14 @@ function TimePromptModal({ isOpen, isEvent, content, timeFormat = '12h', onSubmi
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-background border border-border-subtle rounded-sm p-24 max-w-md w-full mx-16">
-        <h3 className="text-base font-serif mb-16">
+      <div
+        ref={focusTrapRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="time-modal-title"
+        className="bg-background border border-border-subtle rounded-sm p-24 max-w-md w-full mx-16"
+      >
+        <h3 id="time-modal-title" className="text-base font-serif mb-16">
           {isEvent ? 'When does it start and end?' : 'What time?'}
         </h3>
         <p className="text-sm text-text-secondary mb-16 font-serif">{content}</p>
