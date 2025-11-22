@@ -22,23 +22,6 @@ function App() {
   // Setup undo/redo
   const { undo, redo } = useUndoRedo();
 
-  // Handle jump to source from Time pane
-  const handleJumpToSource = (item: Item) => {
-    console.log('Jump to source clicked:', item.id, item.createdDate);
-    console.log('ThoughtsPane ref:', thoughtsPaneRef.current);
-
-    // Scroll ThoughtsPane to item's creation date
-    thoughtsPaneRef.current?.scrollToDate(item.createdDate);
-
-    // Highlight the item
-    setHighlightedItemId(item.id);
-
-    // Clear highlight after animation
-    setTimeout(() => {
-      setHighlightedItemId(null);
-    }, 2000);
-  };
-
   // Book mode: track current day for each pane independently
   const [thoughtsDayIndex, setThoughtsDayIndex] = useState(30); // Start at today (index 30 in 60-day range)
   const [timeDayIndex, setTimeDayIndex] = useState(30);
@@ -53,6 +36,28 @@ function App() {
         : addDays(new Date(), i);
     dates.push(format(date, 'yyyy-MM-dd'));
   }
+
+  // Handle jump to source from Time pane
+  const handleJumpToSource = (item: Item) => {
+    // In book mode, navigate to the date
+    if (viewMode === 'book') {
+      const dateIndex = dates.findIndex(d => d === item.createdDate);
+      if (dateIndex >= 0) {
+        setThoughtsDayIndex(dateIndex);
+      }
+    } else {
+      // In infinite mode, scroll to the date
+      thoughtsPaneRef.current?.scrollToDate(item.createdDate);
+    }
+
+    // Highlight the item
+    setHighlightedItemId(item.id);
+
+    // Clear highlight after animation
+    setTimeout(() => {
+      setHighlightedItemId(null);
+    }, 2000);
+  };
 
   const thoughtsCurrentDate = viewMode === 'book' ? dates[thoughtsDayIndex] : undefined;
   const timeCurrentDate = viewMode === 'book' ? dates[timeDayIndex] : undefined;
