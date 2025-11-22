@@ -10,7 +10,12 @@ import EditEntryInput from './EditEntryInput';
 import { Item, Todo, Event as EventType, Routine } from '../types';
 import { parseInput } from '../utils/parser';
 import { createItem } from '../utils/itemFactory';
-import { symbolsToPrefix, formatTimeForDisplay, prefixToSymbol, symbolToPrefix } from '../utils/formatting';
+import {
+  symbolsToPrefix,
+  formatTimeForDisplay,
+  prefixToSymbol,
+  symbolToPrefix,
+} from '../utils/formatting';
 import { matchesSearch, highlightMatches } from '../utils/search.tsx';
 import { ANIMATION, DATE_RANGE } from '../constants';
 
@@ -59,14 +64,19 @@ function TimePane({
   const lastScrollTop = useRef(0);
   const isTransitioning = useRef(false);
   const wheelDeltaY = useRef(0);
-  const [timePrompt, setTimePrompt] = useState<{ content: string; isEvent: boolean; itemId: string } | null>(null);
-  const [confirmDelete, setConfirmDelete] = useState<{ isOpen: boolean; itemId: string | null }>({ isOpen: false, itemId: null });
+  const [timePrompt, setTimePrompt] = useState<{
+    content: string;
+    isEvent: boolean;
+    itemId: string;
+  } | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<{ isOpen: boolean; itemId: string | null }>({
+    isOpen: false,
+    itemId: null,
+  });
 
   // Filter items based on search query
-  const filteredItems = useMemo(() =>
-    searchQuery
-      ? items.filter(item => matchesSearch(item, searchQuery, items))
-      : items,
+  const filteredItems = useMemo(
+    () => (searchQuery ? items.filter((item) => matchesSearch(item, searchQuery, items)) : items),
     [items, searchQuery]
   );
 
@@ -153,18 +163,17 @@ function TimePane({
     return map;
   }, [filteredItems, scheduledTodos, timeFormat]);
 
-  // Generate date range: past to future days
+  // Generate date range: past to future days (memoized to prevent recreation)
   const today = format(new Date(), 'yyyy-MM-dd');
-  const dates: string[] = [];
-
-  for (let i = -DATE_RANGE.PAST_DAYS; i <= DATE_RANGE.FUTURE_DAYS; i++) {
-    const date = i === 0
-      ? new Date()
-      : i < 0
-        ? subDays(new Date(), Math.abs(i))
-        : addDays(new Date(), i);
-    dates.push(format(date, 'yyyy-MM-dd'));
-  }
+  const dates = useMemo(() => {
+    const result: string[] = [];
+    for (let i = -DATE_RANGE.PAST_DAYS; i <= DATE_RANGE.FUTURE_DAYS; i++) {
+      const date =
+        i === 0 ? new Date() : i < 0 ? subDays(new Date(), Math.abs(i)) : addDays(new Date(), i);
+      result.push(format(date, 'yyyy-MM-dd'));
+    }
+    return result;
+  }, []);
 
   // Filter dates for infinite scroll mode - only show dates with items (plus today)
   const visibleDates = useMemo(() => {
@@ -172,7 +181,7 @@ function TimePane({
       return currentDate ? [currentDate] : dates;
     }
     // In infinite mode, filter out empty dates except today
-    return dates.filter(date => {
+    return dates.filter((date) => {
       const entries = entriesByDate.get(date) || [];
       return entries.length > 0 || date === today;
     });
@@ -180,29 +189,32 @@ function TimePane({
 
   // Find index of today for initial scroll
   const todayIndex = useMemo(() => {
-    return visibleDates.findIndex(date => date === today);
+    return visibleDates.findIndex((date) => date === today);
   }, [visibleDates, today]);
 
   // Estimate height based on entries - each time slot is ~60px, header is ~50px
-  const estimateSize = useCallback((index: number) => {
-    const date = visibleDates[index];
-    const entries = entriesByDate.get(date) || [];
-    const isToday = date === today;
+  const estimateSize = useCallback(
+    (index: number) => {
+      const date = visibleDates[index];
+      const entries = entriesByDate.get(date) || [];
+      const isToday = date === today;
 
-    // Group entries by time to count time slots
-    const timeSlots = new Set(entries.map(e => e.timeKey)).size;
+      // Group entries by time to count time slots
+      const timeSlots = new Set(entries.map((e) => e.timeKey)).size;
 
-    // Base: header (50px) + padding (40px)
-    // Per time slot: ~80px (time label + items)
-    // Daily review for today: ~100px
-    // Empty day: ~60px
-    const baseHeight = 90;
-    const perSlot = 80;
-    const dailyReview = isToday ? 100 : 0;
-    const emptyHeight = timeSlots === 0 ? 60 : 0;
+      // Base: header (50px) + padding (40px)
+      // Per time slot: ~80px (time label + items)
+      // Daily review for today: ~100px
+      // Empty day: ~60px
+      const baseHeight = 90;
+      const perSlot = 80;
+      const dailyReview = isToday ? 100 : 0;
+      const emptyHeight = timeSlots === 0 ? 60 : 0;
 
-    return baseHeight + (timeSlots * perSlot) + dailyReview + emptyHeight;
-  }, [visibleDates, entriesByDate, today]);
+      return baseHeight + timeSlots * perSlot + dailyReview + emptyHeight;
+    },
+    [visibleDates, entriesByDate, today]
+  );
 
   // Virtualizer for infinite scroll mode
   const virtualizer = useVirtualizer({
@@ -221,7 +233,14 @@ function TimePane({
   }, [todayIndex, viewMode, virtualizer]);
 
   const handleWheel = (e: WheelEvent) => {
-    if (!scrollRef.current || viewMode !== 'book' || !onNextDay || !onPreviousDay || isTransitioning.current) return;
+    if (
+      !scrollRef.current ||
+      viewMode !== 'book' ||
+      !onNextDay ||
+      !onPreviousDay ||
+      isTransitioning.current
+    )
+      return;
 
     const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
     const isScrollable = scrollHeight > clientHeight;
@@ -321,9 +340,8 @@ function TimePane({
     }
   };
 
-
   const handleSaveEdit = (itemId: string) => {
-    const currentItem = items.find(i => i.id === itemId);
+    const currentItem = items.find((i) => i.id === itemId);
     if (!editContent.trim() || !currentItem) {
       setEditingItem(null);
       setEditContent('');
@@ -367,7 +385,10 @@ function TimePane({
 
       if (currentItem.type === 'todo') {
         Object.assign(updates, {
-          scheduledTime: parsed.scheduledTime !== null ? parsed.scheduledTime : (currentItem as Todo).scheduledTime,
+          scheduledTime:
+            parsed.scheduledTime !== null
+              ? parsed.scheduledTime
+              : (currentItem as Todo).scheduledTime,
           hasTime: parsed.hasTime,
         });
       } else if (currentItem.type === 'event') {
@@ -378,7 +399,9 @@ function TimePane({
         });
       } else if (currentItem.type === 'routine') {
         Object.assign(updates, {
-          scheduledTime: parsed.scheduledTime ? format(parsed.scheduledTime, 'HH:mm') : (currentItem as Routine).scheduledTime,
+          scheduledTime: parsed.scheduledTime
+            ? format(parsed.scheduledTime, 'HH:mm')
+            : (currentItem as Routine).scheduledTime,
           hasTime: parsed.hasTime,
           recurrencePattern: parsed.recurrencePattern || (currentItem as Routine).recurrencePattern,
         });
@@ -395,7 +418,6 @@ function TimePane({
     setEditingItem(null);
     setEditContent('');
   };
-
 
   const handleTimePromptCancel = () => {
     setTimePrompt(null);
@@ -487,10 +509,7 @@ function TimePane({
       const isHovered = hoveredItem === item.id;
 
       return (
-        <div
-          onMouseEnter={() => setHoveredItem(item.id)}
-          onMouseLeave={() => setHoveredItem(null)}
-        >
+        <div onMouseEnter={() => setHoveredItem(item.id)} onMouseLeave={() => setHoveredItem(null)}>
           {isEditing ? (
             <EditEntryInput
               value={editContent}
@@ -509,7 +528,9 @@ function TimePane({
               </button>
               <div className="flex-1">
                 <div className="flex items-start gap-8">
-                  <p className={`flex-1 text-base font-serif leading-book ${isCompleted ? 'line-through' : ''}`}>
+                  <p
+                    className={`flex-1 text-base font-serif leading-book ${isCompleted ? 'line-through' : ''}`}
+                  >
                     {searchQuery ? highlightMatches(item.content, searchQuery) : item.content}
                   </p>
                   {isHovered && (
@@ -553,10 +574,7 @@ function TimePane({
       const isHovered = hoveredItem === item.id;
 
       return (
-        <div
-          onMouseEnter={() => setHoveredItem(item.id)}
-          onMouseLeave={() => setHoveredItem(null)}
-        >
+        <div onMouseEnter={() => setHoveredItem(item.id)} onMouseLeave={() => setHoveredItem(null)}>
           {isEditing ? (
             <EditEntryInput
               value={editContent}
@@ -571,7 +589,8 @@ function TimePane({
               <div className="flex-1">
                 <div className="flex items-start gap-8">
                   <p className="flex-1 text-base font-serif leading-book font-semibold">
-                    {searchQuery ? highlightMatches(item.content, searchQuery) : item.content} ({startTime} - {endTime})
+                    {searchQuery ? highlightMatches(item.content, searchQuery) : item.content} (
+                    {startTime} - {endTime})
                   </p>
                   {isHovered && (
                     <div className="flex gap-4 flex-shrink-0">
@@ -614,10 +633,7 @@ function TimePane({
       const isHovered = hoveredItem === item.id;
 
       return (
-        <div
-          onMouseEnter={() => setHoveredItem(item.id)}
-          onMouseLeave={() => setHoveredItem(null)}
-        >
+        <div onMouseEnter={() => setHoveredItem(item.id)} onMouseLeave={() => setHoveredItem(null)}>
           {isEditing ? (
             <EditEntryInput
               value={editContent}
@@ -632,7 +648,8 @@ function TimePane({
               <div className="flex-1">
                 <div className="flex items-start gap-8">
                   <p className="flex-1 text-base font-serif leading-book font-semibold">
-                    {searchQuery ? highlightMatches(item.content, searchQuery) : item.content} ({startTime} - {endTime})
+                    {searchQuery ? highlightMatches(item.content, searchQuery) : item.content} (
+                    {startTime} - {endTime})
                   </p>
                   {isHovered && (
                     <div className="flex gap-4 flex-shrink-0">
@@ -672,9 +689,7 @@ function TimePane({
       return (
         <div className="flex items-start gap-3 opacity-60">
           <span className="text-base leading-book flex-shrink-0">⇥</span>
-          <p className="text-base font-serif leading-book">
-            {item.content} (end)
-          </p>
+          <p className="text-base font-serif leading-book">{item.content} (end)</p>
         </div>
       );
     }
@@ -683,12 +698,17 @@ function TimePane({
   const handleTimePromptModalSubmit = (time: string, endTime?: string) => {
     if (!timePrompt) return;
 
-    const currentItem = items.find(i => i.id === timePrompt.itemId);
+    const currentItem = items.find((i) => i.id === timePrompt.itemId);
     if (!currentItem) return;
 
     let updatedContent: string;
     if (timePrompt.isEvent && endTime) {
-      updatedContent = timePrompt.content + ' from ' + formatTimeForDisplay(time, timeFormat) + ' to ' + formatTimeForDisplay(endTime, timeFormat);
+      updatedContent =
+        timePrompt.content +
+        ' from ' +
+        formatTimeForDisplay(time, timeFormat) +
+        ' to ' +
+        formatTimeForDisplay(endTime, timeFormat);
     } else {
       updatedContent = timePrompt.content + ' at ' + formatTimeForDisplay(time, timeFormat);
     }
@@ -713,7 +733,10 @@ function TimePane({
 
       if (currentItem.type === 'todo') {
         Object.assign(updates, {
-          scheduledTime: parsed.scheduledTime !== null ? parsed.scheduledTime : (currentItem as Todo).scheduledTime,
+          scheduledTime:
+            parsed.scheduledTime !== null
+              ? parsed.scheduledTime
+              : (currentItem as Todo).scheduledTime,
           hasTime: parsed.hasTime,
         });
       } else if (currentItem.type === 'event') {
@@ -724,7 +747,9 @@ function TimePane({
         });
       } else if (currentItem.type === 'routine') {
         Object.assign(updates, {
-          scheduledTime: parsed.scheduledTime ? format(parsed.scheduledTime, 'HH:mm') : (currentItem as Routine).scheduledTime,
+          scheduledTime: parsed.scheduledTime
+            ? format(parsed.scheduledTime, 'HH:mm')
+            : (currentItem as Routine).scheduledTime,
           hasTime: parsed.hasTime,
           recurrencePattern: parsed.recurrencePattern || (currentItem as Routine).recurrencePattern,
         });
@@ -761,41 +786,131 @@ function TimePane({
       />
 
       <div className="h-full flex flex-col">
-      {/* Timeline - Scrollable through all days */}
-      <div
-        ref={scrollRef}
-        onScroll={handleScroll}
-        className={`flex-1 overflow-y-auto px-24 py-16 ${
-          viewMode === 'book' ? 'snap-y snap-proximity' : ''
-        } ${
-          isPageFlipping && viewMode === 'book' ? 'page-flip' : ''
-        }`}
-        style={viewMode === 'book' ? { height: 'calc(100vh - 60px - 90px)' } : undefined}
-      >
-        {/* No results found state */}
-        {searchQuery && entriesByDate.size === 0 && (
-          <div className="flex flex-col items-center justify-center h-full text-text-secondary">
-            <p className="text-lg font-serif mb-2">No results found</p>
-            <p className="text-sm">Try a different search term</p>
-          </div>
-        )}
+        {/* Timeline - Scrollable through all days */}
+        <div
+          ref={scrollRef}
+          onScroll={handleScroll}
+          className={`flex-1 overflow-y-auto px-24 py-16 ${
+            viewMode === 'book' ? 'snap-y snap-proximity' : ''
+          } ${isPageFlipping && viewMode === 'book' ? 'page-flip' : ''}`}
+          style={viewMode === 'book' ? { height: 'calc(100vh - 60px - 90px)' } : undefined}
+        >
+          {/* No results found state */}
+          {searchQuery && entriesByDate.size === 0 && (
+            <div className="flex flex-col items-center justify-center h-full text-text-secondary">
+              <p className="text-lg font-serif mb-2">No results found</p>
+              <p className="text-sm">Try a different search term</p>
+            </div>
+          )}
 
-        {/* Virtualized list for infinite mode */}
-        {viewMode === 'infinite' && visibleDates.length > 0 && (
-          <div
-            style={{
-              height: `${virtualizer.getTotalSize()}px`,
-              width: '100%',
-              position: 'relative',
-            }}
-          >
-            {virtualizer.getVirtualItems().map((virtualRow) => {
-              const date = visibleDates[virtualRow.index];
+          {/* Virtualized list for infinite mode */}
+          {viewMode === 'infinite' && visibleDates.length > 0 && (
+            <div
+              style={{
+                height: `${virtualizer.getTotalSize()}px`,
+                width: '100%',
+                position: 'relative',
+              }}
+            >
+              {virtualizer.getVirtualItems().map((virtualRow) => {
+                const date = visibleDates[virtualRow.index];
+                const entries = entriesByDate.get(date) || [];
+                const isToday = date === today;
+
+                // Sort entries by time
+                const sortedEntries = [...entries].sort(
+                  (a, b) => a.time.getTime() - b.time.getTime()
+                );
+
+                // Group by time
+                const entriesByTime: { [timeKey: string]: TimelineEntry[] } = {};
+                sortedEntries.forEach((entry) => {
+                  if (!entriesByTime[entry.timeKey]) {
+                    entriesByTime[entry.timeKey] = [];
+                  }
+                  entriesByTime[entry.timeKey].push(entry);
+                });
+
+                const times = Object.keys(entriesByTime).sort((a, b) => {
+                  const timeA = new Date(`1970-01-01 ${a}`);
+                  const timeB = new Date(`1970-01-01 ${b}`);
+                  return timeA.getTime() - timeB.getTime();
+                });
+
+                return (
+                  <div
+                    key={date}
+                    data-index={virtualRow.index}
+                    ref={virtualizer.measureElement}
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      transform: `translateY(${virtualRow.start}px)`,
+                    }}
+                    className="pb-16"
+                  >
+                    {/* Date Header */}
+                    <div
+                      className={`sticky top-0 bg-background py-3 mb-6 border-b border-border-subtle ${isToday ? 'text-text-primary' : 'text-text-secondary'}`}
+                    >
+                      <h3 className="text-base font-serif uppercase tracking-wide">
+                        {format(parseISO(date), 'EEEE, MMM d, yyyy')}
+                        {isToday && ' (Today)'}
+                      </h3>
+                    </div>
+
+                    {/* Daily Review - appears under current day title */}
+                    {isToday && (
+                      <div className="mb-8">
+                        <DailyReview searchQuery={searchQuery} />
+                        <div className="mt-8 border-t border-border-subtle" />
+                      </div>
+                    )}
+
+                    {/* Items for this date */}
+                    {times.length === 0 ? (
+                      <div className="text-center text-text-secondary text-sm py-4">
+                        <p>No scheduled items</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-6">
+                        {times.map((time) => (
+                          <div key={time}>
+                            <div className="text-xs font-mono text-text-secondary mb-1">{time}</div>
+                            <div className="space-y-3">
+                              {entriesByTime[time].map((entry, idx) => (
+                                <div key={`${entry.item.id}-${entry.type}-${idx}`}>
+                                  {renderEntry(entry)}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Non-virtualized list for book mode */}
+          {viewMode === 'book' &&
+            visibleDates.map((date) => {
               const entries = entriesByDate.get(date) || [];
               const isToday = date === today;
 
+              // Hide empty days in book mode when searching
+              if (entries.length === 0 && !isToday && searchQuery) {
+                return null;
+              }
+
               // Sort entries by time
-              const sortedEntries = [...entries].sort((a, b) => a.time.getTime() - b.time.getTime());
+              const sortedEntries = [...entries].sort(
+                (a, b) => a.time.getTime() - b.time.getTime()
+              );
 
               // Group by time
               const entriesByTime: { [timeKey: string]: TimelineEntry[] } = {};
@@ -813,32 +928,21 @@ function TimePane({
               });
 
               return (
-                <div
-                  key={date}
-                  data-index={virtualRow.index}
-                  ref={virtualizer.measureElement}
-                  style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '100%',
-                    transform: `translateY(${virtualRow.start}px)`,
-                  }}
-                  className="pb-16"
-                >
+                <div key={date} className="snap-start snap-always">
                   {/* Date Header */}
-                  <div className={`sticky top-0 bg-background py-3 mb-6 border-b border-border-subtle ${isToday ? 'text-text-primary' : 'text-text-secondary'}`}>
+                  <div
+                    className={`sticky top-0 bg-background py-3 mb-6 border-b border-border-subtle ${isToday ? 'text-text-primary' : 'text-text-secondary'}`}
+                  >
                     <h3 className="text-base font-serif uppercase tracking-wide">
                       {format(parseISO(date), 'EEEE, MMM d, yyyy')}
                       {isToday && ' (Today)'}
                     </h3>
                   </div>
 
-                  {/* Daily Review - appears under current day title */}
+                  {/* Daily Review - appears under current day title in book mode */}
                   {isToday && (
-                    <div className="mb-8">
+                    <div className="mb-8 border border-border-subtle rounded-sm p-16 bg-hover-bg">
                       <DailyReview searchQuery={searchQuery} />
-                      <div className="mt-8 border-t border-border-subtle" />
                     </div>
                   )}
 
@@ -851,9 +955,7 @@ function TimePane({
                     <div className="space-y-6">
                       {times.map((time) => (
                         <div key={time}>
-                          <div className="text-xs font-mono text-text-secondary mb-1">
-                            {time}
-                          </div>
+                          <div className="text-xs font-mono text-text-secondary mb-1">{time}</div>
                           <div className="space-y-3">
                             {entriesByTime[time].map((entry, idx) => (
                               <div key={`${entry.item.id}-${entry.type}-${idx}`}>
@@ -868,84 +970,7 @@ function TimePane({
                 </div>
               );
             })}
-          </div>
-        )}
-
-        {/* Non-virtualized list for book mode */}
-        {viewMode === 'book' && visibleDates.map((date) => {
-          const entries = entriesByDate.get(date) || [];
-          const isToday = date === today;
-
-          // Hide empty days in book mode when searching
-          if (entries.length === 0 && !isToday && searchQuery) {
-            return null;
-          }
-
-          // Sort entries by time
-          const sortedEntries = [...entries].sort((a, b) => a.time.getTime() - b.time.getTime());
-
-          // Group by time
-          const entriesByTime: { [timeKey: string]: TimelineEntry[] } = {};
-          sortedEntries.forEach((entry) => {
-            if (!entriesByTime[entry.timeKey]) {
-              entriesByTime[entry.timeKey] = [];
-            }
-            entriesByTime[entry.timeKey].push(entry);
-          });
-
-          const times = Object.keys(entriesByTime).sort((a, b) => {
-            const timeA = new Date(`1970-01-01 ${a}`);
-            const timeB = new Date(`1970-01-01 ${b}`);
-            return timeA.getTime() - timeB.getTime();
-          });
-
-          return (
-            <div
-              key={date}
-              className="snap-start snap-always"
-            >
-              {/* Date Header */}
-              <div className={`sticky top-0 bg-background py-3 mb-6 border-b border-border-subtle ${isToday ? 'text-text-primary' : 'text-text-secondary'}`}>
-                <h3 className="text-base font-serif uppercase tracking-wide">
-                  {format(parseISO(date), 'EEEE, MMM d, yyyy')}
-                  {isToday && ' (Today)'}
-                </h3>
-              </div>
-
-              {/* Daily Review - appears under current day title in book mode */}
-              {isToday && (
-                <div className="mb-8 border border-border-subtle rounded-sm p-16 bg-hover-bg">
-                  <DailyReview searchQuery={searchQuery} />
-                </div>
-              )}
-
-              {/* Items for this date */}
-              {times.length === 0 ? (
-                <div className="text-center text-text-secondary text-sm py-4">
-                  <p>No scheduled items</p>
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  {times.map((time) => (
-                    <div key={time}>
-                      <div className="text-xs font-mono text-text-secondary mb-1">
-                        {time}
-                      </div>
-                      <div className="space-y-3">
-                        {entriesByTime[time].map((entry, idx) => (
-                          <div key={`${entry.item.id}-${entry.type}-${idx}`}>
-                            {renderEntry(entry)}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
+        </div>
       </div>
     </>
   );

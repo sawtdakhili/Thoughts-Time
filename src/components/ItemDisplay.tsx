@@ -28,7 +28,15 @@ interface ItemDisplayProps {
  * Renders a single item with its content, actions, and nested sub-items.
  * Handles editing, deletion, completion toggling, and time prompts.
  */
-function ItemDisplay({ item, depth = 0, showTime = true, sourcePane = 'thoughts', searchQuery = '', onJumpToSource, highlightedItemId }: ItemDisplayProps) {
+function ItemDisplay({
+  item,
+  depth = 0,
+  showTime = true,
+  sourcePane = 'thoughts',
+  searchQuery = '',
+  onJumpToSource,
+  highlightedItemId,
+}: ItemDisplayProps) {
   const toggleTodoComplete = useStore((state) => state.toggleTodoComplete);
   const updateItem = useStore((state) => state.updateItem);
   const deleteItem = useStore((state) => state.deleteItem);
@@ -39,7 +47,11 @@ function ItemDisplay({ item, depth = 0, showTime = true, sourcePane = 'thoughts'
   const [isHovered, setIsHovered] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [timePrompt, setTimePrompt] = useState<{ content: string; isEvent: boolean } | null>(null);
-  const [confirmDelete, setConfirmDelete] = useState<{ isOpen: boolean; message: string; hasChildren: boolean }>({
+  const [confirmDelete, setConfirmDelete] = useState<{
+    isOpen: boolean;
+    message: string;
+    hasChildren: boolean;
+  }>({
     isOpen: false,
     message: '',
     hasChildren: false,
@@ -124,7 +136,8 @@ function ItemDisplay({ item, depth = 0, showTime = true, sourcePane = 'thoughts'
 
       if (item.type === 'todo') {
         Object.assign(updates, {
-          scheduledTime: parsed.scheduledTime !== null ? parsed.scheduledTime : (item as Todo).scheduledTime,
+          scheduledTime:
+            parsed.scheduledTime !== null ? parsed.scheduledTime : (item as Todo).scheduledTime,
           hasTime: parsed.hasTime,
         });
       } else if (item.type === 'event') {
@@ -135,7 +148,9 @@ function ItemDisplay({ item, depth = 0, showTime = true, sourcePane = 'thoughts'
         });
       } else if (item.type === 'routine') {
         Object.assign(updates, {
-          scheduledTime: parsed.scheduledTime ? format(parsed.scheduledTime, 'HH:mm') : (item as Routine).scheduledTime,
+          scheduledTime: parsed.scheduledTime
+            ? format(parsed.scheduledTime, 'HH:mm')
+            : (item as Routine).scheduledTime,
           hasTime: parsed.hasTime,
           recurrencePattern: parsed.recurrencePattern || (item as Routine).recurrencePattern,
         });
@@ -154,7 +169,12 @@ function ItemDisplay({ item, depth = 0, showTime = true, sourcePane = 'thoughts'
 
     let updatedContent: string;
     if (timePrompt.isEvent && endTime) {
-      updatedContent = timePrompt.content + ' from ' + formatTimeForDisplay(time, timeFormat) + ' to ' + formatTimeForDisplay(endTime, timeFormat);
+      updatedContent =
+        timePrompt.content +
+        ' from ' +
+        formatTimeForDisplay(time, timeFormat) +
+        ' to ' +
+        formatTimeForDisplay(endTime, timeFormat);
     } else {
       updatedContent = timePrompt.content + ' at ' + formatTimeForDisplay(time, timeFormat);
     }
@@ -172,11 +192,12 @@ function ItemDisplay({ item, depth = 0, showTime = true, sourcePane = 'thoughts'
   };
 
   const handleDelete = () => {
-    const subItemIds = item.type === 'note'
-      ? (item as Note).subItems
-      : item.type === 'todo'
-        ? (item as Todo).subtasks
-        : [];
+    const subItemIds =
+      item.type === 'note'
+        ? (item as Note).subItems
+        : item.type === 'todo'
+          ? (item as Todo).subtasks
+          : [];
 
     const hasChildren = subItemIds.length > 0;
     let message = 'Are you sure you want to delete this item?';
@@ -195,15 +216,14 @@ function ItemDisplay({ item, depth = 0, showTime = true, sourcePane = 'thoughts'
 
   const isCompleted = item.type === 'todo' && (item as Todo).completedAt;
 
-  const subItemIds = item.type === 'note'
-    ? (item as Note).subItems
-    : item.type === 'todo'
-      ? (item as Todo).subtasks
-      : [];
+  const subItemIds =
+    item.type === 'note'
+      ? (item as Note).subItems
+      : item.type === 'todo'
+        ? (item as Todo).subtasks
+        : [];
 
-  const subItems = subItemIds
-    .map(id => items.find(i => i.id === id))
-    .filter(Boolean) as Item[];
+  const subItems = subItemIds.map((id) => items.find((i) => i.id === id)).filter(Boolean) as Item[];
 
   const indentPx = depth * 16;
 
@@ -273,7 +293,11 @@ function ItemDisplay({ item, depth = 0, showTime = true, sourcePane = 'thoughts'
                     <ItemActions
                       onEdit={handleEdit}
                       onDelete={handleDelete}
-                      onJumpToSource={sourcePane === 'time' && onJumpToSource ? () => onJumpToSource(item) : undefined}
+                      onJumpToSource={
+                        sourcePane === 'time' && onJumpToSource
+                          ? () => onJumpToSource(item)
+                          : undefined
+                      }
                     />
                   )}
                 </div>
@@ -287,41 +311,48 @@ function ItemDisplay({ item, depth = 0, showTime = true, sourcePane = 'thoughts'
               )}
 
               {(item.type === 'todo' || item.type === 'event' || item.type === 'routine') &&
-               'embeddedItems' in item && item.embeddedItems.length > 0 && (
-                <div className="mt-1 space-y-1">
-                  {item.embeddedItems.map((noteId) => {
-                    const embeddedNote = items.find(i => i.id === noteId && i.type === 'note');
+                'embeddedItems' in item &&
+                item.embeddedItems.length > 0 && (
+                  <div className="mt-1 space-y-1">
+                    {item.embeddedItems.map((noteId) => {
+                      const embeddedNote = items.find((i) => i.id === noteId && i.type === 'note');
 
-                    if (!embeddedNote) {
+                      if (!embeddedNote) {
+                        return (
+                          <div
+                            key={noteId}
+                            className="border border-border-subtle rounded-sm px-6 py-4 bg-hover-bg"
+                          >
+                            <p className="text-xs text-text-secondary italic">
+                              [Note not found: {noteId}]
+                            </p>
+                          </div>
+                        );
+                      }
+
                       return (
-                        <div key={noteId} className="border border-border-subtle rounded-sm px-6 py-4 bg-hover-bg">
-                          <p className="text-xs text-text-secondary italic">
-                            [Note not found: {noteId}]
-                          </p>
+                        <div
+                          key={noteId}
+                          className="border border-border-subtle rounded-sm px-6 py-4 bg-hover-bg"
+                        >
+                          <div className="flex items-start gap-4">
+                            <span className="text-xs text-text-secondary">↝</span>
+                            <p className="text-xs font-serif italic text-text-secondary">
+                              {embeddedNote.content}
+                            </p>
+                          </div>
                         </div>
                       );
-                    }
-
-                    return (
-                      <div key={noteId} className="border border-border-subtle rounded-sm px-6 py-4 bg-hover-bg">
-                        <div className="flex items-start gap-4">
-                          <span className="text-xs text-text-secondary">↝</span>
-                          <p className="text-xs font-serif italic text-text-secondary">
-                            {embeddedNote.content}
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+                    })}
+                  </div>
+                )}
             </div>
           </div>
         </div>
 
         {subItems.length > 0 && (
           <div className="mt-1">
-            {subItems.map(subItem => (
+            {subItems.map((subItem) => (
               <ItemDisplay
                 key={subItem.id}
                 item={subItem}
@@ -351,4 +382,15 @@ function ItemDisplay({ item, depth = 0, showTime = true, sourcePane = 'thoughts'
   );
 }
 
-export default memo(ItemDisplay);
+export default memo(ItemDisplay, (prevProps, nextProps) => {
+  return (
+    prevProps.item.id === nextProps.item.id &&
+    prevProps.item.updatedAt === nextProps.item.updatedAt &&
+    prevProps.item.content === nextProps.item.content &&
+    prevProps.highlightedItemId === nextProps.highlightedItemId &&
+    prevProps.searchQuery === nextProps.searchQuery &&
+    prevProps.showTime === nextProps.showTime &&
+    prevProps.sourcePane === nextProps.sourcePane &&
+    prevProps.depth === nextProps.depth
+  );
+});

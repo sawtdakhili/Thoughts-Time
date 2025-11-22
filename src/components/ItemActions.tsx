@@ -15,6 +15,7 @@ function ItemActions({ onEdit, onDelete, onJumpToSource }: ItemActionsProps) {
           onClick={onJumpToSource}
           className="text-xs text-text-secondary hover:text-text-primary"
           title="Jump to source"
+          aria-label="Jump to source"
         >
           ↸
         </button>
@@ -23,6 +24,7 @@ function ItemActions({ onEdit, onDelete, onJumpToSource }: ItemActionsProps) {
         onClick={onEdit}
         className="text-xs text-text-secondary hover:text-text-primary"
         title="Edit"
+        aria-label="Edit item"
       >
         ✎
       </button>
@@ -30,6 +32,7 @@ function ItemActions({ onEdit, onDelete, onJumpToSource }: ItemActionsProps) {
         onClick={onDelete}
         className="text-xs text-text-secondary hover:text-text-primary"
         title="Delete"
+        aria-label="Delete item"
       >
         ×
       </button>

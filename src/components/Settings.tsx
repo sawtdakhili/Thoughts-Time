@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { useStore } from '../store/useStore';
 import { useToast } from '../hooks/useToast';
+import { Item, ItemTypes } from '../types';
 
 interface SettingsProps {
   isOpen: boolean;
@@ -17,6 +18,52 @@ interface ExportData {
     viewMode: string;
     timeFormat: string;
   };
+}
+
+// Validate imported items for data integrity
+function validateImportedItems(items: unknown[]): { valid: boolean; errors: string[] } {
+  const errors: string[] = [];
+  const seenIds = new Set<string>();
+
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i] as Record<string, unknown>;
+
+    // Check required fields
+    if (!item.id || typeof item.id !== 'string') {
+      errors.push(`Item ${i}: missing or invalid id`);
+      continue;
+    }
+
+    // Check for duplicate IDs
+    if (seenIds.has(item.id)) {
+      errors.push(`Item ${i}: duplicate id "${item.id}"`);
+    }
+    seenIds.add(item.id);
+
+    // Validate item type
+    if (!item.type || !ItemTypes.includes(item.type as (typeof ItemTypes)[number])) {
+      errors.push(`Item ${i}: invalid type "${item.type}"`);
+    }
+
+    // Validate required string fields
+    if (typeof item.content !== 'string') {
+      errors.push(`Item ${i}: missing or invalid content`);
+    }
+
+    if (typeof item.createdDate !== 'string') {
+      errors.push(`Item ${i}: missing or invalid createdDate`);
+    }
+
+    // Validate parent references exist
+    if (item.parentId && typeof item.parentId === 'string') {
+      const parentExists = items.some((p) => (p as Record<string, unknown>).id === item.parentId);
+      if (!parentExists) {
+        errors.push(`Item ${i}: parentId "${item.parentId}" references non-existent item`);
+      }
+    }
+  }
+
+  return { valid: errors.length === 0, errors };
 }
 
 function Settings({ isOpen, onClose }: SettingsProps) {
@@ -69,9 +116,22 @@ function Settings({ isOpen, onClose }: SettingsProps) {
           throw new Error('Invalid backup file format');
         }
 
-        // Import items - replace current items
-        // Access store directly to set items
-        useStore.setState({ items: data.items as typeof items });
+        // Validate imported items
+        const validation = validateImportedItems(data.items);
+        if (!validation.valid) {
+          const errorMsg = validation.errors.slice(0, 3).join('; ');
+          throw new Error(`Invalid data: ${errorMsg}${validation.errors.length > 3 ? '...' : ''}`);
+        }
+
+        // Import items - replace current items with localStorage error handling
+        try {
+          useStore.setState({ items: data.items as Item[] });
+        } catch (storageError) {
+          if (storageError instanceof Error && storageError.name === 'QuotaExceededError') {
+            throw new Error('Storage quota exceeded. Try clearing some data first.');
+          }
+          throw storageError;
+        }
 
         // Import settings if present
         if (data.settings) {
@@ -87,8 +147,9 @@ function Settings({ isOpen, onClose }: SettingsProps) {
         }
 
         addToast(`Imported ${data.items.length} items`, 'success');
-      } catch {
-        addToast('Failed to import: Invalid file', 'error');
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Invalid file';
+        addToast(`Failed to import: ${message}`, 'error');
       }
     };
 
@@ -104,10 +165,7 @@ function Settings({ isOpen, onClose }: SettingsProps) {
   return (
     <>
       {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black bg-opacity-50 z-40"
-        onClick={onClose}
-      />
+      <div className="fixed inset-0 bg-black bg-opacity-50 z-40" onClick={onClose} />
 
       {/* Modal */}
       <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-background border border-border-subtle rounded-sm shadow-lg z-50 w-[400px]">

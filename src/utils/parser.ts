@@ -34,7 +34,7 @@ customChrono.refiners.push({
     });
 
     return results;
-  }
+  },
 });
 
 // Add patterns for "in X minutes/hours" that Chrono might miss
@@ -59,7 +59,7 @@ customChrono.parsers.push({
       hour: targetDate.getHours(),
       minute: targetDate.getMinutes(),
     };
-  }
+  },
 });
 
 // Add refiner for 24-hour time format like "at 13:55" or "at 09:30"
@@ -97,7 +97,7 @@ customChrono.refiners.push({
       }
     }
     return results;
-  }
+  },
 });
 
 // Custom refiner for "between X and Y" to properly parse both start and end times
@@ -105,7 +105,9 @@ customChrono.refiners.push({
   refine: (context, results) => {
     results.forEach((result) => {
       const text = context.text.substring(result.index);
-      const betweenMatch = text.match(/^between\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\s+and\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b/i);
+      const betweenMatch = text.match(
+        /^between\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\s+and\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b/i
+      );
 
       if (betweenMatch) {
         const startHour = parseInt(betweenMatch[1]);
@@ -133,7 +135,10 @@ customChrono.refiners.push({
 
         // Fix common mistake: "10 to 12am" probably means "10am to 12pm" (noon)
         // If end time is before start time, assume they meant PM for the end
-        if (adjustedEndHour < adjustedStartHour || (adjustedEndHour === adjustedStartHour && endMin <= startMin)) {
+        if (
+          adjustedEndHour < adjustedStartHour ||
+          (adjustedEndHour === adjustedStartHour && endMin <= startMin)
+        ) {
           if (endHour === 12 && endMeridiem.toLowerCase() === 'am') {
             // They probably meant 12pm (noon), not 12am (midnight)
             adjustedEndHour = 12;
@@ -160,7 +165,7 @@ customChrono.refiners.push({
     });
 
     return results;
-  }
+  },
 });
 
 // Custom refiner for "from X to Y" pattern (same as "between X and Y")
@@ -168,7 +173,9 @@ customChrono.refiners.push({
   refine: (context, results) => {
     results.forEach((result) => {
       const text = context.text.substring(result.index);
-      const fromMatch = text.match(/^from\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\s+to\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b/i);
+      const fromMatch = text.match(
+        /^from\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\s+to\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b/i
+      );
 
       if (fromMatch) {
         const startHour = parseInt(fromMatch[1]);
@@ -196,7 +203,10 @@ customChrono.refiners.push({
 
         // Fix common mistake: "10 to 12am" probably means "10am to 12pm" (noon)
         // If end time is before start time, assume they meant PM for the end
-        if (adjustedEndHour < adjustedStartHour || (adjustedEndHour === adjustedStartHour && endMin <= startMin)) {
+        if (
+          adjustedEndHour < adjustedStartHour ||
+          (adjustedEndHour === adjustedStartHour && endMin <= startMin)
+        ) {
           if (endHour === 12 && endMeridiem.toLowerCase() === 'am') {
             // They probably meant 12pm (noon), not 12am (midnight)
             adjustedEndHour = 12;
@@ -223,9 +233,8 @@ customChrono.refiners.push({
     });
 
     return results;
-  }
+  },
 });
-
 
 /**
  * Detect item type from prefix
@@ -259,7 +268,6 @@ export function removePrefix(input: string): string {
   }
   return input;
 }
-
 
 /**
  * Extract embedded note references from content
@@ -350,7 +358,9 @@ export function detectRecurrencePattern(content: string): RecurrencePattern | nu
   }
 
   // Specific day of month - "15th of each month", "on the 15th"
-  const dayOfMonthMatch = lowerContent.match(/(?:on the )?(\d{1,2})(?:st|nd|rd|th)?(?: of (?:each|every) month)?/);
+  const dayOfMonthMatch = lowerContent.match(
+    /(?:on the )?(\d{1,2})(?:st|nd|rd|th)?(?: of (?:each|every) month)?/
+  );
   if (dayOfMonthMatch && (lowerContent.includes('month') || lowerContent.includes('monthly'))) {
     const day = parseInt(dayOfMonthMatch[1]);
     if (day >= 1 && day <= 31) {
@@ -381,7 +391,12 @@ export function detectRecurrencePattern(content: string): RecurrencePattern | nu
 /**
  * Parse natural language date/time using enhanced Chrono
  */
-export function parseDateTime(content: string): { date: Date | null; hasTime: boolean; refText: string; endDate?: Date | null } {
+export function parseDateTime(content: string): {
+  date: Date | null;
+  hasTime: boolean;
+  refText: string;
+  endDate?: Date | null;
+} {
   const results = customChrono.parse(content);
 
   // Check for 24h time pattern "at HH:MM" that chrono might miss entirely
@@ -460,8 +475,7 @@ export function parseInput(input: string): ParsedInput {
   // Determine if we need to prompt for time
   // For todos and events without a date OR without a specific time, we'll prompt
   let needsTimePrompt =
-    (type === 'todo' || type === 'event') &&
-    (scheduledTime === null || !hasTime);
+    (type === 'todo' || type === 'event') && (scheduledTime === null || !hasTime);
 
   // Final override: if content contains "at HH:MM" pattern, don't prompt
   // This catches any cases where parseDateTime didn't properly detect the time
@@ -484,6 +498,22 @@ export function parseInput(input: string): ParsedInput {
     endOfDay.setDate(endOfDay.getDate() + 1);
     endOfDay.setHours(0, 0, 0, 0);
     endTime = endOfDay;
+  }
+
+  // Validate time ranges for events
+  if (type === 'event' && scheduledTime && endTime) {
+    if (endTime <= scheduledTime) {
+      // If end time is before or equal to start time, add 12 hours to end time
+      // This handles cases like "from 5pm to 2pm" which likely means 2pm the next segment
+      const adjustedEnd = new Date(endTime);
+      adjustedEnd.setHours(adjustedEnd.getHours() + 12);
+      if (adjustedEnd > scheduledTime) {
+        endTime = adjustedEnd;
+      } else {
+        // If still invalid, set end to 1 hour after start
+        endTime = new Date(scheduledTime.getTime() + 60 * 60 * 1000);
+      }
+    }
   }
 
   return {

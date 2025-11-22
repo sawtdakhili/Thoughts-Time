@@ -18,6 +18,7 @@ This app enforces a strict scheduling philosophy: **every single task, event, an
 ### Current Implementation Status
 
 #### ✅ Completed Features (MVP)
+
 - [x] Basic capture system with prefix detection (t, e, r, n)
 - [x] Four item types: Todo, Event, Routine, Note
 - [x] Natural language time parsing (via chrono library)
@@ -60,6 +61,7 @@ This app enforces a strict scheduling philosophy: **every single task, event, an
 ### 🔴 High Priority (Phase 1)
 
 #### 1. Daily Review Enhancements ✅
+
 **Status**: Completed
 
 **Current Behavior**: Daily Review shows incomplete todos from past days.
@@ -67,6 +69,7 @@ This app enforces a strict scheduling philosophy: **every single task, event, an
 **Philosophy Alignment**: Since all items in this app must be scheduled (see Core Philosophy above), Daily Review shows all incomplete scheduled todos from previous days that need to be rescheduled or completed.
 
 **Completed**:
+
 - [x] Track handled items (items disappear after action)
 - [x] Pagination for 10+ items ("Show more" button)
 - [x] Header indicator (■→□) when all handled
@@ -74,14 +77,17 @@ This app enforces a strict scheduling philosophy: **every single task, event, an
 - [x] Display subtasks nested in review items
 
 **Files modified**:
+
 - `src/components/DailyReview.tsx`
 
 ---
 
 #### 2. Subtasks Enhancements
+
 **Status**: Completed ✅
 
 **Completed**:
+
 - [x] Tab/Shift+Tab for indent/outdent
 - [x] Visual indent (32px)
 - [x] Parent-child relationship in DB
@@ -93,9 +99,11 @@ This app enforces a strict scheduling philosophy: **every single task, event, an
 ---
 
 #### 3. Time Format Setting
+
 **Status**: Completed ✅
 
 **Completed**:
+
 - [x] Setting UI toggle for 12-hour vs 24-hour format
 - [x] Persistent preference storage
 - [x] Applied to item creation timestamps in ThoughtsPane
@@ -108,6 +116,7 @@ This app enforces a strict scheduling philosophy: **every single task, event, an
 - [x] Enter key submission in time prompt modal
 
 **Files modified**:
+
 - `src/store/useSettingsStore.ts` (added timeFormat state)
 - `src/components/Settings.tsx` (added UI toggle)
 - `src/utils/formatting.ts` (formatTimeForDisplay function)
@@ -121,9 +130,11 @@ This app enforces a strict scheduling philosophy: **every single task, event, an
 ---
 
 #### 4. Testing Infrastructure
+
 **Status**: Completed ✅
 
 **Completed**:
+
 - [x] Vitest testing framework with Happy DOM environment
 - [x] Test setup with @testing-library/react and jest-dom matchers
 - [x] Test scripts (test, test:ui, test:coverage)
@@ -131,12 +142,14 @@ This app enforces a strict scheduling philosophy: **every single task, event, an
 - [x] 158 comprehensive tests covering utilities, store, and components
 
 **Test Coverage**:
+
 - `formatting.ts` (33 tests): Symbol conversion, time formatting
 - `parser.ts` (54 tests): Type detection, recurrence patterns, date parsing
 - `itemFactory.ts` (15 tests): Type-safe item creation
 - `useStore.ts` (13 tests): Cascade delete, todo completion
 
 **Files created**:
+
 - `vite.config.ts` (test configuration)
 - `src/test/setup.ts` (test setup file)
 - `src/utils/formatting.test.ts`
@@ -147,9 +160,11 @@ This app enforces a strict scheduling philosophy: **every single task, event, an
 ---
 
 #### 5. Error Handling & User Feedback
+
 **Status**: Completed ✅
 
 **Completed**:
+
 - [x] Toast notification system with multiple types (success, error, info, warning)
 - [x] Custom ConfirmDialog component replacing browser confirm()
 - [x] ErrorBoundary component with graceful error handling
@@ -158,6 +173,7 @@ This app enforces a strict scheduling philosophy: **every single task, event, an
 - [x] Focus management and keyboard accessibility in dialogs
 
 **Components Created**:
+
 - `src/components/Toast.tsx` - Toast notification display
 - `src/hooks/useToast.ts` - Toast state management with Zustand
 - `src/components/ConfirmDialog.tsx` - Custom confirmation dialog
@@ -165,6 +181,7 @@ This app enforces a strict scheduling philosophy: **every single task, event, an
 - `src/hooks/useKeyboardShortcuts.ts` - Keyboard shortcut management
 
 **Accessibility Improvements**:
+
 - [x] ARIA labels on all interactive elements
 - [x] Focus indicators with `:focus-visible` styles
 - [x] Keyboard shortcuts (Cmd/Ctrl+F for search, Escape to close)
@@ -172,6 +189,7 @@ This app enforces a strict scheduling philosophy: **every single task, event, an
 - [x] Proper dialog roles and aria attributes
 
 **Files Modified**:
+
 - `src/App.tsx` (added ToastContainer, keyboard shortcuts)
 - `src/main.tsx` (wrapped with ErrorBoundary)
 - `src/components/ItemDisplay.tsx` (replaced confirm() with ConfirmDialog)
@@ -180,9 +198,11 @@ This app enforces a strict scheduling philosophy: **every single task, event, an
 ---
 
 #### 6. Undo/Redo System
+
 **Status**: Completed ✅
 
 **Completed**:
+
 - [x] Action history store with undo/redo stacks
 - [x] Tracks create, delete, edit, complete actions
 - [x] Keyboard shortcuts: Cmd/Ctrl+Z (undo), Cmd/Ctrl+Shift+Z (redo)
@@ -192,10 +212,12 @@ This app enforces a strict scheduling philosophy: **every single task, event, an
 - [x] Skip history flag prevents infinite loops during undo/redo
 
 **Components Created**:
+
 - `src/store/useHistory.ts` - History management with Zustand
 - `src/hooks/useUndoRedo.ts` - Undo/redo integration hook
 
 **Files Modified**:
+
 - `src/store/useStore.ts` (added history recording to all mutations)
 - `src/App.tsx` (integrated undo/redo hook, keyboard shortcuts)
 - `src/hooks/useToast.ts` (added onUndo callback support)
@@ -207,9 +229,11 @@ This app enforces a strict scheduling philosophy: **every single task, event, an
 ### 🟡 Medium Priority (Phase 2)
 
 #### 7. Search Functionality
+
 **Status**: Completed ✅
 
 **Completed**:
+
 - [x] Search input in header
 - [x] Scope: searches both panes simultaneously (Thoughts & Time)
 - [x] Full-text search capability
@@ -219,12 +243,14 @@ This app enforces a strict scheduling philosophy: **every single task, event, an
 - [x] Clear search with × button
 
 **Not implemented** (lower priority):
+
 - [ ] Keyboard shortcut: Cmd/Ctrl + F
 - [ ] Highlight matching text
 - [ ] Click result navigates to day and scrolls to item
 - [ ] Show "No results found" empty state
 
 **Files modified**:
+
 - `src/components/Header.tsx` (search input)
 - `src/components/ThoughtsPane.tsx` (search filtering)
 - `src/components/TimePane.tsx` (search filtering)
@@ -233,9 +259,11 @@ This app enforces a strict scheduling philosophy: **every single task, event, an
 ---
 
 #### 8. Event Auto-Split Logic
+
 **Status**: Completed ✅
 
 **Completed**:
+
 - [x] Detect when items exist between event start and end times
 - [x] Split event into ⇤ (start) and ⇥ (end) markers
 - [x] Single ↹ symbol when no items between
@@ -244,14 +272,17 @@ This app enforces a strict scheduling philosophy: **every single task, event, an
 - [x] Dynamic calculation on render
 
 **Files modified**:
+
 - `src/components/TimePane.tsx` (hasItemsWithinEvent function, split rendering)
 
 ---
 
 #### 9. URL Link Previews for Notes
+
 **Status**: Not implemented
 
 **Requirements**:
+
 - [ ] Auto-detect URLs in note content
 - [ ] Background fetch metadata (Open Graph, Twitter cards)
 - [ ] Store in `linkPreviews` JSONB field
@@ -261,6 +292,7 @@ This app enforces a strict scheduling philosophy: **every single task, event, an
 - [ ] Max width: 400px (desktop), 100% (mobile)
 
 **Card Specs**:
+
 ```css
 border: 1px solid #1A1A1A
 background: #0A0A0A
@@ -274,6 +306,7 @@ domain: 13px, #6A6A6A
 ```
 
 **Files to create/modify**:
+
 - `src/utils/linkPreview.ts` (new file - fetch metadata)
 - `src/components/LinkPreviewCard.tsx` (new file)
 - `src/components/ItemDisplay.tsx` (render link previews)
@@ -281,11 +314,13 @@ domain: 13px, #6A6A6A
 ---
 
 #### 10. Note Embedding in Todos
+
 **Status**: Replaced by Jump to Source ✅
 
 **Note**: Instead of embedding notes in todos, we implemented "Jump to Source" (↸ button) which allows users to navigate from any Time pane item to its original location in the Thoughts pane. This provides context viewing without the complexity of note embedding.
 
 **Original Requirements** (not implemented):
+
 - [ ] Click "Link" button on note → copies ID to clipboard
 - [ ] Paste link into todo content
 - [ ] Detect link pattern in todo
@@ -294,6 +329,7 @@ domain: 13px, #6A6A6A
 - [ ] Broken link display when note deleted
 
 **Card Specs**:
+
 ```
 □ Meeting prep
   ┌─────────────────────────────┐
@@ -303,6 +339,7 @@ domain: 13px, #6A6A6A
 ```
 
 **Files to create/modify**:
+
 - `src/components/ItemDisplay.tsx` (add Link button, detect embedded)
 - `src/components/EmbeddedNoteCard.tsx` (new file)
 - `src/utils/parser.ts` (detect embedded note links)
@@ -312,9 +349,11 @@ domain: 13px, #6A6A6A
 ### 🟢 Lower Priority (Phase 3)
 
 #### 11. Completion Linking System
+
 **Status**: Partially implemented in store, not in UI - **Not a priority**
 
 **Requirements**:
+
 - [ ] Create CompletionLink on todo completion
 - [ ] Original item shows "completed on Oct 14 →"
 - [ ] Completion entry created in today's Thoughts
@@ -325,6 +364,7 @@ domain: 13px, #6A6A6A
 - [ ] Deleting completion reverts original to uncompleted
 
 **Visual Specs**:
+
 ```
 Oct 12 Thoughts:
 ☑ ~~Call mom~~
@@ -336,6 +376,7 @@ Oct 14 Thoughts:
 ```
 
 **Files to create/modify**:
+
 - `src/types.ts` (add CompletionLink interface)
 - `src/store/useStore.ts` (add completion linking logic)
 - `src/components/ItemDisplay.tsx` (show completion links)
@@ -344,9 +385,11 @@ Oct 14 Thoughts:
 ---
 
 #### 12. Database Backend (Supabase)
+
 **Status**: Not implemented (currently localStorage only)
 
 **Requirements**:
+
 - [ ] Supabase project setup
 - [ ] Database schema migration (see spec for full schema)
 - [ ] User authentication
@@ -358,6 +401,7 @@ Oct 14 Thoughts:
 - [ ] Offline mode handling
 
 **Schema Tables**:
+
 - `users`
 - `items` (polymorphic for all types)
 - `routine_occurrences`
@@ -365,6 +409,7 @@ Oct 14 Thoughts:
 - `notification_settings`
 
 **Files to create/modify**:
+
 - `supabase/migrations/` (new directory)
 - `src/lib/supabase.ts` (new file - client setup)
 - `src/store/useStore.ts` (replace localStorage with Supabase)
@@ -373,9 +418,11 @@ Oct 14 Thoughts:
 ---
 
 #### 13. Mobile Responsive Optimizations
+
 **Status**: Partially responsive, needs improvements
 
 **Requirements**:
+
 - [ ] Swipeable panes (swipe left/right to switch)
 - [ ] Touch gesture detection
 - [ ] Mobile tap targets (44×44px minimum)
@@ -385,6 +432,7 @@ Oct 14 Thoughts:
 - [ ] Android Chrome fixes
 
 **Files to modify**:
+
 - `src/App.tsx` (add swipe detection)
 - `src/components/*.tsx` (adjust tap target sizes)
 - `src/styles/index.css` (mobile-specific styles)
@@ -393,9 +441,11 @@ Oct 14 Thoughts:
 ---
 
 #### 14. Notifications System
+
 **Status**: Not implemented
 
 **Requirements**:
+
 - [ ] Push notification setup
 - [ ] Service worker registration
 - [ ] Notification permission request
@@ -406,6 +456,7 @@ Oct 14 Thoughts:
 - [ ] Dismiss handling
 
 **Files to create/modify**:
+
 - `public/service-worker.js` (new file)
 - `src/utils/notifications.ts` (new file)
 - `src/components/Settings.tsx` (add notification preferences)
@@ -414,9 +465,11 @@ Oct 14 Thoughts:
 ---
 
 #### 15. Performance Optimizations
+
 **Status**: Partially completed ✅
 
 **Completed**:
+
 - [x] Virtualized lists with @tanstack/react-virtual (both panes)
 - [x] Only render visible items in infinite scroll mode
 - [x] Overscan 3 items above/below viewport
@@ -425,24 +478,29 @@ Oct 14 Thoughts:
 - [x] Memoized event split detection
 
 **Remaining**:
+
 - [ ] Lazy loading (30 days at a time)
 - [ ] Database indexes (if using Supabase)
 
 **Performance Targets**:
+
 - Initial load: < 2s
 - Search results: < 500ms
 - Timeline scroll: 60fps smooth
 - Database query: < 100ms average
 
 **Files modified**:
+
 - `src/components/TimePane.tsx` (virtualization with useVirtualizer)
 
 ---
 
 #### 16. Accessibility Improvements
+
 **Status**: Basic accessibility, needs WCAG 2.1 compliance
 
 **Requirements**:
+
 - [ ] WCAG 2.1 Level AA compliance
 - [ ] Keyboard navigation for all actions
 - [ ] ARIA labels for interactive elements
@@ -453,6 +511,7 @@ Oct 14 Thoughts:
 - [ ] Reduced motion support
 
 **Files to modify**:
+
 - All component files (add ARIA labels)
 - `src/styles/index.css` (focus indicators, reduced motion)
 
@@ -461,21 +520,21 @@ Oct 14 Thoughts:
 ## Design System Specifications
 
 ### Typography
+
 - **Content**: "Crimson Text", Lora, Georgia, serif
 - **Metadata**: "Courier Prime", "Courier New", monospace
 - **Base size**: 18px
 - **Line height**: 1.7 (book-like spacing)
 
 ### Colors (Monochrome)
+
 ```css
---background: #0A0A0A
---text-primary: #F5F5F5
---text-secondary: #6A6A6A
---border-subtle: #1A1A1A
---hover-bg: #0F0F0F
+--background: #0a0a0a --text-primary: #f5f5f5 --text-secondary: #6a6a6a --border-subtle: #1a1a1a
+  --hover-bg: #0f0f0f;
 ```
 
 ### Spacing (8px grid)
+
 - 6px: Minimal
 - 12px: Close
 - 16px: Comfortable
@@ -485,6 +544,7 @@ Oct 14 Thoughts:
 - 64px: Major sections
 
 ### Symbols (18px)
+
 - □ Todo (unchecked) - U+25A1
 - ☑ Todo (checked) - U+2611
 - ↹ Event (single) - U+21B9
@@ -493,7 +553,7 @@ Oct 14 Thoughts:
 - ↻ Routine - U+21BB
 - ↝ Note - U+219D
 - ■ Daily Review - U+25A0
-- * Note sub-item - U+002A
+- - Note sub-item - U+002A
 - ↸ Jump to Source - U+21B8
 
 ---
@@ -508,7 +568,7 @@ Oct 14 Thoughts:
 4. **Daily Review auto-completion** - Only when ALL items handled
 5. **Event splitting is dynamic** - Recalculate on every render
 6. **Todo subtasks: max depth 1, todos only** - No prefixes, always todos
-7. **Note sub-items: max depth 2, any type** - Use prefixes * t e r
+7. **Note sub-items: max depth 2, any type** - Use prefixes \* t e r
 8. **Org Mode inspiration** - Freedom to mix types within notes
 9. **Search scope** - Searches both panes simultaneously (Thoughts & Time)
 10. **No unscheduled items** - Every task, event, and routine must have a date and time
@@ -519,13 +579,15 @@ Oct 14 Thoughts:
 ### Two Hierarchy Systems
 
 **Todo Subtasks**:
+
 - Parent todo → child todos (max 1 level)
 - No prefixes (always todos)
 - Checking parent checks all children
 
 **Note Sub-Items** (Org Mode):
+
 - Parent note → any type via prefixes (max 2 levels)
-- Prefixes: * (note), t (todo), e (event), r (routine)
+- Prefixes: \* (note), t (todo), e (event), r (routine)
 - Independent items (checking doesn't cascade)
 - Maximum flexibility
 
@@ -534,6 +596,7 @@ Oct 14 Thoughts:
 ## Testing Requirements
 
 ### Unit Tests ✅
+
 - [x] Item creation with prefixes (parser.test.ts)
 - [x] Daily Review generation
 - [x] Subtask cascade completion (useStore.test.ts)
@@ -543,11 +606,13 @@ Oct 14 Thoughts:
 - [x] 158 tests total with Vitest
 
 ### Integration Tests
+
 - [ ] Capture to Timeline flow
 - [ ] Daily Review to Completion flow
 - [ ] Search and navigation
 
 ### E2E Tests (Playwright) ✅
+
 - [x] App loads with header and two panes
 - [x] User can create todo, event, note items
 - [x] Toggle todo completion
@@ -561,10 +626,12 @@ Oct 14 Thoughts:
 - [x] Export/import data buttons visible
 
 **Files created**:
+
 - `playwright.config.ts`
 - `e2e/app.spec.ts` (15 test cases)
 
 **Scripts**:
+
 - `npm run test:e2e` - Run E2E tests
 - `npm run test:e2e:ui` - Run with UI
 - `npm run test:e2e:headed` - Run in headed mode
@@ -582,22 +649,85 @@ Oct 14 Thoughts:
 
 ---
 
+## Code Quality Improvements (November 2025)
+
+### ✅ Completed Improvements
+
+#### 1. Accessibility Enhancements
+
+- [x] Added `aria-label` attributes to all icon buttons in ItemActions
+- [x] Improved screen reader support for action buttons (Edit, Delete, Jump to Source)
+
+#### 2. Performance Optimizations
+
+- [x] Added custom comparator to React.memo in ItemDisplay to prevent unnecessary re-renders
+- [x] Memoized dates array generation in TimePane and ThoughtsPane
+- [x] Optimized re-render cycles by comparing specific item properties
+
+#### 3. Input Validation & Error Handling
+
+- [x] Added time range validation in parser (auto-corrects invalid end times)
+- [x] Added comprehensive import validation in Settings:
+  - Validates required fields (id, type, content, createdDate)
+  - Detects duplicate IDs
+  - Validates parent references exist
+  - Validates item types are valid
+- [x] Added localStorage quota exceeded error handling
+
+#### 4. Type Safety Improvements
+
+- [x] Fixed unsafe double casting in useUndoRedo hook
+- [x] Improved type assertions with proper type guards
+
+#### 5. Developer Experience
+
+- [x] Set up Prettier code formatter with consistent config
+- [x] Set up Husky pre-commit hooks with lint-staged
+- [x] Added format and format:check npm scripts
+- [x] Added 18 new unit tests (176 total tests passing)
+- [x] Created test files for Settings and ItemActions components
+
+**Files Modified:**
+
+- `src/components/ItemActions.tsx` - Added aria-labels
+- `src/components/ItemDisplay.tsx` - Added React.memo comparator
+- `src/components/Settings.tsx` - Added import validation and error handling
+- `src/components/TimePane.tsx` - Memoized dates array
+- `src/components/ThoughtsPane.tsx` - Memoized dates array
+- `src/utils/parser.ts` - Added time range validation
+- `src/hooks/useUndoRedo.ts` - Fixed type safety
+- `package.json` - Added Prettier, Husky, lint-staged
+
+**Files Created:**
+
+- `.prettierrc` - Prettier configuration
+- `.prettierignore` - Files to ignore
+- `.husky/pre-commit` - Pre-commit hook
+- `src/components/Settings.test.tsx` - Settings tests
+- `src/components/ItemActions.test.tsx` - ItemActions tests
+
+---
+
 ## Next Steps
 
 ### Immediate (This Week)
+
 1. URL link previews for notes
 2. Mobile responsive optimizations (swipe gestures, tap targets)
 
 ### Short Term (Next 2 Weeks)
+
 1. Integration tests for key user flows
 2. Completion linking system (if needed)
 
 ### Medium Term (Next Month)
+
 1. Database backend (Supabase)
 2. Notifications system
 3. WCAG 2.1 accessibility audit
 
 ### Long Term (Next Quarter)
+
 1. User authentication
 2. Cross-device sync
 3. Beta testing and polish
@@ -605,6 +735,7 @@ Oct 14 Thoughts:
 ---
 
 **Status Key**:
+
 - ✅ Completed
 - 🔴 High Priority
 - 🟡 Medium Priority
@@ -614,4 +745,4 @@ Oct 14 Thoughts:
 
 ---
 
-Last updated: November 21, 2025
+Last updated: November 22, 2025
