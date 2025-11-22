@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
   detectItemType,
-  hasExplicitNotePrefix,
   removePrefix,
   extractEmbeddedNotes,
   detectRecurrencePattern,
@@ -40,26 +39,6 @@ describe('detectItemType', () => {
   });
 });
 
-describe('hasExplicitNotePrefix', () => {
-  it('returns true for * prefix', () => {
-    expect(hasExplicitNotePrefix('* Note')).toBe(true);
-  });
-
-  it('returns true for n prefix', () => {
-    expect(hasExplicitNotePrefix('n Note')).toBe(true);
-  });
-
-  it('returns false for other prefixes', () => {
-    expect(hasExplicitNotePrefix('t Task')).toBe(false);
-    expect(hasExplicitNotePrefix('e Event')).toBe(false);
-    expect(hasExplicitNotePrefix('r Routine')).toBe(false);
-  });
-
-  it('returns false for no prefix', () => {
-    expect(hasExplicitNotePrefix('Plain text')).toBe(false);
-  });
-});
-
 describe('removePrefix', () => {
   it('removes todo prefix', () => {
     expect(removePrefix('t Buy milk')).toBe('Buy milk');
@@ -75,10 +54,6 @@ describe('removePrefix', () => {
 
   it('removes note prefix (n)', () => {
     expect(removePrefix('n Note content')).toBe('Note content');
-  });
-
-  it('removes note prefix (*)', () => {
-    expect(removePrefix('* Note content')).toBe('Note content');
   });
 
   it('returns unchanged text when no prefix', () => {
@@ -357,7 +332,8 @@ describe('parseInput', () => {
     if (result.scheduledTime && result.endTime) {
       expect(result.scheduledTime.getHours()).toBe(0);
       expect(result.endTime.getHours()).toBe(0);
-      const daysDiff = (result.endTime.getTime() - result.scheduledTime.getTime()) / (1000 * 60 * 60 * 24);
+      const daysDiff =
+        (result.endTime.getTime() - result.scheduledTime.getTime()) / (1000 * 60 * 60 * 24);
       expect(daysDiff).toBe(1);
     }
   });
@@ -374,7 +350,7 @@ describe('parseInput', () => {
   });
 
   it('parses note without date', () => {
-    const result = parseInput('* Random thought');
+    const result = parseInput('n Random thought');
     expect(result.type).toBe('note');
     expect(result.content).toBe('Random thought');
     expect(result.scheduledTime).toBeNull();

@@ -4,7 +4,7 @@ import { matchesSearch, highlightMatches } from './search.tsx';
 import { Todo, Note } from '../types';
 
 describe('matchesSearch', () => {
-  const createTodo = (content: string, subtasks: string[] = []): Todo => ({
+  const createTodo = (content: string, children: string[] = []): Todo => ({
     id: 'test-' + Math.random(),
     userId: 'user-1',
     type: 'todo',
@@ -19,12 +19,12 @@ describe('matchesSearch', () => {
     parentId: null,
     parentType: null,
     depthLevel: 0,
-    subtasks,
+    children,
     embeddedItems: [],
     completionLinkId: null,
   });
 
-  const createNote = (content: string, subItems: string[] = []): Note => ({
+  const createNote = (content: string, children: string[] = []): Note => ({
     id: 'test-' + Math.random(),
     userId: 'user-1',
     type: 'note',
@@ -35,7 +35,7 @@ describe('matchesSearch', () => {
     completedAt: null,
     cancelledAt: null,
     linkPreviews: [],
-    subItems,
+    children,
     parentId: null,
     parentType: null,
     depthLevel: 0,
@@ -116,7 +116,7 @@ describe('highlightMatches', () => {
     render(<>{result}</>);
     const highlights = screen.getAllByText('test');
     expect(highlights).toHaveLength(3);
-    highlights.forEach(h => expect(h.tagName).toBe('MARK'));
+    highlights.forEach((h) => expect(h.tagName).toBe('MARK'));
   });
 
   it('is case-insensitive', () => {

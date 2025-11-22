@@ -37,7 +37,7 @@ describe('createTodoItem', () => {
     expect(todo.scheduledTime).toBe(scheduledTime);
     expect(todo.hasTime).toBe(true);
     expect(todo.completedAt).toBeNull();
-    expect(todo.subtasks).toEqual([]);
+    expect(todo.children).toEqual([]);
     expect(todo.userId).toBe('user-1');
   });
 
@@ -269,7 +269,7 @@ describe('createNoteItem', () => {
     expect(note.type).toBe('note');
     expect(note.content).toBe('Random thought');
     expect(note.linkPreviews).toEqual([]);
-    expect(note.subItems).toEqual([]);
+    expect(note.children).toEqual([]);
     expect(note.orderIndex).toBe(0);
   });
 
@@ -293,7 +293,7 @@ describe('createNoteItem', () => {
     });
 
     expect(note.linkPreviews).toEqual([]);
-    expect(note.subItems).toEqual([]);
+    expect(note.children).toEqual([]);
   });
 });
 

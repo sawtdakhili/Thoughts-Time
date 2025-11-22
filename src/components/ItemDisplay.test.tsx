@@ -37,7 +37,7 @@ describe('ItemDisplay', () => {
     parentId: null,
     parentType: null,
     depthLevel: 0,
-    subtasks: [],
+    children: [],
     embeddedItems: [],
     completionLinkId: null,
     ...overrides,
@@ -54,7 +54,7 @@ describe('ItemDisplay', () => {
     completedAt: null,
     cancelledAt: null,
     linkPreviews: [],
-    subItems: [],
+    children: [],
     parentId: null,
     parentType: null,
     depthLevel: 0,
@@ -129,7 +129,7 @@ describe('ItemDisplay', () => {
         parentId: 'test-todo-1',
         depthLevel: 1,
       });
-      const parentTodo = createTodo({ subtasks: ['subtask-1'] });
+      const parentTodo = createTodo({ children: ['subtask-1'] });
 
       useStore.setState({ items: [parentTodo, subtask] });
       render(<ItemDisplay item={parentTodo} />);

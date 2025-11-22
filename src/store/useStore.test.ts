@@ -45,7 +45,7 @@ describe('useStore', () => {
       expect(stateAfterAdd.items.length).toBe(3);
 
       const parentTodo = stateAfterAdd.items.find((i) => i.id === parentId) as Todo;
-      expect(parentTodo.subtasks).toEqual([subtask1Id, subtask2Id]);
+      expect(parentTodo.children).toEqual([subtask1Id, subtask2Id]);
 
       // Delete parent
       deleteItem(parentId);
@@ -59,11 +59,11 @@ describe('useStore', () => {
       const { addItem, deleteItem } = useStore.getState();
 
       // Add a parent note
-      const parentId = addItem('* Parent note');
+      const parentId = addItem('n Parent note');
       expect(useStore.getState().items.length).toBe(1);
 
       // Add two sub-items
-      const subItem1Id = addItem('* Sub-note 1', parentId, 1);
+      const subItem1Id = addItem('n Sub-note 1', parentId, 1);
       const subItem2Id = addItem('t Sub-task', parentId, 1);
 
       // Verify all items exist
@@ -71,7 +71,7 @@ describe('useStore', () => {
       expect(stateAfterAdd.items.length).toBe(3);
 
       const parentNote = stateAfterAdd.items.find((i) => i.id === parentId) as Note;
-      expect(parentNote.subItems).toEqual([subItem1Id, subItem2Id]);
+      expect(parentNote.children).toEqual([subItem1Id, subItem2Id]);
 
       // Delete parent
       deleteItem(parentId);
@@ -85,13 +85,13 @@ describe('useStore', () => {
       const { addItem, deleteItem } = useStore.getState();
 
       // Add a parent note
-      const parentId = addItem('* Parent note');
+      const parentId = addItem('n Parent note');
 
       // Add level 1 sub-item
-      const level1Id = addItem('* Level 1', parentId, 1);
+      const level1Id = addItem('n Level 1', parentId, 1);
 
       // Add level 2 sub-item
-      addItem('* Level 2', level1Id, 2);
+      addItem('n Level 2', level1Id, 2);
 
       // Verify all items exist
       expect(useStore.getState().items.length).toBe(3);
@@ -113,14 +113,14 @@ describe('useStore', () => {
 
       // Verify parent has children
       const parent1 = useStore.getState().items.find((i) => i.id === parentId) as Todo;
-      expect(parent1.subtasks).toEqual([child1Id, child2Id]);
+      expect(parent1.children).toEqual([child1Id, child2Id]);
 
       // Delete one child
       deleteItem(child1Id);
 
-      // Verify parent's subtasks array is cleaned up
+      // Verify parent's children array is cleaned up
       const parent2 = useStore.getState().items.find((i) => i.id === parentId) as Todo;
-      expect(parent2.subtasks).toEqual([child2Id]);
+      expect(parent2.children).toEqual([child2Id]);
     });
 
     it('does nothing when deleting non-existent item', () => {
