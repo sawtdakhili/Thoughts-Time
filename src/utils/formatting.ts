@@ -12,7 +12,7 @@ export function symbolsToPrefix(text: string): string {
     .replace(/^(\s*)□\s/, '$1t ')
     .replace(/^(\s*)☑\s/, '$1t ')
     .replace(/^(\s*)↻\s/, '$1r ')
-    .replace(/^(\s*)↝\s/, '$1* ');
+    .replace(/^(\s*)↝\s/, '$1n ');
 }
 
 /**
@@ -36,9 +36,9 @@ export function formatTimeForDisplay(time24: string, format: '12h' | '24h' = '12
  * Prefix to symbol mapping for item types
  */
 export const prefixToSymbol: { [key: string]: string } = {
-  'e': '↹',
-  't': '□',
-  'r': '↻',
+  e: '↹',
+  t: '□',
+  r: '↻',
   '*': '↝',
 };
 
@@ -50,5 +50,15 @@ export const symbolToPrefix: { [key: string]: string } = {
   '□': 't',
   '☑': 't',
   '↻': 'r',
-  '↝': '*',
+  '↝': 'n',
+};
+
+/**
+ * Item type to symbol mapping
+ */
+export const typeToSymbol: { [key: string]: string } = {
+  event: '↹',
+  todo: '□',
+  routine: '↻',
+  note: '↝',
 };

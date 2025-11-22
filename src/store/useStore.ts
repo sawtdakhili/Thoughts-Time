@@ -29,9 +29,15 @@ interface AppState {
   /**
    * Add multiple items from multi-line input with hierarchy.
    * @param input - Multi-line input with prefixes and Tab indentation
+   * @param rootParentId - Optional parent ID for all top-level items (for editing)
+   * @param depthOffset - Optional depth offset to add to all levels (for editing)
    * @returns Object with created item IDs and any errors
    */
-  addItems: (input: string) => { ids: string[]; errors: string[]; needsTimePrompt: ParsedLine[] };
+  addItems: (
+    input: string,
+    rootParentId?: string | null,
+    depthOffset?: number
+  ) => { ids: string[]; errors: string[]; needsTimePrompt: ParsedLine[] };
 
   /**
    * Add a pre-constructed item directly (used by undo/redo).
@@ -239,7 +245,7 @@ export const useStore = create<AppState>()(
         return newId;
       },
 
-      addItems: (input: string) => {
+      addItems: (input: string, rootParentId?: string | null, depthOffset: number = 0) => {
         const { lines, errors } = parseMultiLine(input);
 
         if (errors.length > 0 || lines.length === 0) {
@@ -252,6 +258,10 @@ export const useStore = create<AppState>()(
         const newItems: Item[] = [];
         const needsTimePrompt: ParsedLine[] = [];
 
+        // Get root parent info if provided
+        const { items } = get();
+        const rootParent = rootParentId ? items.find((i) => i.id === rootParentId) : null;
+
         // Track parent at each level
         const parentStack: { id: string; level: number }[] = [];
 
@@ -259,11 +269,18 @@ export const useStore = create<AppState>()(
           const newId = generateId();
           ids.push(newId);
 
+          // Adjust level with offset
+          const adjustedLevel = line.level + depthOffset + (rootParentId ? 1 : 0);
+
           // Find parent based on level
           let parentId: string | null = null;
           let parentType: Item['type'] | null = null;
 
-          if (line.level > 0) {
+          if (line.level === 0 && rootParentId) {
+            // First level items belong to the root parent
+            parentId = rootParentId;
+            parentType = rootParent?.type || null;
+          } else if (line.level > 0) {
             // Pop items from stack until we find one at the correct parent level
             while (
               parentStack.length > 0 &&
@@ -276,6 +293,10 @@ export const useStore = create<AppState>()(
               parentId = parentInfo.id;
               const parentItem = newItems.find((i) => i.id === parentId);
               parentType = parentItem?.type || null;
+            } else if (rootParentId) {
+              // Fall back to root parent if stack is empty
+              parentId = rootParentId;
+              parentType = rootParent?.type || null;
             }
           }
 
@@ -306,7 +327,7 @@ export const useStore = create<AppState>()(
                 hasTime: line.hasTime,
                 parentId,
                 parentType: parentType as 'todo' | 'note' | 'event' | null,
-                depthLevel: line.level,
+                depthLevel: adjustedLevel,
                 children: [],
                 embeddedItems: line.embeddedNotes,
                 completionLinkId: null,
@@ -326,7 +347,7 @@ export const useStore = create<AppState>()(
                 embeddedItems: line.embeddedNotes,
                 parentId,
                 parentType: parentType as 'note' | null,
-                depthLevel: line.level,
+                depthLevel: adjustedLevel,
                 children: [],
               } as Event;
               break;
@@ -357,7 +378,7 @@ export const useStore = create<AppState>()(
                 children: [],
                 parentId,
                 parentType: parentType as 'todo' | 'note' | 'event' | 'routine' | null,
-                depthLevel: line.level,
+                depthLevel: adjustedLevel,
                 orderIndex: 0,
               } as Note;
               break;
@@ -391,9 +412,29 @@ export const useStore = create<AppState>()(
           }
         }
 
-        set((state) => ({
-          items: [...state.items, ...newItems],
-        }));
+        // Collect IDs of direct children of the root parent
+        const rootChildIds = rootParentId
+          ? newItems.filter((item) => item.parentId === rootParentId).map((item) => item.id)
+          : [];
+
+        set((state) => {
+          let updatedItems = [...state.items, ...newItems];
+
+          // Update root parent's children array if needed
+          if (rootParentId && rootChildIds.length > 0) {
+            updatedItems = updatedItems.map((item) => {
+              if (item.id === rootParentId && 'children' in item) {
+                return {
+                  ...item,
+                  children: [...(item as { children: string[] }).children, ...rootChildIds],
+                };
+              }
+              return item;
+            });
+          }
+
+          return { items: updatedItems };
+        });
 
         return { ids, errors: [], needsTimePrompt };
       },

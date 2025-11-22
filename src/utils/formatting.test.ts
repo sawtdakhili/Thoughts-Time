@@ -24,7 +24,7 @@ describe('symbolsToPrefix', () => {
   });
 
   it('converts note symbol to prefix', () => {
-    expect(symbolsToPrefix('↝ Note content')).toBe('* Note content');
+    expect(symbolsToPrefix('↝ Note content')).toBe('n Note content');
   });
 
   it('preserves leading whitespace', () => {
@@ -139,7 +139,7 @@ describe('symbolToPrefix', () => {
   });
 
   it('maps note symbol to prefix', () => {
-    expect(symbolToPrefix['↝']).toBe('*');
+    expect(symbolToPrefix['↝']).toBe('n');
   });
 
   it('has exactly 5 mappings', () => {
