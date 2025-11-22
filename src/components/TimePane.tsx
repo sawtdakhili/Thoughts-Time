@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { format, subDays, addDays, parseISO } from 'date-fns';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { useStore } from '../store/useStore';
 import { useSettingsStore } from '../store/useSettingsStore';
 import DailyReview from './DailyReview';
@@ -26,6 +27,7 @@ interface TimePaneProps {
   currentDate?: string;
   onNextDay?: () => void;
   onPreviousDay?: () => void;
+  onJumpToSource?: (item: Item) => void;
 }
 
 function TimePane({
@@ -34,6 +36,7 @@ function TimePane({
   currentDate,
   onNextDay,
   onPreviousDay,
+  onJumpToSource,
 }: TimePaneProps) {
   const items = useStore((state) => state.items);
   const timeFormat = useSettingsStore((state) => state.timeFormat);
@@ -163,12 +166,59 @@ function TimePane({
     dates.push(format(date, 'yyyy-MM-dd'));
   }
 
+  // Filter dates for infinite scroll mode - only show dates with items (plus today)
+  const visibleDates = useMemo(() => {
+    if (viewMode === 'book') {
+      return currentDate ? [currentDate] : dates;
+    }
+    // In infinite mode, filter out empty dates except today
+    return dates.filter(date => {
+      const entries = entriesByDate.get(date) || [];
+      return entries.length > 0 || date === today;
+    });
+  }, [viewMode, currentDate, dates, entriesByDate, today]);
+
+  // Find index of today for initial scroll
+  const todayIndex = useMemo(() => {
+    return visibleDates.findIndex(date => date === today);
+  }, [visibleDates, today]);
+
+  // Estimate height based on entries - each time slot is ~60px, header is ~50px
+  const estimateSize = useCallback((index: number) => {
+    const date = visibleDates[index];
+    const entries = entriesByDate.get(date) || [];
+    const isToday = date === today;
+
+    // Group entries by time to count time slots
+    const timeSlots = new Set(entries.map(e => e.timeKey)).size;
+
+    // Base: header (50px) + padding (40px)
+    // Per time slot: ~80px (time label + items)
+    // Daily review for today: ~100px
+    // Empty day: ~60px
+    const baseHeight = 90;
+    const perSlot = 80;
+    const dailyReview = isToday ? 100 : 0;
+    const emptyHeight = timeSlots === 0 ? 60 : 0;
+
+    return baseHeight + (timeSlots * perSlot) + dailyReview + emptyHeight;
+  }, [visibleDates, entriesByDate, today]);
+
+  // Virtualizer for infinite scroll mode
+  const virtualizer = useVirtualizer({
+    count: visibleDates.length,
+    getScrollElement: () => scrollRef.current,
+    estimateSize,
+    overscan: 3,
+  });
+
   // Auto-scroll to today on mount
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight / 2;
+    if (scrollRef.current && viewMode === 'infinite' && todayIndex >= 0) {
+      // Use virtualizer to scroll to today
+      virtualizer.scrollToIndex(todayIndex, { align: 'start' });
     }
-  }, []);
+  }, [todayIndex, viewMode, virtualizer]);
 
   const handleWheel = (e: WheelEvent) => {
     if (!scrollRef.current || viewMode !== 'book' || !onNextDay || !onPreviousDay || isTransitioning.current) return;
@@ -464,6 +514,15 @@ function TimePane({
                   </p>
                   {isHovered && (
                     <div className="flex gap-4 flex-shrink-0">
+                      {onJumpToSource && (
+                        <button
+                          onClick={() => onJumpToSource(item)}
+                          className="text-xs text-text-secondary hover:text-text-primary"
+                          title="Jump to source"
+                        >
+                          ↸
+                        </button>
+                      )}
                       <button
                         onClick={() => handleEdit(item.id, item)}
                         className="text-xs text-text-secondary hover:text-text-primary"
@@ -516,6 +575,15 @@ function TimePane({
                   </p>
                   {isHovered && (
                     <div className="flex gap-4 flex-shrink-0">
+                      {onJumpToSource && (
+                        <button
+                          onClick={() => onJumpToSource(item)}
+                          className="text-xs text-text-secondary hover:text-text-primary"
+                          title="Jump to source"
+                        >
+                          ↸
+                        </button>
+                      )}
                       <button
                         onClick={() => handleEdit(item.id, item)}
                         className="text-xs text-text-secondary hover:text-text-primary"
@@ -568,6 +636,15 @@ function TimePane({
                   </p>
                   {isHovered && (
                     <div className="flex gap-4 flex-shrink-0">
+                      {onJumpToSource && (
+                        <button
+                          onClick={() => onJumpToSource(item)}
+                          className="text-xs text-text-secondary hover:text-text-primary"
+                          title="Jump to source"
+                        >
+                          ↸
+                        </button>
+                      )}
                       <button
                         onClick={() => handleEdit(item.id, item)}
                         className="text-xs text-text-secondary hover:text-text-primary"
@@ -689,7 +766,7 @@ function TimePane({
         ref={scrollRef}
         onScroll={handleScroll}
         className={`flex-1 overflow-y-auto px-24 py-16 ${
-          viewMode === 'infinite' ? 'snap-y snap-mandatory' : viewMode === 'book' ? 'snap-y snap-proximity' : ''
+          viewMode === 'book' ? 'snap-y snap-proximity' : ''
         } ${
           isPageFlipping && viewMode === 'book' ? 'page-flip' : ''
         }`}
@@ -702,19 +779,106 @@ function TimePane({
             <p className="text-sm">Try a different search term</p>
           </div>
         )}
-        {(viewMode === 'book' && currentDate ? [currentDate] : dates).map((date) => {
+
+        {/* Virtualized list for infinite mode */}
+        {viewMode === 'infinite' && visibleDates.length > 0 && (
+          <div
+            style={{
+              height: `${virtualizer.getTotalSize()}px`,
+              width: '100%',
+              position: 'relative',
+            }}
+          >
+            {virtualizer.getVirtualItems().map((virtualRow) => {
+              const date = visibleDates[virtualRow.index];
+              const entries = entriesByDate.get(date) || [];
+              const isToday = date === today;
+
+              // Sort entries by time
+              const sortedEntries = [...entries].sort((a, b) => a.time.getTime() - b.time.getTime());
+
+              // Group by time
+              const entriesByTime: { [timeKey: string]: TimelineEntry[] } = {};
+              sortedEntries.forEach((entry) => {
+                if (!entriesByTime[entry.timeKey]) {
+                  entriesByTime[entry.timeKey] = [];
+                }
+                entriesByTime[entry.timeKey].push(entry);
+              });
+
+              const times = Object.keys(entriesByTime).sort((a, b) => {
+                const timeA = new Date(`1970-01-01 ${a}`);
+                const timeB = new Date(`1970-01-01 ${b}`);
+                return timeA.getTime() - timeB.getTime();
+              });
+
+              return (
+                <div
+                  key={date}
+                  data-index={virtualRow.index}
+                  ref={virtualizer.measureElement}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    transform: `translateY(${virtualRow.start}px)`,
+                  }}
+                  className="pb-16"
+                >
+                  {/* Date Header */}
+                  <div className={`sticky top-0 bg-background py-3 mb-6 border-b border-border-subtle ${isToday ? 'text-text-primary' : 'text-text-secondary'}`}>
+                    <h3 className="text-base font-serif uppercase tracking-wide">
+                      {format(parseISO(date), 'EEEE, MMM d, yyyy')}
+                      {isToday && ' (Today)'}
+                    </h3>
+                  </div>
+
+                  {/* Daily Review - appears under current day title */}
+                  {isToday && (
+                    <div className="mb-8">
+                      <DailyReview searchQuery={searchQuery} />
+                      <div className="mt-8 border-t border-border-subtle" />
+                    </div>
+                  )}
+
+                  {/* Items for this date */}
+                  {times.length === 0 ? (
+                    <div className="text-center text-text-secondary text-sm py-4">
+                      <p>No scheduled items</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-6">
+                      {times.map((time) => (
+                        <div key={time}>
+                          <div className="text-xs font-mono text-text-secondary mb-1">
+                            {time}
+                          </div>
+                          <div className="space-y-3">
+                            {entriesByTime[time].map((entry, idx) => (
+                              <div key={`${entry.item.id}-${entry.type}-${idx}`}>
+                                {renderEntry(entry)}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Non-virtualized list for book mode */}
+        {viewMode === 'book' && visibleDates.map((date) => {
           const entries = entriesByDate.get(date) || [];
           const isToday = date === today;
 
-          // Don't show empty days (except today) in infinite mode
-          // Also hide empty days in book mode when searching
-          if (entries.length === 0 && !isToday) {
-            if (viewMode === 'infinite') {
-              return null;
-            }
-            if (viewMode === 'book' && searchQuery) {
-              return null;
-            }
+          // Hide empty days in book mode when searching
+          if (entries.length === 0 && !isToday && searchQuery) {
+            return null;
           }
 
           // Sort entries by time
@@ -738,7 +902,7 @@ function TimePane({
           return (
             <div
               key={date}
-              className={viewMode === 'infinite' ? 'mb-16 snap-start' : viewMode === 'book' ? 'snap-start snap-always' : ''}
+              className="snap-start snap-always"
             >
               {/* Date Header */}
               <div className={`sticky top-0 bg-background py-3 mb-6 border-b border-border-subtle ${isToday ? 'text-text-primary' : 'text-text-secondary'}`}>
@@ -748,11 +912,10 @@ function TimePane({
                 </h3>
               </div>
 
-              {/* Daily Review - appears under current day title in both modes */}
+              {/* Daily Review - appears under current day title in book mode */}
               {isToday && (
-                <div className={`mb-8 ${viewMode === 'book' ? 'border border-border-subtle rounded-sm p-16 bg-hover-bg' : ''}`}>
+                <div className="mb-8 border border-border-subtle rounded-sm p-16 bg-hover-bg">
                   <DailyReview searchQuery={searchQuery} />
-                  {viewMode === 'infinite' && <div className="mt-8 border-t border-border-subtle" />}
                 </div>
               )}
 
@@ -763,7 +926,6 @@ function TimePane({
                 </div>
               ) : (
                 <div className="space-y-6">
-
                   {times.map((time) => (
                     <div key={time}>
                       <div className="text-xs font-mono text-text-secondary mb-1">

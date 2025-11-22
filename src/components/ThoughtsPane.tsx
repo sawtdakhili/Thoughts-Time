@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback, forwardRef, useImperativeHandle } from 'react';
 import { format, subDays, addDays, parseISO } from 'date-fns';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { useStore } from '../store/useStore';
 import { useSettingsStore } from '../store/useSettingsStore';
 import ItemDisplay from './ItemDisplay';
@@ -16,22 +17,27 @@ interface ThoughtsPaneProps {
   currentDate?: string;
   onNextDay?: () => void;
   onPreviousDay?: () => void;
+  highlightedItemId?: string | null;
 }
 
-function ThoughtsPane({
+export interface ThoughtsPaneHandle {
+  scrollToDate: (date: string) => void;
+}
+
+const ThoughtsPane = forwardRef<ThoughtsPaneHandle, ThoughtsPaneProps>(({
   searchQuery = '',
   viewMode = 'infinite',
   currentDate,
   onNextDay,
   onPreviousDay,
-}: ThoughtsPaneProps) {
+  highlightedItemId,
+}, ref) => {
   const [input, setInput] = useState('');
   const addItem = useStore((state) => state.addItem);
   const items = useStore((state) => state.items);
   const timeFormat = useSettingsStore((state) => state.timeFormat);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const [isAtBottom, setIsAtBottom] = useState(true);
   const [timePrompt, setTimePrompt] = useState<{ line: string; index: number; isEvent: boolean } | null>(null);
   const [isPageFlipping, setIsPageFlipping] = useState(false);
   const lastScrollTop = useRef(0);
@@ -80,6 +86,65 @@ function ThoughtsPane({
     dates.push(format(date, 'yyyy-MM-dd'));
   }
 
+  // Filter dates for infinite scroll mode - only show dates with items (plus today)
+  const visibleDates = useMemo(() => {
+    if (viewMode === 'book') {
+      return currentDate ? [currentDate] : dates;
+    }
+    // In infinite mode, filter out empty dates except today
+    return dates.filter(date => {
+      const dateItems = itemsByDate.get(date) || [];
+      return dateItems.length > 0 || date === today;
+    });
+  }, [viewMode, currentDate, dates, itemsByDate, today]);
+
+  // Find index of today for initial scroll
+  const todayIndex = useMemo(() => {
+    return visibleDates.findIndex(date => date === today);
+  }, [visibleDates, today]);
+
+  // Estimate height based on items - each item is ~60px, header is ~50px
+  const estimateSize = useCallback((index: number) => {
+    const date = visibleDates[index];
+    const dateItems = itemsByDate.get(date) || [];
+    const topLevelItems = dateItems.filter(item => !item.parentId).length;
+
+    // Base: header (50px) + padding (40px)
+    // Per item: ~70px (includes spacing)
+    // Empty day: ~60px
+    const baseHeight = 90;
+    const perItem = 70;
+    const emptyHeight = topLevelItems === 0 ? 60 : 0;
+
+    return baseHeight + (topLevelItems * perItem) + emptyHeight;
+  }, [visibleDates, itemsByDate]);
+
+  // Virtualizer for infinite scroll mode
+  const virtualizer = useVirtualizer({
+    count: visibleDates.length,
+    getScrollElement: () => scrollRef.current,
+    estimateSize,
+    overscan: 3,
+  });
+
+  // Expose imperative methods
+  useImperativeHandle(ref, () => ({
+    scrollToDate: (date: string) => {
+      const dateIndex = visibleDates.findIndex(d => d === date);
+      if (dateIndex >= 0) {
+        virtualizer.scrollToIndex(dateIndex, { align: 'start' });
+      } else if (scrollRef.current) {
+        scrollRef.current.scrollTop = 0;
+      }
+    },
+  }), [visibleDates, virtualizer]);
+
+  // Auto-scroll to today on mount for infinite mode
+  useEffect(() => {
+    if (scrollRef.current && viewMode === 'infinite' && todayIndex >= 0) {
+      virtualizer.scrollToIndex(todayIndex, { align: 'end' });
+    }
+  }, [todayIndex, viewMode, virtualizer]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
@@ -286,13 +351,6 @@ function ThoughtsPane({
     setTimePrompt(null);
   };
 
-  // Auto-scroll to bottom on mount (to show today)
-  useEffect(() => {
-    if (scrollRef.current && isAtBottom) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const handleWheel = (e: WheelEvent) => {
     if (!scrollRef.current || viewMode !== 'book' || !onNextDay || !onPreviousDay || isTransitioning.current) return;
@@ -349,9 +407,7 @@ function ThoughtsPane({
   const handleScroll = () => {
     if (!scrollRef.current) return;
 
-    const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
-    const atBottom = scrollHeight - scrollTop - clientHeight < 50;
-    setIsAtBottom(atBottom);
+    const { scrollTop } = scrollRef.current;
 
     // Track scroll position for reference
     lastScrollTop.current = scrollTop;
@@ -411,7 +467,7 @@ function ThoughtsPane({
         ref={scrollRef}
         onScroll={handleScroll}
         className={`flex-1 overflow-y-auto px-24 py-16 ${
-          viewMode === 'infinite' ? 'snap-y snap-mandatory' : viewMode === 'book' ? 'snap-y snap-proximity' : ''
+          viewMode === 'book' ? 'snap-y snap-proximity' : ''
         } ${
           isPageFlipping && viewMode === 'book' ? 'page-flip-left' : ''
         }`}
@@ -424,25 +480,81 @@ function ThoughtsPane({
             <p className="text-sm">Try a different search term</p>
           </div>
         )}
-        {(viewMode === 'book' && currentDate ? [currentDate] : dates).map((date) => {
-          const items = itemsByDate.get(date) || [];
+
+        {/* Virtualized list for infinite mode */}
+        {viewMode === 'infinite' && visibleDates.length > 0 && (
+          <div
+            style={{
+              height: `${virtualizer.getTotalSize()}px`,
+              width: '100%',
+              position: 'relative',
+            }}
+          >
+            {virtualizer.getVirtualItems().map((virtualRow) => {
+              const date = visibleDates[virtualRow.index];
+              const dateItems = itemsByDate.get(date) || [];
+              const isToday = date === today;
+
+              return (
+                <div
+                  key={date}
+                  data-index={virtualRow.index}
+                  ref={virtualizer.measureElement}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    transform: `translateY(${virtualRow.start}px)`,
+                  }}
+                  className="pb-16"
+                >
+                  {/* Date Header */}
+                  <div className={`sticky top-0 bg-background py-3 mb-6 border-b border-border-subtle ${isToday ? 'text-text-primary' : 'text-text-secondary'}`}>
+                    <h3 className="text-base font-serif uppercase tracking-wide">
+                      {format(parseISO(date), 'EEEE, MMM d, yyyy')}
+                      {isToday && ' (Today)'}
+                    </h3>
+                  </div>
+
+                  {/* Items for this date */}
+                  {dateItems.length === 0 ? (
+                    <div className="text-center text-text-secondary text-sm py-4">
+                      <p>Nothing captured yet</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-6">
+                      {dateItems.filter(item => !item.parentId).map((item) => (
+                        <ItemDisplay
+                          key={item.id}
+                          item={item}
+                          sourcePane="thoughts"
+                          searchQuery={searchQuery}
+                          highlightedItemId={highlightedItemId}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Non-virtualized list for book mode */}
+        {viewMode === 'book' && visibleDates.map((date) => {
+          const dateItems = itemsByDate.get(date) || [];
           const isToday = date === today;
 
-          // Don't show empty days (except today) in infinite mode
-          // Also hide empty days in book mode when searching
-          if (items.length === 0 && !isToday) {
-            if (viewMode === 'infinite') {
-              return null;
-            }
-            if (viewMode === 'book' && searchQuery) {
-              return null;
-            }
+          // Hide empty days in book mode when searching
+          if (dateItems.length === 0 && !isToday && searchQuery) {
+            return null;
           }
 
           return (
             <div
               key={date}
-              className={viewMode === 'infinite' ? 'mb-16 snap-start' : viewMode === 'book' ? 'snap-start snap-always' : ''}
+              className="snap-start snap-always"
             >
               {/* Date Header */}
               <div className={`sticky top-0 bg-background py-3 mb-6 border-b border-border-subtle ${isToday ? 'text-text-primary' : 'text-text-secondary'}`}>
@@ -453,19 +565,19 @@ function ThoughtsPane({
               </div>
 
               {/* Items for this date */}
-              {items.length === 0 ? (
+              {dateItems.length === 0 ? (
                 <div className="text-center text-text-secondary text-sm py-4">
                   <p>Nothing captured yet</p>
                 </div>
               ) : (
                 <div className="space-y-6">
-                  {/* Only render top-level items (sub-items are rendered recursively) */}
-                  {items.filter(item => !item.parentId).map((item) => (
+                  {dateItems.filter(item => !item.parentId).map((item) => (
                     <ItemDisplay
                       key={item.id}
                       item={item}
                       sourcePane="thoughts"
                       searchQuery={searchQuery}
+                      highlightedItemId={highlightedItemId}
                     />
                   ))}
                 </div>
@@ -490,6 +602,8 @@ function ThoughtsPane({
       </form>
     </div>
   );
-}
+});
+
+ThoughtsPane.displayName = 'ThoughtsPane';
 
 export default ThoughtsPane;

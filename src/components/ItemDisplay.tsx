@@ -20,13 +20,15 @@ interface ItemDisplayProps {
   showTime?: boolean;
   sourcePane?: 'thoughts' | 'time';
   searchQuery?: string;
+  onJumpToSource?: (item: Item) => void;
+  highlightedItemId?: string | null;
 }
 
 /**
  * Renders a single item with its content, actions, and nested sub-items.
  * Handles editing, deletion, completion toggling, and time prompts.
  */
-function ItemDisplay({ item, depth = 0, showTime = true, sourcePane = 'thoughts', searchQuery = '' }: ItemDisplayProps) {
+function ItemDisplay({ item, depth = 0, showTime = true, sourcePane = 'thoughts', searchQuery = '', onJumpToSource, highlightedItemId }: ItemDisplayProps) {
   const toggleTodoComplete = useStore((state) => state.toggleTodoComplete);
   const updateItem = useStore((state) => state.updateItem);
   const deleteItem = useStore((state) => state.deleteItem);
@@ -228,6 +230,7 @@ function ItemDisplay({ item, depth = 0, showTime = true, sourcePane = 'thoughts'
           style={{ marginLeft: `${indentPx}px` }}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
+          className={highlightedItemId === item.id ? 'highlight-flash' : ''}
         >
           {depth === 0 && (
             <div className="text-xs font-mono text-text-secondary mt-3 mb-0.5">
@@ -267,7 +270,11 @@ function ItemDisplay({ item, depth = 0, showTime = true, sourcePane = 'thoughts'
                     {renderContent()}
                   </p>
                   {isHovered && (
-                    <ItemActions onEdit={handleEdit} onDelete={handleDelete} />
+                    <ItemActions
+                      onEdit={handleEdit}
+                      onDelete={handleDelete}
+                      onJumpToSource={sourcePane === 'time' && onJumpToSource ? () => onJumpToSource(item) : undefined}
+                    />
                   )}
                 </div>
               )}
@@ -322,6 +329,8 @@ function ItemDisplay({ item, depth = 0, showTime = true, sourcePane = 'thoughts'
                 showTime={showTime}
                 sourcePane={sourcePane}
                 searchQuery={searchQuery}
+                onJumpToSource={onJumpToSource}
+                highlightedItemId={highlightedItemId}
               />
             ))}
           </div>

@@ -77,7 +77,7 @@ customChrono.refiners.push({
         if (results.length === 0) {
           const now = context.refDate || new Date();
           const result = new chrono.ParsingResult(
-            context.refDate,
+            context.reference as ConstructorParameters<typeof chrono.ParsingResult>[0],
             timeMatch.index!,
             timeMatch[0]
           );

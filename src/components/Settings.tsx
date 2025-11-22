@@ -1,8 +1,22 @@
+import { useRef } from 'react';
 import { useSettingsStore } from '../store/useSettingsStore';
+import { useStore } from '../store/useStore';
+import { useToast } from '../hooks/useToast';
 
 interface SettingsProps {
   isOpen: boolean;
   onClose: () => void;
+}
+
+interface ExportData {
+  version: number;
+  exportedAt: string;
+  items: unknown[];
+  settings: {
+    theme: string;
+    viewMode: string;
+    timeFormat: string;
+  };
 }
 
 function Settings({ isOpen, onClose }: SettingsProps) {
@@ -12,6 +26,78 @@ function Settings({ isOpen, onClose }: SettingsProps) {
   const setTheme = useSettingsStore((state) => state.setTheme);
   const setViewMode = useSettingsStore((state) => state.setViewMode);
   const setTimeFormat = useSettingsStore((state) => state.setTimeFormat);
+
+  const items = useStore((state) => state.items);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const addToast = useToast((state) => state.addToast);
+
+  const handleExport = () => {
+    const exportData: ExportData = {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      items,
+      settings: {
+        theme,
+        viewMode,
+        timeFormat,
+      },
+    };
+
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `thoughts-time-backup-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    addToast('Data exported successfully', 'success');
+  };
+
+  const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target?.result as string) as ExportData;
+
+        // Validate structure
+        if (!data.version || !data.items || !Array.isArray(data.items)) {
+          throw new Error('Invalid backup file format');
+        }
+
+        // Import items - replace current items
+        // Access store directly to set items
+        useStore.setState({ items: data.items as typeof items });
+
+        // Import settings if present
+        if (data.settings) {
+          if (data.settings.theme === 'dark' || data.settings.theme === 'light') {
+            setTheme(data.settings.theme);
+          }
+          if (data.settings.viewMode === 'infinite' || data.settings.viewMode === 'book') {
+            setViewMode(data.settings.viewMode);
+          }
+          if (data.settings.timeFormat === '12h' || data.settings.timeFormat === '24h') {
+            setTimeFormat(data.settings.timeFormat);
+          }
+        }
+
+        addToast(`Imported ${data.items.length} items`, 'success');
+      } catch {
+        addToast('Failed to import: Invalid file', 'error');
+      }
+    };
+
+    reader.readAsText(file);
+    // Reset input so same file can be selected again
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -120,6 +206,35 @@ function Settings({ isOpen, onClose }: SettingsProps) {
                 24-hour
               </button>
             </div>
+          </div>
+
+          {/* Data Management */}
+          <div>
+            <label className="block text-sm font-serif mb-8">Data Management</label>
+            <div className="flex gap-8">
+              <button
+                onClick={handleExport}
+                className="flex-1 px-16 py-8 text-sm font-mono border rounded-sm transition-colors bg-transparent text-text-secondary border-border-subtle hover:border-text-secondary"
+              >
+                Export Data
+              </button>
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="flex-1 px-16 py-8 text-sm font-mono border rounded-sm transition-colors bg-transparent text-text-secondary border-border-subtle hover:border-text-secondary"
+              >
+                Import Data
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".json"
+                onChange={handleImport}
+                className="hidden"
+              />
+            </div>
+            <p className="text-xs text-text-secondary mt-8">
+              Export creates a JSON backup. Import replaces all current data.
+            </p>
           </div>
         </div>
       </div>
