@@ -503,6 +503,12 @@ function TimePane({
       const isEditing = editingItem === item.id;
       const isHovered = hoveredItem === item.id;
 
+      // Get children of this event
+      const childIds = 'children' in event ? event.children : [];
+      const childItems = childIds
+        .map((id: string) => items.find((i) => i.id === id))
+        .filter(Boolean) as Item[];
+
       return (
         <div onMouseEnter={() => setHoveredItem(item.id)} onMouseLeave={() => setHoveredItem(null)}>
           {isEditing ? (
@@ -550,6 +556,27 @@ function TimePane({
                     </div>
                   )}
                 </div>
+                {/* Event children */}
+                {childItems.length > 0 && (
+                  <div className="mt-1 ml-4 space-y-1 border-l-2 border-border-subtle pl-3">
+                    {childItems.map((child) => (
+                      <div key={child.id} className="flex items-start gap-2">
+                        <span className="text-sm leading-book flex-shrink-0">
+                          {child.type === 'todo' ? '□' : '↝'}
+                        </span>
+                        <p
+                          className={`text-sm font-serif leading-book ${
+                            child.type === 'note' ? 'italic' : ''
+                          }`}
+                        >
+                          {searchQuery
+                            ? highlightMatches(child.content, searchQuery)
+                            : child.content}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -561,6 +588,12 @@ function TimePane({
       const endTime = formatTime(new Date(event.endTime));
       const isEditing = editingItem === item.id;
       const isHovered = hoveredItem === item.id;
+
+      // Get children of this event
+      const childIds = 'children' in event ? event.children : [];
+      const childItems = childIds
+        .map((id: string) => items.find((i) => i.id === id))
+        .filter(Boolean) as Item[];
 
       return (
         <div onMouseEnter={() => setHoveredItem(item.id)} onMouseLeave={() => setHoveredItem(null)}>
@@ -609,6 +642,27 @@ function TimePane({
                     </div>
                   )}
                 </div>
+                {/* Event children */}
+                {childItems.length > 0 && (
+                  <div className="mt-1 ml-4 space-y-1 border-l-2 border-border-subtle pl-3">
+                    {childItems.map((child) => (
+                      <div key={child.id} className="flex items-start gap-2">
+                        <span className="text-sm leading-book flex-shrink-0">
+                          {child.type === 'todo' ? '□' : '↝'}
+                        </span>
+                        <p
+                          className={`text-sm font-serif leading-book ${
+                            child.type === 'note' ? 'italic' : ''
+                          }`}
+                        >
+                          {searchQuery
+                            ? highlightMatches(child.content, searchQuery)
+                            : child.content}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}
