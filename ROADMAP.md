@@ -347,44 +347,7 @@ domain: 13px, #6A6A6A
 
 ### 🟢 Lower Priority (Phase 3)
 
-#### 11. Completion Linking System
-
-**Status**: UI partially implemented ✅
-
-**Completed**:
-
-- [x] Original item shows "completed on [date] →" clickable link
-- [x] Shows completion date for all completed todos
-
-**Remaining** (if needed):
-
-- [ ] Auto-create linked entry on completion
-- [ ] Completion entry shows "← from Oct 12"
-- [ ] Uncompleting removes completion entry and link
-- [ ] Deleting original deletes completion entry
-
-**Visual Specs**:
-
-```
-Oct 12 Thoughts:
-☑ ~~Call mom~~
-  completed on Oct 14 →
-
-Oct 14 Thoughts:
-☑ ~~Call mom (completed)~~
-  ← from Oct 12
-```
-
-**Files to create/modify**:
-
-- `src/types.ts` (add CompletionLink interface)
-- `src/store/useStore.ts` (add completion linking logic)
-- `src/components/ItemDisplay.tsx` (show completion links)
-- `src/components/DailyReview.tsx` (create links on complete)
-
----
-
-#### 12. Database Backend (Supabase)
+#### 11. Database Backend (Supabase)
 
 **Status**: Not implemented (currently localStorage only)
 
@@ -417,7 +380,7 @@ Oct 14 Thoughts:
 
 ---
 
-#### 13. Mobile Responsive Optimizations
+#### 12. Mobile Responsive Optimizations
 
 **Status**: Partially responsive, needs improvements
 
@@ -440,7 +403,7 @@ Oct 14 Thoughts:
 
 ---
 
-#### 14. Notifications System
+#### 13. Notifications System
 
 **Status**: Not implemented
 
@@ -495,7 +458,7 @@ Oct 14 Thoughts:
 
 ---
 
-#### 16. Accessibility Improvements
+#### 15. Accessibility Improvements
 
 **Status**: Significantly improved ✅
 
@@ -853,7 +816,7 @@ Oct 14 Thoughts:
 ### Short Term (Next 2 Weeks)
 
 1. URL link previews for notes
-2. Auto-create completion links on todo completion
+2. Component tests for complex UI (ThoughtsPane, TimePane, DailyReview)
 
 ### Medium Term (Next Month)
 
