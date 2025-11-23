@@ -12,7 +12,13 @@ interface TimeInputProps {
 /**
  * Custom time input that respects the app's time format setting.
  */
-function TimeInput({ onChange, timeFormat, autoFocus, onKeyDown, onEnterWithValue }: TimeInputProps) {
+function TimeInput({
+  onChange,
+  timeFormat,
+  autoFocus,
+  onKeyDown,
+  onEnterWithValue,
+}: TimeInputProps) {
   const [inputValue, setInputValue] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
   const valueRef = useRef(''); // Track value for immediate access in handlers
@@ -31,7 +37,7 @@ function TimeInput({ onChange, timeFormat, autoFocus, onKeyDown, onEnterWithValu
 
       const maxHours = timeFormat === '12h' ? 12 : 23;
       if (hours <= maxHours && minutes <= 59) {
-        const h24 = timeFormat === '12h' ? (hours % 12) : hours;
+        const h24 = timeFormat === '12h' ? hours % 12 : hours;
         return `${h24.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
       }
     }
@@ -80,7 +86,7 @@ function TimeInput({ onChange, timeFormat, autoFocus, onKeyDown, onEnterWithValu
   const placeholder = timeFormat === '24h' ? '00:00' : '12:00';
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-8">
       <input
         ref={inputRef}
         type="text"
@@ -89,11 +95,11 @@ function TimeInput({ onChange, timeFormat, autoFocus, onKeyDown, onEnterWithValu
         onChange={handleChange}
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
-        className="w-[6ch] px-12 py-8 bg-hover-bg border border-border-subtle rounded-sm font-mono text-sm text-center outline-none placeholder-text-secondary"
+        className="w-20 px-12 py-12 bg-hover-bg border border-border-subtle rounded-sm font-mono text-base text-center outline-none placeholder-text-secondary focus:border-text-secondary"
       />
       {timeFormat === '12h' && (
         <select
-          className="px-8 py-8 bg-hover-bg border border-border-subtle rounded-sm font-mono text-sm"
+          className="px-12 py-12 bg-hover-bg border border-border-subtle rounded-sm font-mono text-base"
           onChange={(e) => {
             // Re-parse with new period
             const match = valueRef.current.match(/^(\d{1,2}):?(\d{0,2})$/);
@@ -107,7 +113,9 @@ function TimeInput({ onChange, timeFormat, autoFocus, onKeyDown, onEnterWithValu
                 hours = 0;
               }
 
-              onChange(`${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`);
+              onChange(
+                `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`
+              );
             }
           }}
         >

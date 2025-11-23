@@ -101,15 +101,17 @@ function TimePromptModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="time-modal-title"
-        className="bg-background border border-border-subtle rounded-sm p-24 max-w-md w-full mx-16"
+        className="bg-background border border-border-subtle rounded-sm p-16 min-w-[280px] mx-16"
       >
-        <h3 id="time-modal-title" className="text-base font-serif mb-16">
+        <h3 id="time-modal-title" className="text-base font-serif mb-8">
           {isEvent ? 'When does it start and end?' : 'What time?'}
         </h3>
-        <p className="text-sm text-text-secondary mb-16 font-serif">{content}</p>
+        <p className="text-sm text-text-secondary mb-12 font-serif truncate max-w-[300px]">
+          {content}
+        </p>
 
         {isEvent ? (
-          <div className="space-y-12">
+          <div className="space-y-8">
             <div>
               <label className="block text-xs font-mono text-text-secondary mb-4">Start time</label>
               <TimeInput
@@ -133,7 +135,7 @@ function TimePromptModal({
             </div>
           </div>
         ) : (
-          <div className="mb-16">
+          <div className="mb-12">
             <TimeInput
               value={time}
               onChange={handleTimeChange}
@@ -145,16 +147,16 @@ function TimePromptModal({
           </div>
         )}
 
-        <div className="flex gap-8 justify-end mt-16">
+        <div className="flex gap-8 justify-end mt-12">
           <button
             onClick={handleCancel}
-            className="px-16 py-8 text-sm font-mono text-text-secondary hover:text-text-primary"
+            className="px-12 py-8 text-sm font-mono text-text-secondary hover:text-text-primary"
           >
             Cancel
           </button>
           <button
             onClick={handleSubmit}
-            className="px-16 py-8 text-sm font-mono text-text-primary border border-border-subtle rounded-sm hover:bg-hover-bg"
+            className="px-12 py-8 text-sm font-mono text-text-primary border border-border-subtle rounded-sm hover:bg-hover-bg"
           >
             {isEvent ? 'Add Times' : 'Add Time'}
           </button>
