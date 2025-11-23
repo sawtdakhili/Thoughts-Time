@@ -52,6 +52,7 @@ const ThoughtsPane = forwardRef<ThoughtsPaneHandle, ThoughtsPaneProps>(
     ref
   ) => {
     const [input, setInput] = useState('');
+    const [indentLevel, setIndentLevel] = useState(0);
     const addItems = useStore((state) => state.addItems);
     const items = useStore((state) => state.items);
     const timeFormat = useSettingsStore((state) => state.timeFormat);
@@ -258,6 +259,9 @@ const ThoughtsPane = forwardRef<ThoughtsPaneHandle, ThoughtsPaneProps>(
         const newValue = value.substring(0, selectionStart) + '\t' + value.substring(selectionEnd);
         setInput(newValue);
 
+        // Update visual indent level (max 2 levels)
+        setIndentLevel((prev) => Math.min(prev + 1, 2));
+
         // Move cursor after the inserted tab
         setTimeout(() => {
           textarea.selectionStart = textarea.selectionEnd = selectionStart + 1;
@@ -281,6 +285,9 @@ const ThoughtsPane = forwardRef<ThoughtsPaneHandle, ThoughtsPaneProps>(
           if (value[afterPrefix] === '\t') {
             const newValue = value.substring(0, afterPrefix) + value.substring(afterPrefix + 1);
             setInput(newValue);
+
+            // Update visual indent level
+            setIndentLevel((prev) => Math.max(prev - 1, 0));
 
             // Move cursor back 1 position
             setTimeout(() => {
@@ -374,6 +381,7 @@ const ThoughtsPane = forwardRef<ThoughtsPaneHandle, ThoughtsPaneProps>(
       }
 
       setInput('');
+      setIndentLevel(0);
 
       // Reset textarea height
       if (textareaRef.current) {
@@ -578,7 +586,8 @@ const ThoughtsPane = forwardRef<ThoughtsPaneHandle, ThoughtsPaneProps>(
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
             placeholder="Type here... (Tab to indent, Shift+Enter for new line)"
-            className="w-full min-h-[56px] max-h-[200px] py-16 px-24 bg-transparent border-none outline-none font-serif text-base placeholder-text-secondary resize-none overflow-y-auto"
+            className="w-full min-h-[56px] max-h-[200px] py-16 bg-transparent border-none outline-none font-serif text-base placeholder-text-secondary resize-none overflow-y-auto transition-[padding] duration-150"
+            style={{ paddingLeft: `${24 + indentLevel * 24}px`, paddingRight: '24px' }}
             rows={1}
             autoFocus
             aria-describedby="input-help"
