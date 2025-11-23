@@ -252,16 +252,30 @@ const ThoughtsPane = forwardRef<ThoughtsPaneHandle, ThoughtsPaneProps>(
         }
       }
 
-      // Tab: insert tab character for indentation
+      // Tab: insert tab character for indentation (after prefix)
       if (e.key === 'Tab' && !e.shiftKey) {
         e.preventDefault();
-        const newValue = value.substring(0, selectionStart) + '\t' + value.substring(selectionEnd);
-        setInput(newValue);
 
-        // Move cursor after the inserted tab
-        setTimeout(() => {
-          textarea.selectionStart = textarea.selectionEnd = selectionStart + 1;
-        }, 0);
+        // Find start of current line
+        const lineStart = value.lastIndexOf('\n', selectionStart - 1) + 1;
+        const lineContent = value.substring(lineStart);
+
+        // Find position after prefix (symbol + space or prefix + space)
+        const prefixMatch = lineContent.match(/^[□☑↹⇤⇥↻↝■\-*tern] /);
+        if (prefixMatch) {
+          const afterPrefix = lineStart + prefixMatch[0].length;
+          // Count existing tabs to limit depth
+          const existingTabs = (lineContent.match(/^[□☑↹⇤⇥↻↝■\-*tern] (\t*)/)?.[1] || '').length;
+          if (existingTabs < 2) {
+            const newValue = value.substring(0, afterPrefix) + '\t' + value.substring(afterPrefix);
+            setInput(newValue);
+
+            // Move cursor forward 1 position
+            setTimeout(() => {
+              textarea.selectionStart = textarea.selectionEnd = selectionStart + 1;
+            }, 0);
+          }
+        }
         return;
       }
 
