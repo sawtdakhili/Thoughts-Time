@@ -568,7 +568,11 @@ const ThoughtsPane = forwardRef<ThoughtsPaneHandle, ThoughtsPaneProps>(
 
         {/* Input Field - Fixed at Bottom */}
         <form onSubmit={handleSubmit} className="border-t border-border-subtle">
+          <label htmlFor="thoughts-input" className="sr-only">
+            Add a new thought, task, event, or routine
+          </label>
           <textarea
+            id="thoughts-input"
             ref={textareaRef}
             value={input}
             onChange={handleInputChange}
@@ -577,7 +581,12 @@ const ThoughtsPane = forwardRef<ThoughtsPaneHandle, ThoughtsPaneProps>(
             className="w-full min-h-[56px] max-h-[200px] py-16 px-24 bg-transparent border-none outline-none font-serif text-base placeholder-text-secondary resize-none overflow-y-auto"
             rows={1}
             autoFocus
+            aria-describedby="input-help"
           />
+          <span id="input-help" className="sr-only">
+            Use prefixes: t for todo, e for event, r for routine, n for note. Press Enter to submit,
+            Shift+Enter for new line.
+          </span>
         </form>
       </div>
     );

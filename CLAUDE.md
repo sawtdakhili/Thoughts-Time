@@ -19,7 +19,7 @@
 ```
 src/
 ├── components/     # React components (TimePane, ThoughtsPane, ItemDisplay, etc.)
-├── store/          # Zustand stores (useStore.ts, useHistory.ts, useSettingsStore.ts)
+├── store/          # Zustand stores (useStore.ts, useHistory.ts, useSettingsStore.ts, itemHelpers.ts)
 ├── hooks/          # Custom hooks (useKeyboardShortcuts, useWheelNavigation, useFocusTrap, etc.)
 ├── utils/          # Utilities (parser.ts, formatting.ts, itemFactory.ts, search.tsx)
 ├── constants/      # App constants
@@ -124,6 +124,7 @@ npm run lint         # ESLint
 - `src/types.ts` - All TypeScript interfaces
 - `src/store/useStore.ts` - Core state management
 - `src/store/useHistory.ts` - Undo/redo history management
+- `src/store/itemHelpers.ts` - Validation and tree operations helpers
 - `src/utils/parser.ts` - Input parsing logic
 - `src/components/ThoughtsPane.tsx` - Left pane (thoughts)
 - `src/components/TimePane.tsx` - Right pane (timeline)
@@ -177,4 +178,4 @@ npm run lint         # ESLint
 6. **localStorage persistence** - changes auto-persist via Zustand middleware
 7. **Error boundaries** - Each pane has its own error boundary for isolation
 8. **Accessibility** - App includes skip navigation link and ARIA labels
-9. **Test coverage** - 238 tests covering stores, hooks, and components
+9. **Test coverage** - 278 tests covering stores, hooks, and components

@@ -4,6 +4,15 @@ import { format } from 'date-fns';
 import { Item, Todo, Event, Routine, Note, ParsedLine } from '../types';
 import { parseInput, parseMultiLine } from '../utils/parser';
 import { useHistory } from './useHistory';
+import { useToast } from '../hooks/useToast';
+import {
+  generateId,
+  validateDepth,
+  validateChildType,
+  collectDescendantIds,
+  getDeletedItemsWithIndices,
+  VALIDATION_MESSAGES,
+} from './itemHelpers';
 
 /**
  * Main application state interface for Thoughts & Time.
@@ -96,8 +105,6 @@ interface AppState {
   getAllDatesWithItems: () => string[];
 }
 
-const generateId = () => Math.random().toString(36).substring(2, 11);
-
 export const useStore = create<AppState>()(
   persist(
     (set, get) => ({
@@ -120,24 +127,22 @@ export const useStore = create<AppState>()(
         const parentType = parentItem?.type as 'todo' | 'note' | null;
 
         // VALIDATION: Depth constraints
-        if (parentType === 'todo' && depthLevel > 1) {
-          console.error('Todo subtasks: maximum depth is 1 level');
-          throw new Error('Todo subtasks: maximum depth is 1 level');
-        }
-        if (parentType === 'note' && depthLevel > 2) {
-          console.error('Note sub-items: maximum depth is 2 levels');
-          throw new Error('Note sub-items: maximum depth is 2 levels');
+        const depthError = validateDepth(parentType, depthLevel);
+        if (depthError) {
+          const message = VALIDATION_MESSAGES[depthError];
+          useToast.getState().addToast(message, 'error');
+          throw new Error(message);
         }
 
         // RULE: Sub-items follow the same parsing rules as top-level items
         // No prefix = note (default), t = todo, e = event, r = routine
         // VALIDATION: Todo sub-items can only be todos or notes
         const itemType = parsed.type;
-        if (parentType === 'todo') {
-          if (parsed.type !== 'todo' && parsed.type !== 'note') {
-            console.error('Todo subtasks can only be todos or notes');
-            throw new Error('Todo subtasks can only be todos or notes');
-          }
+        const childTypeError = validateChildType(parentType, parsed.type);
+        if (childTypeError) {
+          const message = VALIDATION_MESSAGES[childTypeError];
+          useToast.getState().addToast(message, 'error');
+          throw new Error(message);
         }
         // For notes: itemType remains as parsed.type (any type allowed via prefix)
 
@@ -500,29 +505,8 @@ export const useStore = create<AppState>()(
         const itemToDelete = items.find((i) => i.id === id);
         if (!itemToDelete) return;
 
-        const idsToDelete = new Set<string>();
-        const collectDescendants = (itemId: string) => {
-          idsToDelete.add(itemId);
-          const item = items.find((i) => i.id === itemId);
-          if (!item) return;
-
-          // All types now use 'children' field
-          if ('children' in item && item.children.length > 0) {
-            item.children.forEach((childId) => collectDescendants(childId));
-          }
-        };
-
-        collectDescendants(id);
-
-        // Collect all items to delete for history with their original indices
-        const deletedItems: Item[] = [];
-        const deletedIndices: number[] = [];
-        items.forEach((item, index) => {
-          if (idsToDelete.has(item.id)) {
-            deletedItems.push(item);
-            deletedIndices.push(index);
-          }
-        });
+        const idsToDelete = collectDescendantIds(id, items);
+        const { deletedItems, deletedIndices } = getDeletedItemsWithIndices(idsToDelete, items);
 
         // Record history before deletion
         if (!skipHistory) {

@@ -68,14 +68,18 @@ describe('ItemDisplay', () => {
       render(<ItemDisplay item={todo} />);
 
       expect(screen.getByText('Test todo item')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: '□' })).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /Mark "Test todo item" as complete/ })
+      ).toBeInTheDocument();
     });
 
     it('renders completed todo with checkmark symbol', () => {
       const completedTodo = createTodo({ completedAt: new Date() });
       render(<ItemDisplay item={completedTodo} />);
 
-      expect(screen.getByRole('button', { name: '☑' })).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /Mark "Test todo item" as incomplete/ })
+      ).toBeInTheDocument();
     });
 
     it('renders note item with note symbol', () => {
@@ -83,7 +87,7 @@ describe('ItemDisplay', () => {
       render(<ItemDisplay item={note} />);
 
       expect(screen.getByText('Test note item')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: '↝' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'note item' })).toBeInTheDocument();
     });
 
     it('applies strikethrough to completed items', () => {
@@ -168,7 +172,7 @@ describe('ItemDisplay', () => {
 
       render(<ItemDisplay item={todo} />);
 
-      const checkbox = screen.getByRole('button', { name: '□' });
+      const checkbox = screen.getByRole('button', { name: /Mark "Test todo item" as complete/ });
       fireEvent.click(checkbox);
 
       // Verify the store action was called (item should be toggled)

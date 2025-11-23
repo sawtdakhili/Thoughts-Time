@@ -1,6 +1,6 @@
 # Thoughts & Time - Development Roadmap
 
-**Last Updated**: November 21, 2025
+**Last Updated**: November 23, 2025
 **Current Status**: MVP with core features ✅
 
 ---
@@ -44,8 +44,9 @@ This app enforces a strict scheduling philosophy: **every single task, event, an
 - [x] Custom confirmation dialogs (replaced browser confirm)
 - [x] Error boundary with graceful error handling
 - [x] Keyboard shortcuts (Cmd/Ctrl+F, Escape, Cmd/Ctrl+Z, Cmd/Ctrl+Shift+Z)
-- [x] Accessibility improvements (ARIA labels, focus indicators)
-- [x] Comprehensive test suite (238 tests with Vitest)
+- [x] Accessibility improvements (ARIA labels, focus indicators, keyboard navigation)
+- [x] Comprehensive test suite (278 tests with Vitest)
+- [x] Store helper functions extracted (itemHelpers.ts)
 - [x] Undo/Redo system (tracks all actions with Cmd/Ctrl+Z/Shift+Z)
 - [x] Undo button in delete toasts
 - [x] Custom TimeInput component (replaces native browser picker)
@@ -481,17 +482,24 @@ domain: 13px, #6A6A6A
 - [x] Reduced motion support (`prefers-reduced-motion` media query)
 - [x] Focus trap in all modals (Settings, ConfirmDialog, TimePromptModal)
 - [x] ARIA dialog roles and labels
+- [x] Meaningful aria-labels on todo checkboxes (e.g., "Mark 'Task' as complete")
+- [x] aria-pressed state for toggle buttons
+- [x] Keyboard-accessible item actions (show on focus, not just hover)
+- [x] Proper form labeling with aria-describedby for input hints
+- [x] Screen reader hints explaining input syntax
 
 **Remaining for full WCAG 2.1 AA**:
 
 - [x] Skip navigation link (added November 2025)
-- [ ] Full accessibility audit (manual testing)
+- [ ] Full accessibility audit (manual testing with screen readers)
 
 **Files modified**:
 
 - `src/components/Settings.tsx` - Focus trap, ARIA labels
 - `src/components/ConfirmDialog.tsx` - Focus trap
 - `src/components/TimePromptModal.tsx` - Focus trap, ARIA labels
+- `src/components/ItemDisplay.tsx` - Meaningful aria-labels, keyboard focus handling
+- `src/components/ThoughtsPane.tsx` - Input labeling and screen reader hints
 - `src/index.css` - Reduced motion support
 - `src/hooks/useFocusTrap.ts` - New focus trap hook
 

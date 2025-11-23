@@ -47,6 +47,7 @@ function ItemDisplay({
   const timeFormat = useSettingsStore((state) => state.timeFormat);
   const addToast = useToast((state) => state.addToast);
   const [isHovered, setIsHovered] = useState(false);
+  const [isFocusWithin, setIsFocusWithin] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [timePrompt, setTimePrompt] = useState<{ content: string; isEvent: boolean } | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<{
@@ -342,6 +343,13 @@ function ItemDisplay({
           style={{ marginLeft: `${indentPx}px` }}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
+          onFocus={() => setIsFocusWithin(true)}
+          onBlur={(e) => {
+            // Only clear focus if focus moved outside this container
+            if (!e.currentTarget.contains(e.relatedTarget)) {
+              setIsFocusWithin(false);
+            }
+          }}
           className={highlightedItemId === item.id ? 'highlight-flash' : ''}
         >
           {depth === 0 && (
@@ -358,6 +366,14 @@ function ItemDisplay({
                   item.type === 'todo' ? 'cursor-pointer hover:opacity-70' : 'cursor-default'
                 }`}
                 disabled={item.type !== 'todo'}
+                aria-label={
+                  item.type === 'todo'
+                    ? isCompleted
+                      ? `Mark "${item.content}" as incomplete`
+                      : `Mark "${item.content}" as complete`
+                    : `${item.type} item`
+                }
+                aria-pressed={item.type === 'todo' ? !!isCompleted : undefined}
               >
                 {getSymbol()}
               </button>
@@ -381,7 +397,7 @@ function ItemDisplay({
                   >
                     {renderContent()}
                   </p>
-                  {isHovered && (
+                  {(isHovered || isFocusWithin) && (
                     <ItemActions
                       onEdit={handleEdit}
                       onDelete={handleDelete}
@@ -416,6 +432,7 @@ function ItemDisplay({
                         }
                       }}
                       className="hover:text-text-primary transition-colors"
+                      aria-label={`Navigate to completion date: ${format(new Date((item as Todo).completedAt!), 'MMMM d')}`}
                     >
                       completed on {format(new Date((item as Todo).completedAt!), 'MMM d')} →
                     </button>
