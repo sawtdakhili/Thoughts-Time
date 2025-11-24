@@ -260,12 +260,25 @@ const ThoughtsPane = forwardRef<ThoughtsPaneHandle, ThoughtsPaneProps>(
         const lineStart = value.lastIndexOf('\n', selectionStart - 1) + 1;
         const lineContent = value.substring(lineStart);
 
+        // First line cannot be indented
+        if (lineStart === 0) {
+          return;
+        }
+
         // Check if line has a prefix (symbol + space)
-        const prefixMatch = lineContent.match(/^(\S) /);
+        const prefixMatch = lineContent.match(/^(\t*)(\S) /);
         if (prefixMatch) {
-          // Count existing tabs at start of line to limit depth
-          const existingTabs = (lineContent.match(/^(\t*)/)?.[1] || '').length;
-          if (existingTabs < 2) {
+          // Count existing tabs on current line
+          const currentTabs = prefixMatch[1].length;
+
+          // Find previous line and count its tabs
+          const prevLineEnd = lineStart - 1;
+          const prevLineStart = value.lastIndexOf('\n', prevLineEnd - 1) + 1;
+          const prevLineContent = value.substring(prevLineStart, prevLineEnd);
+          const prevTabs = (prevLineContent.match(/^(\t*)/)?.[1] || '').length;
+
+          // Can only indent 1 level deeper than previous line
+          if (currentTabs <= prevTabs) {
             // Insert tab at the beginning of the line
             const newValue = value.substring(0, lineStart) + '\t' + value.substring(lineStart);
             setInput(newValue);
