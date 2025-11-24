@@ -593,7 +593,7 @@ const ThoughtsPane = forwardRef<ThoughtsPaneHandle, ThoughtsPaneProps>(
             onKeyDown={handleKeyDown}
             placeholder="Type here... (Tab to indent, Shift+Enter for new line)"
             className="w-full min-h-[56px] max-h-[200px] py-16 px-24 bg-transparent border-none outline-none font-serif text-base placeholder-text-secondary resize-none overflow-y-auto"
-            style={{ tabSize: 3 }}
+            style={{ tabSize: 8 }}
             rows={1}
             autoFocus
             aria-describedby="input-help"
