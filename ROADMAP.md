@@ -776,7 +776,8 @@ n		Subnote (two Tabs = level 2)
 
 #### 1. Show Subtasks Under Parent Todos
 
-- [x] Display subtasks under parent todos in TimePane (inherit parent's time/date)
+- [x] Display todo subtasks under parent todos in TimePane (inherit parent's time/date)
+- [x] Notes do NOT appear in TimePane - only todo subtasks are shown
 - [x] Visual hierarchy with left border and indentation (matching event children style)
 - [x] Interactive subtask completion (checkboxes for todo children)
 - [x] Daily Review simplified to show only parent tasks (not children)
@@ -784,11 +785,12 @@ n		Subnote (two Tabs = level 2)
 
 **Files Modified:**
 
-- `src/components/TimePane.tsx` - Added children display for todos (lines 441-531)
+- `src/components/TimePane.tsx` - Added children display for todos, filtered to only show todo children
 - `src/components/DailyReview.tsx` - Removed subtasks display to keep it compact
 
 **Key Features:**
 
+- **Only todo subtasks appear in TimePane** (notes are filtered out)
 - Subtasks inherit parent's time/date (no independent scheduling)
 - Clickable checkboxes to complete individual subtasks
 - Search highlights work in both parent and child content

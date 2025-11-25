@@ -171,6 +171,20 @@ npm run lint         # ESLint
 - **Infinite Scroll**: All days visible, continuous scrolling
 - **Book Style**: One day per page, flip animation
 
+## Dual-Pane Layout
+
+### ThoughtsPane (Left)
+- Input box at bottom for creating new items
+- Shows all items (todos, events, routines, notes) with full details
+- Displays complete parent-child hierarchy (todos and notes)
+
+### TimePane (Right)
+- Timeline view showing scheduled items by date/time
+- Shows todos with scheduled times and events
+- **Subtasks display**: Only todo subtasks appear under parent todos (notes filtered out)
+- Subtasks inherit parent's time/date (no independent scheduling)
+- Daily Review at top shows incomplete todos from past days (parent only, no children)
+
 ## Notes for AI Assistants
 
 1. **Always run tests** after making changes: `npm run test` and `npm run build`
@@ -181,4 +195,5 @@ npm run lint         # ESLint
 6. **localStorage persistence** - changes auto-persist via Zustand middleware
 7. **Error boundaries** - Each pane has its own error boundary for isolation
 8. **Accessibility** - App includes skip navigation link and ARIA labels
-9. **Test coverage** - 278 tests covering stores, hooks, and components
+9. **Test coverage** - 279 tests covering stores, hooks, and components
+10. **TimePane subtasks** - Only todo children appear in timeline (notes filtered out)
