@@ -438,11 +438,11 @@ function TimePane({
       const isEditing = editingItem === item.id;
       const isHovered = hoveredItem === item.id;
 
-      // Get children of this todo (subtasks inherit parent's time/date)
+      // Get children of this todo (only subtasks, not notes - subtasks inherit parent's time/date)
       const childIds = 'children' in todo ? todo.children : [];
       const childItems = childIds
         .map((id: string) => items.find((i) => i.id === id))
-        .filter(Boolean) as Item[];
+        .filter((item): item is Item => item !== undefined && item.type === 'todo');
 
       return (
         <div onMouseEnter={() => setHoveredItem(item.id)} onMouseLeave={() => setHoveredItem(null)}>
@@ -497,28 +497,22 @@ function TimePane({
                     </div>
                   )}
                 </div>
-                {/* Todo children (subtasks inherit parent's time/date) */}
+                {/* Subtasks only (inherit parent's time/date, notes don't appear) */}
                 {childItems.length > 0 && (
                   <div className="mt-1 ml-4 space-y-1 border-l-2 border-border-subtle pl-3">
                     {childItems.map((child) => {
-                      const childCompleted =
-                        child.type === 'todo' ? (child as Todo).completedAt : false;
+                      const childTodo = child as Todo;
+                      const childCompleted = childTodo.completedAt;
                       return (
                         <div key={child.id} className="flex items-start gap-2">
-                          {child.type === 'todo' ? (
-                            <button
-                              onClick={() => toggleTodoComplete(child.id)}
-                              className="text-sm leading-book flex-shrink-0 cursor-pointer hover:opacity-70"
-                            >
-                              {childCompleted ? '☑' : '□'}
-                            </button>
-                          ) : (
-                            <span className="text-sm leading-book flex-shrink-0">↝</span>
-                          )}
+                          <button
+                            onClick={() => toggleTodoComplete(child.id)}
+                            className="text-sm leading-book flex-shrink-0 cursor-pointer hover:opacity-70"
+                          >
+                            {childCompleted ? '☑' : '□'}
+                          </button>
                           <p
-                            className={`text-sm font-serif leading-book ${
-                              child.type === 'note' ? 'italic' : ''
-                            } ${childCompleted ? 'line-through opacity-40' : ''}`}
+                            className={`text-sm font-serif leading-book ${childCompleted ? 'line-through opacity-40' : ''}`}
                           >
                             {searchQuery
                               ? highlightMatches(child.content, searchQuery)
