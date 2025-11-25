@@ -438,6 +438,12 @@ function TimePane({
       const isEditing = editingItem === item.id;
       const isHovered = hoveredItem === item.id;
 
+      // Get children of this todo (subtasks inherit parent's time/date)
+      const childIds = 'children' in todo ? todo.children : [];
+      const childItems = childIds
+        .map((id: string) => items.find((i) => i.id === id))
+        .filter(Boolean) as Item[];
+
       return (
         <div onMouseEnter={() => setHoveredItem(item.id)} onMouseLeave={() => setHoveredItem(null)}>
           {isEditing ? (
@@ -491,6 +497,38 @@ function TimePane({
                     </div>
                   )}
                 </div>
+                {/* Todo children (subtasks inherit parent's time/date) */}
+                {childItems.length > 0 && (
+                  <div className="mt-1 ml-4 space-y-1 border-l-2 border-border-subtle pl-3">
+                    {childItems.map((child) => {
+                      const childCompleted =
+                        child.type === 'todo' ? (child as Todo).completedAt : false;
+                      return (
+                        <div key={child.id} className="flex items-start gap-2">
+                          {child.type === 'todo' ? (
+                            <button
+                              onClick={() => toggleTodoComplete(child.id)}
+                              className="text-sm leading-book flex-shrink-0 cursor-pointer hover:opacity-70"
+                            >
+                              {childCompleted ? '☑' : '□'}
+                            </button>
+                          ) : (
+                            <span className="text-sm leading-book flex-shrink-0">↝</span>
+                          )}
+                          <p
+                            className={`text-sm font-serif leading-book ${
+                              child.type === 'note' ? 'italic' : ''
+                            } ${childCompleted ? 'line-through opacity-40' : ''}`}
+                          >
+                            {searchQuery
+                              ? highlightMatches(child.content, searchQuery)
+                              : child.content}
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
           )}

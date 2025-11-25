@@ -770,6 +770,33 @@ n		Subnote (two Tabs = level 2)
 
 ---
 
+## TimePane Subtask Display (November 25, 2025)
+
+### ✅ Completed Improvements
+
+#### 1. Show Subtasks Under Parent Todos
+
+- [x] Display subtasks under parent todos in TimePane (inherit parent's time/date)
+- [x] Visual hierarchy with left border and indentation (matching event children style)
+- [x] Interactive subtask completion (checkboxes for todo children)
+- [x] Daily Review simplified to show only parent tasks (not children)
+- [x] Subtasks never have their own scheduled time - they follow parent everywhere
+
+**Files Modified:**
+
+- `src/components/TimePane.tsx` - Added children display for todos (lines 441-531)
+- `src/components/DailyReview.tsx` - Removed subtasks display to keep it compact
+
+**Key Features:**
+
+- Subtasks inherit parent's time/date (no independent scheduling)
+- Clickable checkboxes to complete individual subtasks
+- Search highlights work in both parent and child content
+- Visual consistency with event children (left border, smaller font)
+- Daily Review shows only parent (compact view)
+
+---
+
 ## Edit Box Enhancement with CodeMirror 6 (November 25, 2025)
 
 ### ✅ Completed Improvements

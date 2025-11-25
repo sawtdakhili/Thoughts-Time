@@ -58,24 +58,6 @@ function DailyReview({ searchQuery = '' }: DailyReviewProps) {
     })
     .sort((a, b) => b.waitingDays - a.waitingDays); // Oldest first (highest waiting days first)
 
-  // Helper function to get subtasks for a todo
-  const getSubtasks = (todoId: string): DailyReviewItem[] => {
-    const todo = items.find((i) => i.id === todoId) as Todo | undefined;
-    if (!todo || !todo.children || todo.children.length === 0) return [];
-
-    return todo.children
-      .map((childId: string) => {
-        const child = items.find((i) => i.id === childId);
-        // Only include todo children that are incomplete
-        if (!child || child.type !== 'todo' || child.completedAt || child.cancelledAt) return null;
-
-        const createdDate = new Date(child.createdDate);
-        const waitingDays = differenceInDays(now, createdDate);
-        return { item: child as Todo, waitingDays };
-      })
-      .filter((item): item is DailyReviewItem => item !== null);
-  };
-
   const handleReschedule = (itemId: string) => {
     const item = items.find((i) => i.id === itemId);
     if (item) {
@@ -178,8 +160,6 @@ function DailyReview({ searchQuery = '' }: DailyReviewProps) {
         {/* Review Items */}
         <div className="space-y-6 pl-16">
           {displayedItems.map(({ item, waitingDays }) => {
-            const subtasks = getSubtasks(item.id);
-
             return (
               <div key={item.id} className="space-y-3">
                 {/* Parent Todo */}
@@ -282,23 +262,6 @@ function DailyReview({ searchQuery = '' }: DailyReviewProps) {
                     </div>
                   </div>
                 </div>
-
-                {/* Subtasks - indented */}
-                {subtasks.length > 0 && (
-                  <div className="pl-8 space-y-2">
-                    {subtasks.map(({ item: subtask, waitingDays: subtaskDays }) => (
-                      <div key={subtask.id} className="flex items-start gap-3 text-sm">
-                        <span className="text-text-secondary flex-shrink-0">└</span>
-                        <p className="flex-1 font-serif leading-book text-text-secondary">
-                          {subtask.content}
-                          <span className="text-xs font-mono ml-4">
-                            ({subtaskDays} {subtaskDays === 1 ? 'day' : 'days'} old)
-                          </span>
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
             );
           })}
