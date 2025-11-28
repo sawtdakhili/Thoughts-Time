@@ -361,6 +361,341 @@ Safe Area (iOS notch, etc)       Auto
 
 ---
 
+## 🚨 Edge Cases & Solutions
+
+### 1. Footer Crowding (Thoughts Pane)
+
+**Issue**: Input bar (52px) + Footer (48px) = 100px of bottom UI
+
+**Solution**:
+- Hide footer on scroll down (show on scroll up)
+- When input is expanded full screen, footer is hidden entirely
+- Sticky footer reappears when scrolling up or input closes
+- Maximizes content space while keeping controls accessible
+
+**Implementation**:
+```javascript
+// Detect scroll direction
+let lastScroll = 0;
+window.addEventListener('scroll', () => {
+  const currentScroll = window.pageYOffset;
+  if (currentScroll > lastScroll) {
+    // Scrolling down - hide footer
+    footer.classList.add('hidden');
+  } else {
+    // Scrolling up - show footer
+    footer.classList.remove('hidden');
+  }
+  lastScroll = currentScroll;
+});
+```
+
+---
+
+### 2. Text Length / Internationalization
+
+**Issue**: "Thoughts & Time" might be too long in other languages
+
+**Solution**:
+- Responsive text truncation with ellipsis
+- Priority: Active pane (full) > Buttons > Inactive pane (truncate)
+- Fallback: Abbreviate to "Thoughts →" if space < 360px
+
+**Breakpoints**:
+```
+≥ 390px: "Thoughts & Time →"
+360-389px: "Thoughts →" + "← Time"
+< 360px: Icons "📝 →" + "← ⏰"
+```
+
+---
+
+### 3. Accidental Taps
+
+**Issue**: Tappable greyed text too close to input bar
+
+**Solution**:
+- 8px visual separator (1px border) between input and footer
+- 44px minimum touch targets with padding
+- Haptic feedback on pane switch (confirms intentional action)
+- Debounce taps (300ms) to prevent double-switches
+
+**Visual**:
+```
+│ Type here...                    │
+├─────────────────────────────────┤ ← 8px separator
+│ Thoughts & Time →      [🔍][⚙️] │
+  ^^^^^^^^^^^^^^^^
+  44px touch target
+```
+
+---
+
+### 4. Swipe Gesture Conflicts
+
+**Issue**: Horizontal scrollable content (carousels, tables) conflicts with pane swipe
+
+**Solution**:
+- Detect `overflow-x: scroll` or `overflow-x: auto` elements
+- Disable pane swipe when touch starts on scrollable element
+- Require faster velocity (>0.5px/ms) for pane switching
+- 20px dead zone at left/right edges (swipe works in middle 80%)
+
+**Implementation**:
+```javascript
+// Detect if touch target has horizontal scroll
+const isScrollable = (el) => {
+  return el.scrollWidth > el.clientWidth;
+};
+
+// Only allow pane swipe if not on scrollable element
+if (!isScrollable(touchTarget)) {
+  handlePaneSwipe();
+}
+```
+
+---
+
+### 5. Daily Review Bottom Sheet Conflict
+
+**Issue**: Bottom sheet overlaps footer navigation area
+
+**Solution**:
+- Footer remains visible behind dimmed overlay (accessible)
+- Pane switching disabled while sheet is open
+- Sheet has its own "Done" or close button
+- Swipe down on sheet handle or tap overlay to dismiss
+- Once dismissed, footer navigation re-enabled
+
+**States**:
+```
+Sheet Closed: Footer navigation active ✓
+Sheet Open: Footer visible but navigation disabled
+Sheet Dismissing: Footer re-enabled when sheet < 50% visible
+```
+
+---
+
+### 6. Keyboard + Footer Behavior
+
+**Issue**: iOS keyboard pushes footer up, feels awkward
+
+**Solution**:
+- **When input bar tapped**: Footer hidden, input goes full screen
+- **When keyboard shows**: Footer automatically hidden
+- **When keyboard dismisses**: Footer reappears after 200ms delay
+- Input overlay has its own "Send" button (no footer needed)
+
+**CSS**:
+```css
+/* Hide footer when keyboard is visible */
+body.keyboard-visible .footer {
+  transform: translateY(100%);
+  transition: transform 0.2s ease-out;
+}
+```
+
+---
+
+### 7. Discoverability
+
+**Issue**: Users might not understand swipe gesture or tappable text
+
+**Solution**:
+- **First launch**: Subtle animation on arrow (pulse 3 times)
+- **Onboarding tooltip**: "Swipe to see timeline →" (appears once, dismissible)
+- **Visual hint**: Arrow slightly animates on page load
+- **Fallback**: If user doesn't swipe within 5 seconds, tooltip appears
+
+**Animation**:
+```css
+@keyframes arrow-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; transform: translateX(4px); }
+}
+
+.footer-arrow {
+  animation: arrow-pulse 1.5s ease-in-out 3;
+}
+```
+
+---
+
+### 8. Accessibility
+
+**Issue**: Screen readers, color-blind users, voice control
+
+**Solution**:
+- **ARIA labels**:
+  - Active text: `aria-label="Current pane: Thoughts"`
+  - Inactive text: `aria-label="Switch to Time pane"`
+  - Buttons: `aria-label="Search"` and `aria-label="Settings"`
+- **Visual indicators**: Subtle underline on tappable greyed text
+- **Voice commands**: Register "Go to Time" / "Go to Thoughts"
+- **Focus order**: Tab through footer controls logically
+
+**HTML**:
+```html
+<footer>
+  <button aria-label="Current pane: Thoughts" aria-current="page">
+    Thoughts
+  </button>
+  <button aria-label="Switch to Time pane">
+    & Time →
+  </button>
+  <button aria-label="Search"><svg>🔍</svg></button>
+  <button aria-label="Settings"><svg>⚙️</svg></button>
+</footer>
+```
+
+---
+
+### 9. Search/Settings Modals
+
+**Issue**: When modals open, footer visibility unclear
+
+**Solution**:
+- Modals take full screen (cover footer entirely)
+- Modals have own navigation: "< Back" button top-left
+- Or: Swipe down to dismiss modal (returns to footer)
+- Modal backdrop is semi-transparent (can see footer dimmed)
+
+**Hierarchy**:
+```
+Modal Open:
+  ┌─────────────────────────────┐
+  │ [< Back]    Search          │
+  │                             │
+  │ [Search results...]         │
+  │                             │
+  │ [Dimmed footer behind]      │
+  └─────────────────────────────┘
+```
+
+---
+
+### 10. Long Text Truncation
+
+**Issue**: Very long pane names in some languages
+
+**Solution**:
+- CSS `text-overflow: ellipsis` with `max-width`
+- Responsive max-width based on screen size:
+  - Small (< 360px): 80px max per pane name
+  - Medium (360-390px): 100px max
+  - Large (≥ 390px): No truncation
+
+**CSS**:
+```css
+.footer-nav-text {
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 360px) {
+  .footer-nav-text {
+    max-width: 80px;
+  }
+}
+```
+
+---
+
+### 11. Landscape Mode
+
+**Issue**: Footer navigation doesn't make sense when both panes visible
+
+**Solution**:
+- **Switch to desktop layout** in landscape (≥ 768px width)
+- Both panes visible side-by-side
+- Footer becomes status bar: "Thoughts & Time" centered, buttons on right
+- No navigation controls (both panes always visible)
+
+**Landscape Layout**:
+```
+┌──────────────────┬──────────────────┐
+│ Thoughts         │ Time             │
+│                  │                  │
+└──────────────────┴──────────────────┘
+│     Thoughts & Time         [🔍][⚙️] │
+      ^^^^^^^^^^^^^^
+      Status only (not nav)
+```
+
+---
+
+### 12. Animation & Performance
+
+**Issue**: Pane transitions need to be smooth and responsive
+
+**Solution**:
+- Use CSS transforms (GPU accelerated)
+- Swipe gesture shows live preview (pane moves with finger)
+- Spring animation on release (natural feeling)
+- Velocity-based: fast swipe = quick transition, slow = can cancel
+
+**Animation Timing**:
+```css
+.pane-transition {
+  transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.pane-transition-fast {
+  transition: transform 0.15s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+```
+
+---
+
+### 13. Footer Z-Index Issues
+
+**Issue**: FAB, toasts, modals might be behind or in front of footer
+
+**Solution**:
+- **Z-index hierarchy**:
+  - Modals: 1000
+  - Toasts: 900
+  - Daily Review sheet: 800
+  - FAB: 700
+  - Footer: 600
+  - Input bar: 550
+  - Content: 1
+
+**CSS**:
+```css
+.modal { z-index: 1000; }
+.toast { z-index: 900; }
+.daily-review-sheet { z-index: 800; }
+.fab { z-index: 700; }
+.footer { z-index: 600; }
+```
+
+---
+
+### 14. Safe Area (iOS Notch/Home Indicator)
+
+**Issue**: iPhone notch and home indicator might overlap footer
+
+**Solution**:
+- Use `padding-bottom: env(safe-area-inset-bottom)`
+- Footer respects safe area automatically
+- Home indicator doesn't overlap controls
+- Works on all iOS devices (notched and non-notched)
+
+**CSS**:
+```css
+.footer {
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
+}
+
+/* viewport meta tag required */
+<meta name="viewport" content="viewport-fit=cover">
+```
+
+---
+
 ## 💡 Additional Mobile Considerations
 
 ### Offline Support
