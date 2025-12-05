@@ -2,6 +2,12 @@
 
 A minimalist productivity app that harmonizes thought capture with time-based planning through a dual-pane interface.
 
+## Screenshot
+
+![Thoughts & Time App](screenshot.png)
+
+*The dual-pane interface showing the Thoughts pane (left) with notes and tasks, and the Time pane (right) with the timeline and Daily Review.*
+
 ## Philosophy
 
 **Thoughts & Time** is built on the principle that productive work emerges from the intersection of free-flowing thoughts and structured time. Most productivity tools force you to choose between capturing ideas and scheduling tasks. This app bridges that gap.
