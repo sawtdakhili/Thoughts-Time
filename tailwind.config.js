@@ -6,6 +6,11 @@ export default {
   ],
   theme: {
     extend: {
+      screens: {
+        'mobile': { 'max': '767px' },
+        'tablet': { 'min': '768px', 'max': '1023px' },
+        'desktop': { 'min': '1024px' },
+      },
       colors: {
         'background': 'var(--color-background)',
         'text-primary': 'var(--color-text-primary)',

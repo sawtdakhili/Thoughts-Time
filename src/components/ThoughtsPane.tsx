@@ -13,6 +13,8 @@ import { useStore } from '../store/useStore';
 import { useSettingsStore } from '../store/useSettingsStore';
 import ItemDisplay from './ItemDisplay';
 import TimePromptModal from './TimePromptModal';
+import FAB from './FAB';
+import BottomSheet from './BottomSheet';
 import { Item } from '../types';
 import { parseInput } from '../utils/parser';
 import {
@@ -25,7 +27,7 @@ import {
 import { matchesSearch } from '../utils/search.tsx';
 import { useWheelNavigation } from '../hooks/useWheelNavigation';
 import { useToast } from '../hooks/useToast';
-import { DATE_RANGE } from '../constants';
+import { DATE_RANGE, MOBILE } from '../constants';
 
 interface ThoughtsPaneProps {
   searchQuery?: string;
@@ -34,6 +36,7 @@ interface ThoughtsPaneProps {
   onNextDay?: () => void;
   onPreviousDay?: () => void;
   highlightedItemId?: string | null;
+  isMobile?: boolean;
 }
 
 export interface ThoughtsPaneHandle {
@@ -49,6 +52,7 @@ const ThoughtsPane = forwardRef<ThoughtsPaneHandle, ThoughtsPaneProps>(
       onNextDay,
       onPreviousDay,
       highlightedItemId,
+      isMobile = false,
     },
     ref
   ) => {
@@ -65,6 +69,7 @@ const ThoughtsPane = forwardRef<ThoughtsPaneHandle, ThoughtsPaneProps>(
       isEvent: boolean;
     } | null>(null);
     const [isPageFlipping, setIsPageFlipping] = useState(false);
+    const [isInputSheetOpen, setIsInputSheetOpen] = useState(false);
 
     // Filter items based on search query (memoized for performance)
     const filteredItems = useMemo(
@@ -382,6 +387,11 @@ const ThoughtsPane = forwardRef<ThoughtsPaneHandle, ThoughtsPaneProps>(
 
       setInput('');
 
+      // Close mobile bottom sheet if open
+      if (isMobile && isInputSheetOpen) {
+        setIsInputSheetOpen(false);
+      }
+
       // Reset textarea height
       if (textareaRef.current) {
         textareaRef.current.style.height = '56px';
@@ -451,7 +461,13 @@ const ThoughtsPane = forwardRef<ThoughtsPaneHandle, ThoughtsPaneProps>(
           className={`flex-1 overflow-y-auto px-24 py-16 ${
             viewMode === 'book' ? 'snap-y snap-proximity' : ''
           } ${isPageFlipping && viewMode === 'book' ? 'page-flip-left' : ''}`}
-          style={viewMode === 'book' ? { height: 'calc(100vh - 60px - 90px)' } : undefined}
+          style={
+            isMobile
+              ? { height: `calc(100vh - ${MOBILE.FOOTER_HEIGHT}px)` }
+              : viewMode === 'book'
+                ? { height: 'calc(100vh - 60px - 90px)' }
+                : undefined
+          }
         >
           {/* No results found state */}
           {searchQuery && itemsByDate.size === 0 && (
@@ -573,29 +589,76 @@ const ThoughtsPane = forwardRef<ThoughtsPaneHandle, ThoughtsPaneProps>(
             })}
         </div>
 
-        {/* Input Field - Fixed at Bottom */}
-        <form onSubmit={handleSubmit} className="border-t border-border-subtle">
-          <label htmlFor="thoughts-input" className="sr-only">
-            Add a new thought, task, event, or routine
-          </label>
-          <textarea
-            id="thoughts-input"
-            ref={textareaRef}
-            value={input}
-            onChange={handleInputChange}
-            onKeyDown={handleKeyDown}
-            placeholder="Type here... (Tab to indent, Shift+Enter for new line)"
-            className="w-full min-h-[56px] max-h-[200px] py-16 px-24 bg-transparent border-none outline-none font-serif text-base placeholder-text-secondary resize-none overflow-y-auto"
-            style={{ tabSize: 8 }}
-            rows={1}
-            autoFocus
-            aria-describedby="input-help"
-          />
-          <span id="input-help" className="sr-only">
-            Use prefixes: t for todo, e for event, r for routine, n for note. Press Enter to submit,
-            Shift+Enter for new line.
-          </span>
-        </form>
+        {/* Desktop: Input Field - Fixed at Bottom */}
+        {!isMobile && (
+          <form onSubmit={handleSubmit} className="border-t border-border-subtle">
+            <label htmlFor="thoughts-input" className="sr-only">
+              Add a new thought, task, event, or routine
+            </label>
+            <textarea
+              id="thoughts-input"
+              ref={textareaRef}
+              value={input}
+              onChange={handleInputChange}
+              onKeyDown={handleKeyDown}
+              placeholder="Type here... (Tab to indent, Shift+Enter for new line)"
+              className="w-full min-h-[56px] max-h-[200px] py-16 px-24 bg-transparent border-none outline-none font-serif text-base placeholder-text-secondary resize-none overflow-y-auto"
+              style={{ tabSize: 8 }}
+              rows={1}
+              autoFocus
+              aria-describedby="input-help"
+            />
+            <span id="input-help" className="sr-only">
+              Use prefixes: t for todo, e for event, r for routine, n for note. Press Enter to
+              submit, Shift+Enter for new line.
+            </span>
+          </form>
+        )}
+
+        {/* Mobile: FAB + Bottom Sheet */}
+        {isMobile && (
+          <>
+            <FAB onClick={() => setIsInputSheetOpen(true)} icon="+" label="Add thought" />
+            <BottomSheet
+              isOpen={isInputSheetOpen}
+              onClose={() => setIsInputSheetOpen(false)}
+              title="Add Thought"
+              height="half"
+            >
+              <form onSubmit={handleSubmit}>
+                <label htmlFor="thoughts-input-mobile" className="sr-only">
+                  Add a new thought, task, event, or routine
+                </label>
+                <textarea
+                  id="thoughts-input-mobile"
+                  ref={textareaRef}
+                  value={input}
+                  onChange={handleInputChange}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Type here... (Tab to indent, Shift+Enter for new line)"
+                  className="w-full min-h-[120px] max-h-[300px] py-12 px-16 bg-transparent border border-border-subtle rounded-sm font-serif text-base placeholder-text-secondary resize-none overflow-y-auto"
+                  style={{ tabSize: 8 }}
+                  rows={4}
+                  autoFocus
+                  aria-describedby="input-help-mobile"
+                />
+                <span id="input-help-mobile" className="sr-only">
+                  Use prefixes: t for todo, e for event, r for routine, n for note. Press Enter to
+                  submit, Shift+Enter for new line.
+                </span>
+                <button
+                  type="submit"
+                  className="mt-16 w-full py-12 bg-text-primary text-background rounded-sm font-serif text-base touch-target"
+                  style={{
+                    minHeight: `${MOBILE.MIN_TOUCH_TARGET}px`,
+                  }}
+                >
+                  Add
+                </button>
+              </form>
+            </BottomSheet>
+          </>
+        )}
       </div>
     );
   }

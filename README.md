@@ -130,6 +130,28 @@ Choose your visual preference in Settings:
 - **Dark**: Easy on the eyes
 - **System**: Automatically matches your OS preference
 
+### Mobile Experience
+
+The app is fully optimized for mobile devices (phones and tablets):
+
+**Single-Pane Navigation**:
+- On screens < 768px, view one pane at a time
+- Swipe left/right to switch between Thoughts and Time
+- Footer navigation with active pane indicator
+
+**Touch-Optimized**:
+- Floating Action Button (FAB) for quick capture
+- Bottom sheet for input (slides up from bottom)
+- All buttons meet 44px minimum touch target size
+- Haptic feedback on interactions (where supported)
+
+**Smart Keyboard Handling**:
+- Footer automatically hides when keyboard appears
+- Optimized input layouts for touch typing
+- iOS safe area support for notched devices
+
+See [MOBILE_IMPLEMENTATION.md](./MOBILE_IMPLEMENTATION.md) for complete mobile documentation.
+
 ### Tags
 
 Add tags anywhere in your text with `#tagname`:

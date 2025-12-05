@@ -45,3 +45,25 @@ export const SCROLL = {
   /** Pixel threshold for boundary detection */
   BOUNDARY_THRESHOLD: 5,
 } as const;
+
+/**
+ * Mobile responsive constants
+ */
+export const MOBILE = {
+  /** Mobile breakpoint in pixels */
+  BREAKPOINT: 768,
+  /** Footer height in pixels */
+  FOOTER_HEIGHT: 60,
+  /** FAB size in pixels */
+  FAB_SIZE: 56,
+  /** Minimum touch target size */
+  MIN_TOUCH_TARGET: 44,
+  /** Swipe gesture threshold in pixels */
+  SWIPE_THRESHOLD: 50,
+  /** Swipe velocity threshold (px/ms) */
+  SWIPE_VELOCITY_THRESHOLD: 0.3,
+  /** Bottom sheet slide duration in ms */
+  BOTTOM_SHEET_DURATION: 300,
+  /** Keyboard detection threshold in pixels */
+  KEYBOARD_HEIGHT_THRESHOLD: 150,
+} as const;

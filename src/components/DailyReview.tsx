@@ -14,9 +14,10 @@ interface DailyReviewItem {
 
 interface DailyReviewProps {
   searchQuery?: string;
+  isMobile?: boolean;
 }
 
-function DailyReview({ searchQuery = '' }: DailyReviewProps) {
+function DailyReview({ searchQuery = '', isMobile: _isMobile = false }: DailyReviewProps) {
   const items = useStore((state) => state.items);
   const updateItem = useStore((state) => state.updateItem);
   const deleteItem = useStore((state) => state.deleteItem);
@@ -34,17 +35,25 @@ function DailyReview({ searchQuery = '' }: DailyReviewProps) {
   const today = format(new Date(), 'yyyy-MM-dd');
   const now = new Date();
 
-  // Generate ALL undone todos from previous days (scheduled or unscheduled)
+  // Generate undone todos from previous days that need attention
   // Only include parent-level todos (not subtasks)
   const reviewItems: DailyReviewItem[] = items
     .filter((item) => {
       if (item.type !== 'todo') return false;
       const todo = item as Todo;
 
-      // ALL incomplete todos from previous days (not today)
+      // Incomplete todos from previous days (not today)
       // Exclude subtasks - they'll be shown nested under their parents
+      // Exclude todos already scheduled for today or future - they'll show in timeline
+      const isScheduledForTodayOrLater =
+        todo.scheduledTime && new Date(todo.scheduledTime) >= new Date(today);
+
       const isReviewCandidate =
-        todo.createdDate < today && !todo.completedAt && !todo.cancelledAt && !todo.parentId; // Only show parent-level todos
+        todo.createdDate < today &&
+        !todo.completedAt &&
+        !todo.cancelledAt &&
+        !todo.parentId && // Only show parent-level todos
+        !isScheduledForTodayOrLater; // Exclude if already scheduled for today/future
 
       // Apply search filter
       return isReviewCandidate && matchesSearch(item, searchQuery, items);
@@ -70,7 +79,8 @@ function DailyReview({ searchQuery = '' }: DailyReviewProps) {
     if (!rescheduleInput.trim()) return;
 
     // Parse the input using the parser - prepend "t " so parser treats it as a todo
-    const parsed = parseInput('t ' + rescheduleInput);
+    // Use today's date as reference so "tomorrow" means tomorrow from today, not from the original date
+    const parsed = parseInput('t ' + rescheduleInput, new Date());
 
     if (!parsed) {
       addToast(
@@ -120,8 +130,25 @@ function DailyReview({ searchQuery = '' }: DailyReviewProps) {
     return null;
   }
 
+  // Clean up handledItems: remove items that are now incomplete (unchecked)
+  // This allows unchecked todos to reappear in Daily Review
+  const currentHandledItems = new Set(
+    Array.from(handledItems).filter((id) => {
+      const item = items.find((i) => i.id === id);
+      if (!item || item.type !== 'todo') return false;
+      const todo = item as Todo;
+      // Keep in handledItems only if still complete or cancelled
+      return todo.completedAt || todo.cancelledAt;
+    })
+  );
+
+  // Update state if it changed
+  if (currentHandledItems.size !== handledItems.size) {
+    setHandledItems(currentHandledItems);
+  }
+
   // Filter unhandled items and apply pagination
-  const unhandledItems = reviewItems.filter(({ item }) => !handledItems.has(item.id));
+  const unhandledItems = reviewItems.filter(({ item }) => !currentHandledItems.has(item.id));
   const displayedItems = unhandledItems.slice(0, itemsToShow);
   const hasMore = unhandledItems.length > itemsToShow;
   const allHandled = unhandledItems.length === 0;

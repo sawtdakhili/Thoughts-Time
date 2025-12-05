@@ -18,7 +18,7 @@ import {
 } from '../utils/formatting';
 import { matchesSearch, highlightMatches } from '../utils/search.tsx';
 import { useWheelNavigation } from '../hooks/useWheelNavigation';
-import { DATE_RANGE } from '../constants';
+import { DATE_RANGE, MOBILE } from '../constants';
 
 type TimelineEntry = {
   time: Date;
@@ -34,6 +34,7 @@ interface TimePaneProps {
   onNextDay?: () => void;
   onPreviousDay?: () => void;
   onJumpToSource?: (item: Item) => void;
+  isMobile?: boolean;
 }
 
 function TimePane({
@@ -43,6 +44,7 @@ function TimePane({
   onNextDay,
   onPreviousDay,
   onJumpToSource,
+  isMobile = false,
 }: TimePaneProps) {
   const items = useStore((state) => state.items);
   const timeFormat = useSettingsStore((state) => state.timeFormat);
@@ -809,7 +811,13 @@ function TimePane({
           className={`flex-1 overflow-y-auto px-24 py-16 ${
             viewMode === 'book' ? 'snap-y snap-proximity' : ''
           } ${isPageFlipping && viewMode === 'book' ? 'page-flip' : ''}`}
-          style={viewMode === 'book' ? { height: 'calc(100vh - 60px - 90px)' } : undefined}
+          style={
+            isMobile
+              ? { height: `calc(100vh - ${MOBILE.FOOTER_HEIGHT}px)` }
+              : viewMode === 'book'
+                ? { height: 'calc(100vh - 60px - 90px)' }
+                : undefined
+          }
         >
           {/* No results found state */}
           {searchQuery && entriesByDate.size === 0 && (
@@ -880,7 +888,7 @@ function TimePane({
                     {/* Daily Review - appears under current day title */}
                     {isToday && (
                       <div className="mb-8">
-                        <DailyReview searchQuery={searchQuery} />
+                        <DailyReview searchQuery={searchQuery} isMobile={isMobile} />
                         <div className="mt-8 border-t border-border-subtle" />
                       </div>
                     )}
@@ -958,7 +966,7 @@ function TimePane({
                   {/* Daily Review - appears under current day title in book mode */}
                   {isToday && (
                     <div className="mb-8 border border-border-subtle rounded-sm p-16 bg-hover-bg">
-                      <DailyReview searchQuery={searchQuery} />
+                      <DailyReview searchQuery={searchQuery} isMobile={isMobile} />
                     </div>
                   )}
 

@@ -31,6 +31,17 @@
     --text-lg: 20px;
     --text-xl: 24px;
     --line-height: 1.7;
+
+    /* Mobile dimensions */
+    --mobile-footer-height: 60px;
+    --mobile-fab-size: 56px;
+    --mobile-bottom-sheet-border-radius: 16px;
+
+    /* Z-index layers */
+    --z-footer: 30;
+    --z-fab: 40;
+    --z-bottom-sheet-backdrop: 50;
+    --z-bottom-sheet: 60;
   }
 
   * {
@@ -220,5 +231,93 @@
 
   .skip-link:focus {
     top: 0;
+  }
+
+  /* Mobile-specific animations */
+  @keyframes slideUp {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slideDown {
+    from {
+      transform: translateY(0);
+    }
+    to {
+      transform: translateY(100%);
+    }
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.3s ease-out;
+  }
+
+  .animate-slide-down {
+    animation: slideDown 0.3s ease-out;
+  }
+
+  /* FAB scale animation */
+  @keyframes fabScale {
+    0% {
+      transform: scale(0);
+      opacity: 0;
+    }
+    50% {
+      transform: scale(1.1);
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  .animate-fab-in {
+    animation: fabScale 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  /* iOS safe area utilities */
+  @supports (padding: env(safe-area-inset-bottom)) {
+    .safe-bottom {
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+  }
+
+  /* Mobile touch targets */
+  @media (max-width: 767px) {
+    .touch-target {
+      min-width: 44px;
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Prevent zoom on input focus (iOS) */
+    input,
+    textarea,
+    select {
+      font-size: 16px !important;
+    }
+  }
+
+  /* Z-index classes */
+  .z-30 {
+    z-index: 30;
+  }
+
+  .z-40 {
+    z-index: 40;
+  }
+
+  .z-50 {
+    z-index: 50;
+  }
+
+  .z-60 {
+    z-index: 60;
   }
 }
