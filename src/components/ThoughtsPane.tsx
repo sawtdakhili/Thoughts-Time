@@ -507,7 +507,7 @@ const ThoughtsPane = forwardRef<ThoughtsPaneHandle, ThoughtsPaneProps>(
                   >
                     {/* Date Header */}
                     <div
-                      className={`sticky top-0 bg-background py-3 mb-6 border-b border-border-subtle ${isToday ? 'text-text-primary' : 'text-text-secondary'}`}
+                      className={`sticky top-0 z-10 bg-background py-3 mb-6 border-b border-border-subtle ${isToday ? 'text-text-primary' : 'text-text-secondary'}`}
                     >
                       <h3 className="text-base font-serif uppercase tracking-wide">
                         {format(parseISO(date), 'EEEE, MMM d, yyyy')}
@@ -556,7 +556,7 @@ const ThoughtsPane = forwardRef<ThoughtsPaneHandle, ThoughtsPaneProps>(
                 <div key={date} className="snap-start snap-always">
                   {/* Date Header */}
                   <div
-                    className={`sticky top-0 bg-background py-3 mb-6 border-b border-border-subtle ${isToday ? 'text-text-primary' : 'text-text-secondary'}`}
+                    className={`sticky top-0 z-10 bg-background py-3 mb-6 border-b border-border-subtle ${isToday ? 'text-text-primary' : 'text-text-secondary'}`}
                   >
                     <h3 className="text-base font-serif uppercase tracking-wide">
                       {format(parseISO(date), 'EEEE, MMM d, yyyy')}
