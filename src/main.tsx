@@ -4,13 +4,16 @@ import './index.css'
 import App from './App.tsx'
 import ErrorBoundary from './components/ErrorBoundary.tsx'
 import StorageInitializer from './storage/StorageInitializer.tsx'
+import { AuthProvider } from './auth'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ErrorBoundary>
-      <StorageInitializer>
-        <App />
-      </StorageInitializer>
+      <AuthProvider>
+        <StorageInitializer>
+          <App />
+        </StorageInitializer>
+      </AuthProvider>
     </ErrorBoundary>
   </StrictMode>,
 )
