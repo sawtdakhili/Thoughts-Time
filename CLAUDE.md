@@ -19,11 +19,11 @@
 
 ```
 src/
-├── components/     # React components (TimePane, ThoughtsPane, ItemDisplay, etc.)
+├── components/     # React components (TimePane, ThoughtsPane, ItemDisplay, BottomSheet, FAB, MobileFooter, etc.)
 ├── store/          # Zustand stores (useStore.ts, useHistory.ts, useSettingsStore.ts, itemHelpers.ts)
-├── hooks/          # Custom hooks (useKeyboardShortcuts, useWheelNavigation, useFocusTrap, etc.)
+├── hooks/          # Custom hooks (useKeyboardShortcuts, useWheelNavigation, useFocusTrap, useMobileLayout, useSwipeGesture, useHapticFeedback, useKeyboardDetection, etc.)
 ├── utils/          # Utilities (parser.ts, formatting.ts, itemFactory.ts, search.tsx)
-├── constants/      # App constants
+├── constants/      # App constants (including mobile breakpoints and sizes)
 ├── test/           # Test setup
 ├── types.ts        # TypeScript type definitions
 ├── App.tsx         # Root component
@@ -135,6 +135,13 @@ npm run lint         # ESLint
 - `src/components/PaneErrorBoundary.tsx` - Error isolation for panes
 - `src/hooks/useWheelNavigation.ts` - Shared wheel navigation for book mode
 - `src/hooks/useFocusTrap.ts` - Focus trap for modals
+- `src/components/BottomSheet.tsx` - Mobile bottom sheet modal
+- `src/components/FAB.tsx` - Mobile floating action button
+- `src/components/MobileFooter.tsx` - Mobile bottom navigation
+- `src/hooks/useMobileLayout.ts` - Mobile breakpoint detection
+- `src/hooks/useSwipeGesture.ts` - Touch gesture detection
+- `src/hooks/useHapticFeedback.ts` - Vibration API wrapper
+- `src/hooks/useKeyboardDetection.ts` - Virtual keyboard detection
 
 ## Common Tasks
 
@@ -171,6 +178,22 @@ npm run lint         # ESLint
 - **Infinite Scroll**: All days visible, continuous scrolling
 - **Book Style**: One day per page, flip animation
 
+## Mobile Implementation
+
+The app is fully responsive with a complete mobile implementation (< 768px):
+
+- **Single-pane view** - One pane at a time (Thoughts or Time)
+- **Swipe gestures** - Swipe left/right to switch between panes
+- **Bottom sheet input** - Slides up from bottom (~60% height) for adding items
+- **FAB** - Floating action button (56x56px) for quick capture
+- **Mobile footer** - Bottom navigation with pane switcher and action buttons
+- **Touch targets** - 44×44px minimum for all interactive elements
+- **Haptic feedback** - Vibration API for tactile responses (gracefully degrades)
+- **Keyboard detection** - Footer hides when virtual keyboard appears
+- **iOS safe areas** - Proper padding for notch and home indicator
+
+See `MOBILE_IMPLEMENTATION.md` for complete mobile documentation.
+
 ## Dual-Pane Layout
 
 ### ThoughtsPane (Left)
@@ -195,10 +218,12 @@ npm run lint         # ESLint
 6. **localStorage persistence** - changes auto-persist via Zustand middleware
 7. **Error boundaries** - Each pane has its own error boundary for isolation
 8. **Accessibility** - App includes skip navigation link and ARIA labels
-9. **Test coverage** - 279 tests covering stores, hooks, and components
+9. **Test coverage** - 388 tests covering stores, hooks, and components (109 mobile-specific)
 10. **TimePane subtasks** - Only todo children appear in timeline (notes filtered out)
 11. **Daily Review filtering** - Excludes todos already scheduled for today/future to prevent duplication
 12. **Reference date parsing** - Reschedule actions use today as reference (not original date)
+13. **Mobile responsive** - Complete mobile implementation with swipe gestures, bottom sheet, FAB, and footer navigation
+14. **Touch-optimized** - 44×44px minimum touch targets, haptic feedback, keyboard detection
 
 ## License
 
