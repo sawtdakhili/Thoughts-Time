@@ -388,14 +388,17 @@ export function detectRecurrencePattern(content: string): RecurrencePattern | nu
 
 /**
  * Parse natural language date/time using enhanced Chrono
+ * @param content - The content string to parse
+ * @param referenceDate - Optional reference date for parsing relative dates (defaults to now)
  */
-export function parseDateTime(content: string): {
+export function parseDateTime(content: string, referenceDate?: Date): {
   date: Date | null;
   hasTime: boolean;
   refText: string;
   endDate?: Date | null;
 } {
-  const results = customChrono.parse(content);
+  const refDate = referenceDate || new Date();
+  const results = customChrono.parse(content, refDate);
 
   // Check for 24h time pattern "at HH:MM" that chrono might miss entirely
   const time24Match = content.match(/\bat\s+(\d{1,2}):(\d{2})\b/i);
@@ -411,7 +414,7 @@ export function parseDateTime(content: string): {
   if (results.length === 0) {
     // Even with no chrono results, if we found 24h time pattern, create a date for today
     if (has24hTime) {
-      const now = new Date();
+      const now = new Date(refDate);
       const hour = parseInt(time24Match![1]);
       const minute = parseInt(time24Match![2]);
       now.setHours(hour, minute, 0, 0);
@@ -444,8 +447,10 @@ export function parseDateTime(content: string): {
 
 /**
  * Main parsing function
+ * @param input - The raw input string with optional prefix
+ * @param referenceDate - Optional reference date for parsing relative dates (defaults to now)
  */
-export function parseInput(input: string): ParsedInput {
+export function parseInput(input: string, referenceDate?: Date): ParsedInput {
   const type = detectItemType(input);
   const content = removePrefix(input);
   const embeddedNotes = extractEmbeddedNotes(content);
@@ -457,7 +462,7 @@ export function parseInput(input: string): ParsedInput {
 
   // Parse based on type
   if (type === 'event' || type === 'todo') {
-    const parsed = parseDateTime(content);
+    const parsed = parseDateTime(content, referenceDate);
     scheduledTime = parsed.date;
     endTime = parsed.endDate || null;
     hasTime = parsed.hasTime;

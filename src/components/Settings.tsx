@@ -1,9 +1,11 @@
-import { useRef } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { useStore } from '../store/useStore';
 import { useToast } from '../hooks/useToast';
 import { useFocusTrap } from '../hooks/useFocusTrap';
+import { useStorage } from '../hooks/useStorage';
 import { Item, ItemTypes } from '../types';
+import { StorageType } from '../storage';
 
 interface SettingsProps {
   isOpen: boolean;
@@ -79,6 +81,62 @@ function Settings({ isOpen, onClose }: SettingsProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const addToast = useToast((state) => state.addToast);
   const focusTrapRef = useFocusTrap<HTMLDivElement>(isOpen);
+
+  // Storage settings
+  const storageType = useStorage((state) => state.storageType);
+  const isMigrating = useStorage((state) => state.isMigrating);
+  const migrationProgress = useStorage((state) => state.migrationProgress);
+  const sqliteAvailable = useStorage((state) => state.sqliteAvailable);
+  const stats = useStorage((state) => state.stats);
+  const isInitialized = useStorage((state) => state.isInitialized);
+  const initializeStorage = useStorage((state) => state.initialize);
+  const migrateStorage = useStorage((state) => state.migrate);
+  const refreshStats = useStorage((state) => state.refreshStats);
+
+  const [showMigrationConfirm, setShowMigrationConfirm] = useState(false);
+  const [pendingStorageType, setPendingStorageType] = useState<StorageType | null>(null);
+
+  // Initialize storage when settings opens
+  useEffect(() => {
+    if (isOpen && !isInitialized) {
+      initializeStorage();
+    }
+  }, [isOpen, isInitialized, initializeStorage]);
+
+  // Refresh stats when settings opens
+  useEffect(() => {
+    if (isOpen && isInitialized) {
+      refreshStats();
+    }
+  }, [isOpen, isInitialized, refreshStats]);
+
+  const handleStorageChange = (targetType: StorageType) => {
+    if (targetType === storageType) return;
+    setPendingStorageType(targetType);
+    setShowMigrationConfirm(true);
+  };
+
+  const confirmMigration = async () => {
+    if (!pendingStorageType) return;
+
+    setShowMigrationConfirm(false);
+    const result = await migrateStorage(pendingStorageType);
+
+    if (result.success) {
+      addToast(`Successfully migrated to ${pendingStorageType === 'sqlite' ? 'SQLite' : 'localStorage'}`, 'success');
+      // Reload page to reinitialize stores with new storage
+      window.location.reload();
+    } else {
+      addToast(`Migration failed: ${result.error}`, 'error');
+    }
+
+    setPendingStorageType(null);
+  };
+
+  const cancelMigration = () => {
+    setShowMigrationConfirm(false);
+    setPendingStorageType(null);
+  };
 
   const handleExport = () => {
     const exportData: ExportData = {
@@ -304,8 +362,94 @@ function Settings({ isOpen, onClose }: SettingsProps) {
               Export creates a JSON backup. Import replaces all current data.
             </p>
           </div>
+
+          {/* Storage Backend */}
+          <div>
+            <label className="block text-sm font-serif mb-8">Storage Backend</label>
+            <div className="flex gap-8">
+              <button
+                onClick={() => handleStorageChange('localStorage')}
+                disabled={isMigrating || storageType === 'localStorage'}
+                className={`flex-1 px-16 py-8 text-sm font-mono border rounded-sm transition-colors ${
+                  storageType === 'localStorage'
+                    ? 'bg-text-primary text-background border-text-primary'
+                    : 'bg-transparent text-text-secondary border-border-subtle hover:border-text-secondary disabled:opacity-50'
+                }`}
+              >
+                localStorage
+              </button>
+              <button
+                onClick={() => handleStorageChange('sqlite')}
+                disabled={isMigrating || !sqliteAvailable || storageType === 'sqlite'}
+                title={!sqliteAvailable ? 'SQLite requires WebAssembly support' : undefined}
+                className={`flex-1 px-16 py-8 text-sm font-mono border rounded-sm transition-colors ${
+                  storageType === 'sqlite'
+                    ? 'bg-text-primary text-background border-text-primary'
+                    : 'bg-transparent text-text-secondary border-border-subtle hover:border-text-secondary disabled:opacity-50'
+                }`}
+              >
+                SQLite
+              </button>
+            </div>
+            {isMigrating && migrationProgress && (
+              <div className="mt-8">
+                <div className="flex justify-between text-xs text-text-secondary mb-4">
+                  <span>{migrationProgress.message}</span>
+                  <span>{migrationProgress.percent}%</span>
+                </div>
+                <div className="w-full bg-border-subtle rounded-full h-2">
+                  <div
+                    className="bg-text-primary h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${migrationProgress.percent}%` }}
+                  />
+                </div>
+              </div>
+            )}
+            <p className="text-xs text-text-secondary mt-8">
+              {stats ? `${stats.itemCount} items (${stats.estimatedSize})` : 'Loading...'}
+              {!sqliteAvailable && ' — SQLite unavailable (requires WASM)'}
+            </p>
+          </div>
         </div>
       </div>
+
+      {/* Migration Confirmation Dialog */}
+      {showMigrationConfirm && (
+        <>
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-[60]" onClick={cancelMigration} />
+          <div
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="migration-title"
+            aria-describedby="migration-desc"
+            className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-background border border-border-subtle rounded-sm shadow-lg z-[70] w-[350px]"
+          >
+            <div className="px-24 py-16">
+              <h3 id="migration-title" className="text-base font-serif mb-8">
+                Migrate Storage?
+              </h3>
+              <p id="migration-desc" className="text-sm text-text-secondary mb-16">
+                This will migrate all your data from {storageType === 'localStorage' ? 'localStorage' : 'SQLite'} to{' '}
+                {pendingStorageType === 'localStorage' ? 'localStorage' : 'SQLite'}. The page will reload after migration.
+              </p>
+              <div className="flex gap-8 justify-end">
+                <button
+                  onClick={cancelMigration}
+                  className="px-16 py-8 text-sm font-mono border rounded-sm bg-transparent text-text-secondary border-border-subtle hover:border-text-secondary"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmMigration}
+                  className="px-16 py-8 text-sm font-mono border rounded-sm bg-text-primary text-background border-text-primary hover:opacity-90"
+                >
+                  Migrate
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </>
   );
 }

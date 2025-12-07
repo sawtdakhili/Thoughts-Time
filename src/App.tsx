@@ -15,12 +15,14 @@ import { useSwipeGesture } from './hooks/useSwipeGesture';
 import { useHapticFeedback } from './hooks/useHapticFeedback';
 import { useKeyboardDetection } from './hooks/useKeyboardDetection';
 import { Item } from './types';
+import { AuthGuard, useAuth } from './auth';
 
-function App() {
+function AppContent() {
   const [searchInput, setSearchInput] = useState('');
   const searchQuery = useDebouncedSearch(searchInput, 300);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const { user, signOut } = useAuth();
   const viewMode = useSettingsStore((state) => state.viewMode);
   const activeMobilePane = useSettingsStore((state) => state.activeMobilePane);
   const setActiveMobilePane = useSettingsStore((state) => state.setActiveMobilePane);
@@ -198,9 +200,10 @@ function App() {
 
       {/* Header - Desktop only */}
       {!isMobile && (
-        <header className="h-[60px] border-b border-border-subtle flex items-center justify-center px-48 relative">
+        <header className="h-[60px] border-b border-border-subtle flex items-center justify-between px-48">
+          <div className="w-[200px]" /> {/* Spacer for centering */}
           <h1 className="text-lg font-serif">Thoughts & Time</h1>
-          <div className="absolute right-48 flex items-center gap-16">
+          <div className="w-[200px] flex items-center justify-end gap-16">
             {isSearchOpen && (
               <input
                 type="text"
@@ -212,7 +215,7 @@ function App() {
                   }
                 }}
                 placeholder="Search..."
-                className="px-12 py-4 bg-hover-bg border border-border-subtle rounded-sm font-mono text-sm w-[240px] focus:outline-none focus:border-text-secondary"
+                className="px-12 py-4 bg-hover-bg border border-border-subtle rounded-sm font-mono text-sm w-[200px] focus:outline-none focus:border-text-secondary"
                 autoFocus
               />
             )}
@@ -237,6 +240,20 @@ function App() {
             >
               ⚙️
             </button>
+            {user && (
+              <div className="flex items-center gap-8 pl-8 border-l border-border-subtle">
+                <span className="text-xs text-text-secondary font-mono truncate max-w-[80px]" title={user.username}>
+                  {user.firstName}
+                </span>
+                <button
+                  onClick={signOut}
+                  className="text-xs text-text-secondary hover:text-text-primary transition-colors font-mono"
+                  title="Sign out"
+                >
+                  Sign out
+                </button>
+              </div>
+            )}
           </div>
         </header>
       )}
@@ -333,6 +350,14 @@ function App() {
       {/* Toast Notifications */}
       <ToastContainer />
     </div>
+  );
+}
+
+function App() {
+  return (
+    <AuthGuard>
+      <AppContent />
+    </AuthGuard>
   );
 }
 
