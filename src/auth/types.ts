@@ -17,8 +17,14 @@ export interface User {
   githubId: string | null;
   /** GitHub username if linked */
   githubUsername: string | null;
-  /** GitHub access token for API calls */
+  /** GitHub user access token for API calls (from GitHub App OAuth) */
   githubAccessToken: string | null;
+  /** GitHub token expiration time */
+  githubTokenExpiresAt: string | null;
+  /** GitHub refresh token for renewing access */
+  githubRefreshToken: string | null;
+  /** GitHub refresh token expiration time */
+  githubRefreshTokenExpiresAt: string | null;
 }
 
 /** User data without sensitive fields (for UI) */
@@ -32,6 +38,8 @@ export interface UserProfile {
   lastLoginAt: string | null;
   githubUsername: string | null;
   isGithubLinked: boolean;
+  /** Whether GitHub token is valid and not expired */
+  hasValidGithubToken: boolean;
 }
 
 /** Authentication state */
@@ -80,10 +88,20 @@ export interface AuthResult {
   error?: string;
 }
 
-/** GitHub OAuth state */
-export interface GitHubOAuthState {
+/**
+ * GitHub App configuration.
+ * GitHub Apps use a different auth flow than OAuth Apps:
+ * - Client ID from GitHub App settings
+ * - User authorization generates user access tokens
+ * - Tokens can be refreshed without user interaction
+ * - Scopes are defined at app level, not per-request
+ */
+export interface GitHubAppConfig {
+  /** GitHub App's Client ID */
   clientId: string;
+  /** OAuth callback URL */
   redirectUri: string;
+  /** Requested permissions (defined in GitHub App settings, but can be reduced) */
   scope: string;
 }
 
@@ -94,6 +112,43 @@ export interface GitHubUser {
   email: string | null;
   name: string | null;
   avatar_url: string;
+}
+
+/**
+ * GitHub App OAuth token response.
+ * GitHub Apps return expiring tokens that can be refreshed.
+ */
+export interface GitHubTokenResponse {
+  access_token: string;
+  token_type: string;
+  scope: string;
+  /** Token expiration in seconds (GitHub Apps: 8 hours) */
+  expires_in?: number;
+  /** Refresh token for getting new access tokens */
+  refresh_token?: string;
+  /** Refresh token expiration in seconds (GitHub Apps: 6 months) */
+  refresh_token_expires_in?: number;
+}
+
+/**
+ * GitHub API error response.
+ */
+export interface GitHubApiError {
+  message: string;
+  documentation_url?: string;
+}
+
+/**
+ * Stored GitHub credentials for a user.
+ * Used internally by AuthStorageProvider.
+ */
+export interface GitHubCredentials {
+  accessToken: string;
+  tokenExpiresAt: string;
+  refreshToken: string | null;
+  refreshTokenExpiresAt: string | null;
+  githubId: string;
+  githubUsername: string;
 }
 
 /** Session data stored in localStorage */
