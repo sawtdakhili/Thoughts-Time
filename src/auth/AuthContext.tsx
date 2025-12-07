@@ -19,6 +19,7 @@ import {
   AuthResult,
 } from './types';
 import { getAuthStorage } from './AuthStorageProvider';
+import { getGitHubService } from './GitHubService';
 
 interface AuthContextValue extends AuthState {
   /** Sign up a new user */
@@ -42,15 +43,6 @@ interface AuthContextValue extends AuthState {
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
-
-/** GitHub OAuth configuration */
-const GITHUB_CONFIG = {
-  clientId: import.meta.env.VITE_GITHUB_CLIENT_ID || '',
-  // For local development, we use a proxy or direct API call
-  // In production, you'd need a backend to handle the token exchange
-  redirectUri: `${window.location.origin}/auth/github/callback`,
-  scope: 'read:user user:email gist',
-};
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -194,53 +186,42 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, []);
 
   const signInWithGitHub = useCallback(() => {
-    if (!GITHUB_CONFIG.clientId) {
+    const github = getGitHubService();
+
+    if (!github.isConfigured()) {
       setState((prev) => ({
         ...prev,
-        error: 'GitHub OAuth not configured',
+        error: 'GitHub App not configured. Set VITE_GITHUB_CLIENT_ID.',
       }));
       return;
     }
 
-    // Generate state for CSRF protection
-    const state = crypto.randomUUID();
-    sessionStorage.setItem('github_oauth_state', state);
-
-    // Redirect to GitHub
-    const params = new URLSearchParams({
-      client_id: GITHUB_CONFIG.clientId,
-      redirect_uri: GITHUB_CONFIG.redirectUri,
-      scope: GITHUB_CONFIG.scope,
-      state,
-    });
-
-    window.location.href = `https://github.com/login/oauth/authorize?${params}`;
+    // GitHubService handles state generation and redirect
+    github.initiateOAuth();
   }, []);
 
-  const handleGitHubCallback = useCallback(async (_code: string): Promise<AuthResult> => {
+  const handleGitHubCallback = useCallback(async (code: string): Promise<AuthResult> => {
     setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
     try {
-      // Note: In a real app, you'd exchange the code for a token via your backend
-      // For this demo, we'll simulate the flow
-      // The actual token exchange requires the client secret which should never be in frontend code
+      const github = getGitHubService();
 
-      // For demo purposes, we'll create a mock GitHub user
-      // In production, this would be: POST /api/auth/github with { code }
-      const mockGitHubUser = {
-        id: `github_${Date.now()}`,
-        login: `github_user_${Math.random().toString(36).substring(7)}`,
-        email: null as string | null,
-        name: 'GitHub User',
-      };
+      // Exchange code for tokens (via backend in production, mock in dev)
+      const tokenResponse = await github.exchangeCodeForToken(code);
 
+      // Fetch user info from GitHub
+      const user = await github.getUser(tokenResponse.access_token);
+      const email = await github.getUserEmail(tokenResponse.access_token);
+
+      // Create credentials object with token expiration info
+      const credentials = github.createCredentials(tokenResponse, user);
+
+      // Store user in our database
       const storage = getAuthStorage();
       const result = await storage.signInWithGitHub(
-        mockGitHubUser.id,
-        mockGitHubUser.login,
-        mockGitHubUser.email,
-        mockGitHubUser.name,
-        'mock_access_token'
+        credentials,
+        email || user.email,
+        user.name
       );
 
       if (result.success && result.user) {

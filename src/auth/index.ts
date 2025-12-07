@@ -12,8 +12,11 @@ export type {
   ResetPasswordData,
   AuthView,
   AuthResult,
-  GitHubOAuthState,
+  GitHubAppConfig,
   GitHubUser,
+  GitHubTokenResponse,
+  GitHubApiError,
+  GitHubCredentials,
   Session,
   PasswordResetToken,
 } from './types';
@@ -35,3 +38,5 @@ export { AuthProvider, useAuth } from './AuthContext';
 export { AuthPage } from './AuthPage';
 
 export { AuthGuard, RequireAuth, RequireGuest } from './AuthGuard';
+
+export { GitHubService, getGitHubService } from './GitHubService';

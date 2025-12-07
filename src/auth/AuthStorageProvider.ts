@@ -6,7 +6,7 @@
  */
 
 import initSqlJs, { Database } from 'sql.js';
-import { User, UserProfile, Session, AuthResult } from './types';
+import { User, UserProfile, Session, AuthResult, GitHubCredentials } from './types';
 import { hashPassword, verifyPassword, generateId, generateSessionToken } from './crypto';
 
 /** SQL.js WASM URL */
@@ -75,9 +75,15 @@ export class AuthStorageProvider {
         last_login_at TEXT,
         github_id TEXT UNIQUE,
         github_username TEXT,
-        github_access_token TEXT
+        github_access_token TEXT,
+        github_token_expires_at TEXT,
+        github_refresh_token TEXT,
+        github_refresh_token_expires_at TEXT
       )
     `);
+
+    // Run migrations for existing databases
+    this.runMigrations();
 
     // Sessions table
     this.db.run(`
@@ -112,6 +118,31 @@ export class AuthStorageProvider {
     this.db.run('CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id)');
 
     this.saveToLocalStorage();
+  }
+
+  /**
+   * Run database migrations for existing databases.
+   * Adds new columns for GitHub App token fields.
+   */
+  private runMigrations(): void {
+    if (!this.db) return;
+
+    // Check if new columns exist by querying table info
+    const columns = this.db.exec("PRAGMA table_info(users)");
+    if (columns.length === 0) return;
+
+    const columnNames = columns[0].values.map((row) => row[1] as string);
+
+    // Add GitHub App token columns if they don't exist
+    if (!columnNames.includes('github_token_expires_at')) {
+      this.db.run('ALTER TABLE users ADD COLUMN github_token_expires_at TEXT');
+    }
+    if (!columnNames.includes('github_refresh_token')) {
+      this.db.run('ALTER TABLE users ADD COLUMN github_refresh_token TEXT');
+    }
+    if (!columnNames.includes('github_refresh_token_expires_at')) {
+      this.db.run('ALTER TABLE users ADD COLUMN github_refresh_token_expires_at TEXT');
+    }
   }
 
   private saveToLocalStorage(): void {
@@ -298,19 +329,29 @@ export class AuthStorageProvider {
 
   /**
    * Create or update a user from GitHub OAuth.
+   * @param credentials - GitHub credentials including tokens and user info
+   * @param email - User email from GitHub (may be null if private)
+   * @param name - User display name from GitHub
    */
   async signInWithGitHub(
-    githubId: string,
-    githubUsername: string,
+    credentials: GitHubCredentials,
     email: string | null,
-    name: string | null,
-    accessToken: string
+    name: string | null
   ): Promise<AuthResult> {
     if (!this.db) {
       return { success: false, error: 'Database not initialized' };
     }
 
     try {
+      const {
+        githubId,
+        githubUsername,
+        accessToken,
+        tokenExpiresAt,
+        refreshToken,
+        refreshTokenExpiresAt,
+      } = credentials;
+
       // Check if user exists with this GitHub ID
       const existingGitHub = this.db.exec(
         'SELECT * FROM users WHERE github_id = ? LIMIT 1',
@@ -327,10 +368,22 @@ export class AuthStorageProvider {
           `UPDATE users SET
             github_username = ?,
             github_access_token = ?,
+            github_token_expires_at = ?,
+            github_refresh_token = ?,
+            github_refresh_token_expires_at = ?,
             last_login_at = ?,
             updated_at = ?
            WHERE id = ?`,
-          [githubUsername, accessToken, now, now, user.id]
+          [
+            githubUsername,
+            accessToken,
+            tokenExpiresAt,
+            refreshToken,
+            refreshTokenExpiresAt,
+            now,
+            now,
+            user.id,
+          ]
         );
 
         await this.createSession(user.id);
@@ -342,6 +395,9 @@ export class AuthStorageProvider {
             ...user,
             githubUsername,
             githubAccessToken: accessToken,
+            githubTokenExpiresAt: tokenExpiresAt,
+            githubRefreshToken: refreshToken,
+            githubRefreshTokenExpiresAt: refreshTokenExpiresAt,
             lastLoginAt: now,
           }),
         };
@@ -363,10 +419,23 @@ export class AuthStorageProvider {
               github_id = ?,
               github_username = ?,
               github_access_token = ?,
+              github_token_expires_at = ?,
+              github_refresh_token = ?,
+              github_refresh_token_expires_at = ?,
               last_login_at = ?,
               updated_at = ?
              WHERE id = ?`,
-            [githubId, githubUsername, accessToken, now, now, user.id]
+            [
+              githubId,
+              githubUsername,
+              accessToken,
+              tokenExpiresAt,
+              refreshToken,
+              refreshTokenExpiresAt,
+              now,
+              now,
+              user.id,
+            ]
           );
 
           await this.createSession(user.id);
@@ -379,6 +448,9 @@ export class AuthStorageProvider {
               githubId,
               githubUsername,
               githubAccessToken: accessToken,
+              githubTokenExpiresAt: tokenExpiresAt,
+              githubRefreshToken: refreshToken,
+              githubRefreshTokenExpiresAt: refreshTokenExpiresAt,
               lastLoginAt: now,
             }),
           };
@@ -399,8 +471,9 @@ export class AuthStorageProvider {
         `INSERT INTO users (
           id, email, username, first_name, surname, password_hash,
           created_at, updated_at, last_login_at,
-          github_id, github_username, github_access_token
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          github_id, github_username, github_access_token,
+          github_token_expires_at, github_refresh_token, github_refresh_token_expires_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           userId,
           userEmail.toLowerCase(),
@@ -414,6 +487,9 @@ export class AuthStorageProvider {
           githubId,
           githubUsername,
           accessToken,
+          tokenExpiresAt,
+          refreshToken,
+          refreshTokenExpiresAt,
         ]
       );
 
@@ -656,7 +732,20 @@ export class AuthStorageProvider {
       githubId: (data.github_id as string) || null,
       githubUsername: (data.github_username as string) || null,
       githubAccessToken: (data.github_access_token as string) || null,
+      githubTokenExpiresAt: (data.github_token_expires_at as string) || null,
+      githubRefreshToken: (data.github_refresh_token as string) || null,
+      githubRefreshTokenExpiresAt: (data.github_refresh_token_expires_at as string) || null,
     };
+  }
+
+  /**
+   * Check if a GitHub token is valid (not expired).
+   */
+  private isGithubTokenValid(user: User): boolean {
+    if (!user.githubAccessToken || !user.githubTokenExpiresAt) {
+      return false;
+    }
+    return new Date(user.githubTokenExpiresAt) > new Date();
   }
 
   private toUserProfile(user: User): UserProfile {
@@ -670,6 +759,7 @@ export class AuthStorageProvider {
       lastLoginAt: user.lastLoginAt,
       githubUsername: user.githubUsername,
       isGithubLinked: !!user.githubId,
+      hasValidGithubToken: this.isGithubTokenValid(user),
     };
   }
 
