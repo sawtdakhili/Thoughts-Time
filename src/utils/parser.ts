@@ -391,18 +391,17 @@ export function detectRecurrencePattern(content: string): RecurrencePattern | nu
  * @param content - The content string to parse
  * @param referenceDate - Optional reference date for parsing relative dates (defaults to now)
  */
-export function parseDateTime(content: string, referenceDate?: Date): {
+export function parseDateTime(
+  content: string,
+  referenceDate?: Date
+): {
   date: Date | null;
   hasTime: boolean;
   refText: string;
   endDate?: Date | null;
 } {
-<<<<<<< HEAD
   const refDate = referenceDate || new Date();
   const results = customChrono.parse(content, refDate);
-=======
-  const results = customChrono.parse(content, referenceDate || new Date());
->>>>>>> 2d7595ce227458487a8614a8b653cf0b7cc67bc2
 
   // Check for 24h time pattern "at HH:MM" that chrono might miss entirely
   const time24Match = content.match(/\bat\s+(\d{1,2}):(\d{2})\b/i);
@@ -578,7 +577,10 @@ export function parseMultiLine(input: string): MultiLineParseResult {
   const errors: string[] = [];
 
   const rawLines = input.split('\n').filter((line) => line.trim() !== '');
-  console.log('parseMultiLine received:', rawLines.map(l => JSON.stringify(l)));
+  console.log(
+    'parseMultiLine received:',
+    rawLines.map((l) => JSON.stringify(l))
+  );
 
   if (rawLines.length === 0) {
     return { lines: [], errors: ['Input is empty'] };
