@@ -3,6 +3,8 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "license": "CC-BY-NC-SA-4.0",
+  "author": "Sawt Dakhili",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

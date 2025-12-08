@@ -1,6 +1,6 @@
 # Thoughts & Time
 
-[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 
 A minimalist productivity app that harmonizes thought capture with time-based planning through a dual-pane interface.
 
@@ -265,6 +265,22 @@ npm run preview
 ## Data Storage
 
 All your data is stored locally in your browser's localStorage. Nothing is sent to a server. Your thoughts and tasks stay on your machine.
+
+---
+
+## License
+
+This project is licensed under the **Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License**.
+
+**What this means:**
+- ✅ You can use, modify, and share this project
+- ✅ You must give appropriate credit to "Thoughts & Time by Sawt Dakhili"
+- ❌ You cannot use it for commercial purposes
+- ↪️ Any derivatives must use the same license
+
+See the [LICENSE](LICENSE) file for details or visit [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/).
+
+**Copyright © 2025 Sawt Dakhili**
 
 ---
 

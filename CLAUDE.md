@@ -228,4 +228,4 @@ See `MOBILE_IMPLEMENTATION.md` for complete mobile documentation.
 
 ## License
 
-This project is licensed under the Apache License 2.0, which requires attribution when used or distributed. Copyright 2025 Sawt Dakhili. See LICENSE file for details.
+This project is licensed under the **Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License (CC BY-NC-SA 4.0)**. This means you can use, modify, and share the project with attribution, but cannot use it commercially, and derivatives must use the same license. Copyright 2025 Sawt Dakhili. See LICENSE and NOTICE files for details.

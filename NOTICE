@@ -1,0 +1,78 @@
+Thoughts & Time
+Copyright (c) 2025 Sawt Dakhili
+
+This project is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License (CC BY-NC-SA 4.0).
+
+ATTRIBUTION REQUIREMENTS
+========================
+
+If you use, modify, or distribute this software or any derivative works, you MUST:
+
+1. Give appropriate credit:
+   - Include the text: "Based on Thoughts & Time by Sawt Dakhili"
+   - Provide a link to the original project: https://github.com/sawtdakhili/Thoughts-Time
+   - Provide a link to the license: https://creativecommons.org/licenses/by-nc-sa/4.0/
+
+2. Indicate if changes were made:
+   - State what modifications you have made to the original work
+   - Example: "Modified to add feature X" or "Customized UI for organization Y"
+
+3. ShareAlike requirement:
+   - Any derivative works must be distributed under the same CC BY-NC-SA 4.0 license
+   - You cannot relicense derivatives under a more restrictive or permissive license
+
+4. NonCommercial restriction:
+   - You may NOT use this software for commercial purposes
+   - Commercial use includes: selling the software, using it in a commercial product or service, or using it in a business context for profit
+   - If you wish to use this commercially, contact the copyright holder for a separate license
+
+RECOMMENDED ATTRIBUTION FORMAT
+==============================
+
+For source code:
+```
+// Based on Thoughts & Time by Sawt Dakhili
+// https://github.com/sawtdakhili/Thoughts-Time
+// Licensed under CC BY-NC-SA 4.0
+// Modified: [describe your changes]
+```
+
+For documentation/README:
+```
+This project is based on [Thoughts & Time](https://github.com/sawtdakhili/Thoughts-Time)
+by Sawt Dakhili, licensed under [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/).
+
+Changes made: [describe your modifications]
+```
+
+For UI/About page:
+```
+Based on Thoughts & Time by Sawt Dakhili
+https://github.com/sawtdakhili/Thoughts-Time
+```
+
+THIRD-PARTY COMPONENTS
+=====================
+
+This software includes the following third-party components with their own licenses:
+
+- React (MIT License)
+- TypeScript (Apache-2.0 License)
+- Vite (MIT License)
+- Tailwind CSS (MIT License)
+- Zustand (MIT License)
+- date-fns (MIT License)
+- Chrono (MIT License)
+- CodeMirror (MIT License)
+- @tanstack/react-virtual (MIT License)
+
+See package.json for a complete list of dependencies and their licenses.
+
+CONTACT
+=======
+
+For questions about licensing or to request permission for commercial use:
+- GitHub: https://github.com/sawtdakhili
+- Project: https://github.com/sawtdakhili/Thoughts-Time
+
+Last updated: December 2025

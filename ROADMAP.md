@@ -366,36 +366,209 @@ domain: 13px, #6A6A6A
 
 ### 🟢 Lower Priority (Phase 3)
 
-#### 11. Database Backend (Supabase)
+#### 11. User Accounts & Cloud Sync (Supabase + PocketBase)
 
-**Status**: Not implemented (currently localStorage only)
+**Status**: Planned 🟡
 
-**Requirements**:
+**Strategy**: Dual backend approach for maximum flexibility
 
-- [ ] Supabase project setup
-- [ ] Database schema migration (see spec for full schema)
-- [ ] User authentication
-- [ ] Row-level security policies
-- [ ] Switch from localStorage to Supabase
-- [ ] Sync queue implementation
-- [ ] Optimistic updates
-- [ ] Conflict resolution (last-write-wins)
-- [ ] Offline mode handling
+### Phase 1: Supabase Cloud Backend (Hosted Version)
 
-**Schema Tables**:
+**Cost**: FREE tier (0-500 users), $25/month (500-10K users)
 
-- `users`
-- `items` (polymorphic for all types)
-- `routine_occurrences`
-- `completion_links`
-- `notification_settings`
+**Why Supabase:**
+- Built-in authentication (email/password, OAuth, magic links)
+- PostgreSQL with row-level security
+- Real-time subscriptions for cross-device sync
+- Generous free tier (500MB database, 50K monthly active users)
+- Easy migration from localStorage
 
-**Files to create/modify**:
+**Implementation Steps**:
 
-- `supabase/migrations/` (new directory)
-- `src/lib/supabase.ts` (new file - client setup)
-- `src/store/useStore.ts` (replace localStorage with Supabase)
-- `src/utils/sync.ts` (new file - sync queue)
+1. **Supabase Project Setup** (Week 1)
+   - [ ] Create Supabase project
+   - [ ] Configure authentication providers
+   - [ ] Set up development and production environments
+
+2. **Database Schema** (Week 1-2)
+   - [ ] Create `users` table
+   - [ ] Create `items` table (polymorphic for all types: todo, event, routine, note)
+   - [ ] Create `routine_occurrences` table
+   - [ ] Create `completion_links` table
+   - [ ] Set up row-level security (RLS) policies
+   - [ ] Create indexes for performance
+
+3. **Authentication Layer** (Week 2-3)
+   - [ ] Create `src/lib/supabase.ts` (client setup)
+   - [ ] Create `src/store/useAuthStore.ts` (auth state management)
+   - [ ] Build login/signup UI components
+   - [ ] Add email verification flow
+   - [ ] Add password reset flow
+   - [ ] Add OAuth providers (Google, GitHub)
+
+4. **Data Migration & Sync** (Week 3-4)
+   - [ ] Create `src/utils/sync.ts` (sync queue implementation)
+   - [ ] Update `src/store/useStore.ts` to support both localStorage and Supabase
+   - [ ] Implement optimistic updates (instant UI, background sync)
+   - [ ] Add conflict resolution (last-write-wins with timestamps)
+   - [ ] Add offline mode detection and queue
+   - [ ] Build "Import from localStorage" migration tool
+
+5. **Testing & Polish** (Week 4-5)
+   - [ ] Test multi-device sync
+   - [ ] Test offline mode and conflict resolution
+   - [ ] Test data migration from localStorage
+   - [ ] Performance testing with large datasets
+   - [ ] Add loading states and error handling
+
+**Database Schema**:
+
+```sql
+-- Users (handled by Supabase Auth)
+-- items table
+create table items (
+  id uuid primary key default uuid_generate_v4(),
+  user_id uuid references auth.users not null,
+  type text not null check (type in ('todo', 'event', 'routine', 'note')),
+  content text not null,
+  scheduled_time timestamptz,
+  end_time timestamptz,
+  recurrence_pattern text,
+  parent_id uuid references items,
+  parent_type text,
+  depth_level integer default 0,
+  order_index integer default 0,
+  completed boolean default false,
+  completion_date timestamptz,
+  completion_link_id uuid references items,
+  created_date timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+-- Row-level security
+alter table items enable row level security;
+
+create policy "Users can only access their own items"
+  on items for all
+  using (auth.uid() = user_id);
+
+-- Indexes
+create index items_user_id_idx on items(user_id);
+create index items_scheduled_time_idx on items(scheduled_time);
+create index items_parent_id_idx on items(parent_id);
+create index items_type_idx on items(type);
+```
+
+**Files to Create/Modify**:
+
+- `supabase/migrations/001_initial_schema.sql` (database schema)
+- `supabase/migrations/002_rls_policies.sql` (security policies)
+- `src/lib/supabase.ts` (Supabase client setup)
+- `src/store/useAuthStore.ts` (authentication state)
+- `src/store/useStore.ts` (add Supabase sync)
+- `src/utils/sync.ts` (sync queue and conflict resolution)
+- `src/utils/migration.ts` (localStorage → Supabase migration)
+- `src/components/Auth/` (Login, Signup, ResetPassword components)
+- `src/components/Settings.tsx` (add account settings, data export)
+- `.env.example` (Supabase credentials template)
+
+**Cost Projection**:
+- Year 1 (0-500 users): **$0/month**
+- Year 2 (500-5K users): **$25/month** ($300/year)
+- Year 3 (5K-50K users): **$99/month** ($1,188/year)
+
+---
+
+### Phase 2: PocketBase Self-Hosted Option
+
+**Cost**: FREE (self-hosted) or $5-10/month (VPS)
+
+**Why PocketBase:**
+- Single binary deployment (perfect for self-hosting)
+- Built-in authentication and admin UI
+- SQLite database (lightweight, portable)
+- Real-time subscriptions
+- Matches minimalist philosophy
+- Perfect for privacy-conscious users
+
+**Implementation Steps**:
+
+1. **PocketBase Setup** (Week 1)
+   - [ ] Create PocketBase schema matching Supabase structure
+   - [ ] Configure authentication
+   - [ ] Set up file storage
+
+2. **Backend Adapter Pattern** (Week 2)
+   - [ ] Create `src/lib/backend-adapter.ts` interface
+   - [ ] Implement `SupabaseAdapter` class
+   - [ ] Implement `PocketBaseAdapter` class
+   - [ ] Update stores to use adapter pattern
+
+3. **Self-Hosted Deployment** (Week 3)
+   - [ ] Create Dockerfile with PocketBase + app
+   - [ ] Create docker-compose.yml
+   - [ ] Add deployment scripts
+   - [ ] Write SELF_HOSTING.md guide
+
+4. **User Choice** (Week 3-4)
+   - [ ] Add backend selection in Settings
+   - [ ] Add "Connect to PocketBase" flow
+   - [ ] Test migration between backends
+
+**Files to Create**:
+
+- `pocketbase/pb_schema.json` (PocketBase schema export)
+- `src/lib/backend-adapter.ts` (adapter interface)
+- `src/lib/pocketbase-adapter.ts` (PocketBase implementation)
+- `src/lib/supabase-adapter.ts` (Supabase implementation)
+- `Dockerfile` (includes PocketBase)
+- `docker-compose.yml`
+- `SELF_HOSTING.md` (complete self-hosting guide)
+
+---
+
+### Phase 3: Hybrid Architecture
+
+**Backend Selection Flow**:
+
+```
+User opens app
+  ├─> No account → localStorage only (current behavior)
+  ├─> Cloud account → Supabase (hosted)
+  └─> Self-hosted → PocketBase (user provides URL)
+```
+
+**Architecture**:
+
+```typescript
+// Backend adapter interface
+interface BackendAdapter {
+  auth: {
+    signUp(email: string, password: string): Promise<User>
+    signIn(email: string, password: string): Promise<User>
+    signOut(): Promise<void>
+    getCurrentUser(): User | null
+  }
+  items: {
+    create(item: Item): Promise<Item>
+    update(id: string, updates: Partial<Item>): Promise<Item>
+    delete(id: string): Promise<void>
+    getAll(userId: string): Promise<Item[]>
+    subscribe(userId: string, callback: (items: Item[]) => void): () => void
+  }
+}
+
+// Usage in store
+const backend = useBackendAdapter() // Supabase or PocketBase
+await backend.items.create(newItem)
+```
+
+**Benefits**:
+- Casual users: Free Supabase tier
+- Privacy users: Self-hosted PocketBase
+- Same app, different backends
+- No vendor lock-in
+- Gradual migration path
 
 ---
 
@@ -1066,7 +1239,14 @@ n		Subnote (two Tabs = level 2)
 
 ## License
 
-This project is licensed under the Apache License 2.0, which requires attribution when the code is used or distributed. See the LICENSE file for full terms.
+This project is licensed under the **Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License (CC BY-NC-SA 4.0)**.
+
+**What this means:**
+- ✅ You can use, modify, and share this project with attribution
+- ❌ You cannot use it for commercial purposes
+- ↪️ Any derivative works must use the same CC BY-NC-SA 4.0 license
+
+See the [LICENSE](LICENSE) and [NOTICE](NOTICE) files for full terms and attribution requirements.
 
 **Copyright**: 2025 Sawt Dakhili
 
