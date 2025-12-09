@@ -179,6 +179,23 @@ npm run lint         # ESLint
 - **Infinite Scroll**: All days visible, continuous scrolling
 - **Book Style**: One day per page, flip animation
 
+## PWA Implementation
+
+The app is a Progressive Web App (PWA) that can be installed on devices:
+
+- **Plugin**: vite-plugin-pwa with Workbox for service worker generation
+- **Manifest**: Configured for installability on all platforms (Chrome/Edge, Android, iOS)
+- **Icons**: 192px, 512px, maskable icons, Apple touch icon, and favicon
+- **Caching Strategy**:
+  - CacheFirst for static assets (JS, CSS, images, fonts)
+  - NetworkFirst for HTML (ensures latest version when online)
+  - Google Fonts cached with 1-year expiration
+- **Auto-update**: Service worker auto-updates without user prompts
+- **Dev mode enabled**: PWA features testable in development (devOptions.enabled: true)
+- **Offline support**: App fully functional offline (localStorage + cached UI)
+- **Theme color**: #0A0A0A (matches dark theme)
+- **Display mode**: Standalone (no browser UI when installed)
+
 ## Mobile Implementation
 
 The app is fully responsive with a complete mobile implementation (< 768px):

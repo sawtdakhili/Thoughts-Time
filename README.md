@@ -252,6 +252,16 @@ npm run build
 npm run preview
 ```
 
+### Install as App
+
+Thoughts & Time can be installed as a Progressive Web App (PWA) on your device:
+
+- **Desktop (Chrome/Edge)**: Click the install icon in the address bar
+- **Android**: Open menu → "Add to Home Screen"
+- **iOS**: Tap Share → "Add to Home Screen"
+
+Once installed, the app works offline and feels like a native application.
+
 ## Technical Stack
 
 - **Frontend**: React 18 + TypeScript
