@@ -472,10 +472,19 @@ create index items_type_idx on items(type);
 - `src/components/Settings.tsx` (add account settings, data export)
 - `.env.example` (Supabase credentials template)
 
-**Cost Projection**:
-- Year 1 (0-500 users): **$0/month**
+**Infrastructure Cost Projection**:
+- Year 1 (0-500 users): **$0/month** (Supabase free tier)
 - Year 2 (500-5K users): **$25/month** ($300/year)
 - Year 3 (5K-50K users): **$99/month** ($1,188/year)
+
+**User Pricing Tiers** (Hosted Service):
+- 🆓 **Free Trial**: 1 week, no credit card required
+- 💎 **Basic**: $1/month - Single user, 100MB storage, cross-device sync
+- 🚀 **Pro**: $3/month - 1GB storage, priority support, advanced features
+- 🏢 **Team**: $10/month - 5 users, 10GB storage, collaboration features
+
+**Self-Hosted (PocketBase)**:
+- 🆓 **Free Forever**: Unlimited users, unlimited storage (your infrastructure)
 
 ---
 
@@ -1239,12 +1248,14 @@ n		Subnote (two Tabs = level 2)
 
 ## License
 
-This project is licensed under the **Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License (CC BY-NC-SA 4.0)**.
+This project is licensed under the **GNU Affero General Public License v3.0 (AGPL-3.0)**.
 
 **What this means:**
-- ✅ You can use, modify, and share this project with attribution
-- ❌ You cannot use it for commercial purposes
-- ↪️ Any derivative works must use the same CC BY-NC-SA 4.0 license
+- ✅ You can use, modify, and distribute this software (including commercially)
+- ✅ If you run a modified version as a network service, you must make the source code available
+- ✅ You must give appropriate credit to "Thoughts & Time by Sawt Dakhili"
+- ↪️ Any modifications must also be licensed under AGPL-3.0
+- 🔓 This is OSI-approved open source software
 
 See the [LICENSE](LICENSE) and [NOTICE](NOTICE) files for full terms and attribution requirements.
 

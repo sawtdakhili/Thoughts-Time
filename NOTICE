@@ -1,58 +1,91 @@
 Thoughts & Time
-Copyright (c) 2025 Sawt Dakhili
+Copyright (C) 2025 Sawt Dakhili
 
-This project is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License (CC BY-NC-SA 4.0).
+This project is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
 
-ATTRIBUTION REQUIREMENTS
-========================
+WHAT IS AGPL-3.0?
+==================
 
-If you use, modify, or distribute this software or any derivative works, you MUST:
+The GNU Affero General Public License is a free, copyleft license for software and other kinds of works,
+specifically designed to ensure cooperation with the community in the case of network server software.
 
-1. Give appropriate credit:
+KEY REQUIREMENTS
+================
+
+If you use, modify, or distribute this software, you MUST:
+
+1. **Preserve Attribution**:
    - Include the text: "Based on Thoughts & Time by Sawt Dakhili"
    - Provide a link to the original project: https://github.com/sawtdakhili/Thoughts-Time
-   - Provide a link to the license: https://creativecommons.org/licenses/by-nc-sa/4.0/
+   - Retain all copyright notices
 
-2. Indicate if changes were made:
-   - State what modifications you have made to the original work
-   - Example: "Modified to add feature X" or "Customized UI for organization Y"
+2. **Share Source Code**:
+   - If you modify this software and run it as a network service (web app, API, etc.)
+   - You MUST provide the complete source code to users who interact with it
+   - The source code must be easily accessible (e.g., GitHub repo link in the UI)
 
-3. ShareAlike requirement:
-   - Any derivative works must be distributed under the same CC BY-NC-SA 4.0 license
-   - You cannot relicense derivatives under a more restrictive or permissive license
+3. **Use Same License**:
+   - Any derivative works must be licensed under AGPL-3.0
+   - You cannot relicense under a more restrictive or permissive license
 
-4. NonCommercial restriction:
-   - You may NOT use this software for commercial purposes
-   - Commercial use includes: selling the software, using it in a commercial product or service, or using it in a business context for profit
-   - If you wish to use this commercially, contact the copyright holder for a separate license
+4. **Indicate Changes**:
+   - Clearly state what modifications you have made
+   - Include a changelog or modified files list
+
+NETWORK USE = DISTRIBUTION
+===========================
+
+The key feature of AGPL-3.0 is the "network use" clause:
+
+If you run a modified version of this software on a server and let others interact with it
+over a network (like a web application), you must provide them with access to the source code.
+
+This prevents proprietary cloud services from taking the code without contributing back.
 
 RECOMMENDED ATTRIBUTION FORMAT
-==============================
+===============================
 
-For source code:
+**For source code:**
 ```
 // Based on Thoughts & Time by Sawt Dakhili
 // https://github.com/sawtdakhili/Thoughts-Time
-// Licensed under CC BY-NC-SA 4.0
+// Licensed under AGPL-3.0
 // Modified: [describe your changes]
 ```
 
-For documentation/README:
+**For web applications (add to footer/about page):**
+```
+Powered by Thoughts & Time by Sawt Dakhili
+https://github.com/sawtdakhili/Thoughts-Time
+Licensed under AGPL-3.0 | View Source Code
+```
+
+**For documentation/README:**
 ```
 This project is based on [Thoughts & Time](https://github.com/sawtdakhili/Thoughts-Time)
-by Sawt Dakhili, licensed under [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/).
+by Sawt Dakhili, licensed under [AGPL-3.0](https://www.gnu.org/licenses/agpl-3.0.html).
 
 Changes made: [describe your modifications]
 ```
 
-For UI/About page:
-```
-Based on Thoughts & Time by Sawt Dakhili
-https://github.com/sawtdakhili/Thoughts-Time
-```
+COMMERCIAL USE
+==============
+
+✅ YES, you can use this software commercially!
+
+AGPL-3.0 allows commercial use, but requires:
+- Providing source code to network users
+- Licensing modifications under AGPL-3.0
+- Maintaining attribution
+
+This means:
+- You can charge for hosting services ✅
+- You can sell support/consulting ✅
+- You can run it for your business ✅
+- BUT: You must share your modifications if users interact with them over a network
 
 THIRD-PARTY COMPONENTS
-=====================
+======================
 
 This software includes the following third-party components with their own licenses:
 
@@ -68,11 +101,32 @@ This software includes the following third-party components with their own licen
 
 See package.json for a complete list of dependencies and their licenses.
 
+BUSINESS MODEL
+==============
+
+The original Thoughts & Time project offers:
+
+**Free Tier (Self-Hosted)**:
+- Open source code under AGPL-3.0
+- Run PocketBase on your own infrastructure
+- No usage limits, complete data control
+
+**Paid Tier (Hosted Service)**:
+- We manage Supabase infrastructure
+- 1-week free trial, then starting at $1/month
+- Automatic backups, cross-device sync, premium support
+
+Both tiers use the same AGPL-3.0 licensed code. The paid tier charges for convenience
+and infrastructure, not for the software itself.
+
 CONTACT
 =======
 
-For questions about licensing or to request permission for commercial use:
+For questions about licensing or commercial use:
 - GitHub: https://github.com/sawtdakhili
 - Project: https://github.com/sawtdakhili/Thoughts-Time
+
+For the complete legal text of AGPL-3.0:
+https://www.gnu.org/licenses/agpl-3.0.html
 
 Last updated: December 2025

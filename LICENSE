@@ -1,24 +1,42 @@
-Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International
+GNU AFFERO GENERAL PUBLIC LICENSE
+Version 3, 19 November 2007
 
-Copyright (c) 2025 Sawt Dakhili
+Copyright (C) 2025 Sawt Dakhili
 
-This work is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
-To view a copy of this license, visit:
-https://creativecommons.org/licenses/by-nc-sa/4.0/
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more details.
 
-or send a letter to:
-Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
+You should have received a copy of the GNU Affero General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+ADDITIONAL INFORMATION
+
+The full legal text of the AGPL-3.0 license is available at:
+https://www.gnu.org/licenses/agpl-3.0.html
+
+WHAT THIS LICENSE MEANS:
 
 You are free to:
-- Share: copy and redistribute the material in any medium or format
-- Adapt: remix, transform, and build upon the material
+- Use this software for any purpose, including commercial use
+- Study how the software works and modify it
+- Distribute copies of the software
+- Distribute modified versions of the software
 
-Under the following terms:
-- Attribution: You must give appropriate credit to "Thoughts & Time by Sawt Dakhili", provide a link to the license, and indicate if changes were made.
-- NonCommercial: You may not use the material for commercial purposes.
-- ShareAlike: If you remix, transform, or build upon the material, you must distribute your contributions under the same license as the original.
-- No additional restrictions: You may not apply legal terms or technological measures that legally restrict others from doing anything the license permits.
+Under these conditions:
+- Source Code: If you run a modified version on a server and let others interact with it, you MUST make the source code available to those users
+- Same License: Any modifications must be released under AGPL-3.0
+- Attribution: You must give appropriate credit to the original author
+- No Warranty: This software comes with no warranty
 
-The full legal code is available at:
-https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
+NETWORK USE = DISTRIBUTION:
+The key feature of AGPL-3.0 is that if you modify this software and run it as a network service (like a web app), you must provide the source code to users who interact with it over the network.
+
+This prevents someone from taking this code, modifying it, and running a proprietary hosted service without contributing back.
+
+ATTRIBUTION REQUIREMENT:
+When using or distributing this software, you must:
+1. Retain all copyright notices
+2. Provide attribution to "Thoughts & Time by Sawt Dakhili"
+3. Link to the original project: https://github.com/sawtdakhili/Thoughts-Time
+
+For the complete legal text, visit: https://www.gnu.org/licenses/agpl-3.0.html

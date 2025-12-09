@@ -1,6 +1,6 @@
 # Thoughts & Time
 
-[![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
 A minimalist productivity app that harmonizes thought capture with time-based planning through a dual-pane interface.
 
@@ -270,17 +270,39 @@ All your data is stored locally in your browser's localStorage. Nothing is sent 
 
 ## License
 
-This project is licensed under the **Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License**.
+This project is licensed under the **GNU Affero General Public License v3.0 (AGPL-3.0)**.
 
 **What this means:**
-- ✅ You can use, modify, and share this project
+- ✅ You can use, modify, and distribute this software (including commercially)
+- ✅ If you run a modified version as a network service, you must make the source code available
 - ✅ You must give appropriate credit to "Thoughts & Time by Sawt Dakhili"
-- ❌ You cannot use it for commercial purposes
-- ↪️ Any derivatives must use the same license
+- ↪️ Any modifications must also be licensed under AGPL-3.0
+- 🔓 This is OSI-approved open source software
 
-See the [LICENSE](LICENSE) file for details or visit [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/).
+See the [LICENSE](LICENSE) file for details or visit [AGPL-3.0](https://www.gnu.org/licenses/agpl-3.0.html).
 
 **Copyright © 2025 Sawt Dakhili**
+
+---
+
+## Deployment Options
+
+### 🆓 Free Tier (Self-Hosted)
+Run your own instance using PocketBase:
+- Complete control over your data
+- No usage limits
+- Community support
+- See [SELF_HOSTING.md](SELF_HOSTING.md) (coming soon)
+
+### 💎 Hosted Service (Coming Soon)
+Let us handle the infrastructure:
+- ✅ **1-week free trial** - No credit card required
+- ✅ Automatic backups and sync across devices
+- ✅ Always up-to-date with latest features
+- ✅ Premium support
+- 📊 Pricing tiers starting at **$1/month**
+
+**Interested in early access?** Star this repo and watch for updates!
 
 ---
 
