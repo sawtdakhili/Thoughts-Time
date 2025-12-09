@@ -481,7 +481,7 @@ create index items_type_idx on items(type);
 - 🆓 **Free Trial**: 1 week, no credit card required
 - 💎 **Basic**: $1/month - Single user, 100MB storage, cross-device sync
 - 🚀 **Pro**: $3/month - 1GB storage, priority support, advanced features
-- 🏢 **Team**: $10/month - 5 users, 10GB storage, collaboration features
+- 🏢 **Team**: $10/month - 5 users, 10GB storage, collaboration features *(Coming Soon)*
 
 **Self-Hosted (PocketBase)**:
 - 🆓 **Free Forever**: Unlimited users, unlimited storage (your infrastructure)
