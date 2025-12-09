@@ -1,8 +1,16 @@
-# Thoughts & Time
+<p align="center">
+  <img src="logo.png" alt="Thoughts & Time" width="400" />
+</p>
 
-[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+<p align="center">
+  <a href="https://www.gnu.org/licenses/agpl-3.0"><img src="https://img.shields.io/badge/License-AGPL%20v3-blue.svg" alt="License: AGPL v3" /></a>
+</p>
 
-A minimalist productivity app that harmonizes thought capture with time-based planning through a dual-pane interface.
+<p align="center">
+  <strong>Capture thoughts. Plan time. All in one place.</strong>
+</p>
+
+A simple productivity app with two panes: one for your thoughts (notes, tasks, ideas), and one for your timeline (what's scheduled, what's coming up). Everything syncs automatically and works offline.
 
 ## Screenshots
 
