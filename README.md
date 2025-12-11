@@ -18,7 +18,7 @@ A simple productivity app with two panes: one for your thoughts (notes, tasks, i
 
 ![Thoughts & Time App](screenshot.png)
 
-*The dual-pane interface showing the Thoughts pane (left) with notes and tasks, and the Time pane (right) with the timeline and Daily Review.*
+_The dual-pane interface showing the Thoughts pane (left) with notes and tasks, and the Time pane (right) with the timeline and Daily Review._
 
 ### Mobile Interface (Infinite Scroll Mode)
 
@@ -27,7 +27,7 @@ A simple productivity app with two panes: one for your thoughts (notes, tasks, i
   <img src="screenshot-mobile-time-updated.png" width="45%" alt="Time Pane - Mobile" />
 </p>
 
-*Mobile views in infinite scroll mode showing the floating date header at the top. Left: Thoughts pane with all item types (notes, tasks, events) arranged chronologically. Right: Time pane with scheduled items and Daily Review section displaying incomplete tasks from previous days. Both panes feature swipe navigation and touch-optimized controls.*
+_Mobile views in infinite scroll mode showing the floating date header at the top. Left: Thoughts pane with all item types (notes, tasks, events) arranged chronologically. Right: Time pane with scheduled items and Daily Review section displaying incomplete tasks from previous days. Both panes feature swipe navigation and touch-optimized controls._
 
 ## Philosophy
 
@@ -65,12 +65,14 @@ The magic happens when these two views coexist. An idea can become a task. A tas
    - `r exercise` → Creates a routine
    - `my thought` or `* my thought` → Creates a note (no prefix needed for top-level notes)
 
-2. **Adding Time**: Include time naturally in your text:
+2. **Need a reminder?** Click the **?** button in the header (next to the search icon) to open a quick-reference panel showing all prefixes, their symbols, and example usage.
+
+3. **Adding Time**: Include time naturally in your text:
    - `t buy milk at 5pm`
    - `e team meeting from 2pm to 3pm`
    - `t submit report on Friday`
 
-3. **Nesting Items**: Use indentation (Tab key) to create subtasks or subnotes:
+4. **Nesting Items**: Use indentation (Tab key) to create subtasks or subnotes:
    ```
    t plan party
        t book venue
@@ -81,21 +83,25 @@ The magic happens when these two views coexist. An idea can become a task. A tas
 ### Item Types
 
 **Todos (t)**: Tasks to be completed. Show up in the timeline when scheduled.
+
 - Checkbox symbol: □ (unchecked) / ☑ (checked)
 - Click the checkbox to mark complete
 - Can have subtasks
 
 **Events (e)**: Time-bound occurrences with start and end times.
+
 - Symbol: ↹
 - Always appear in the timeline
 - Can span duration ("from 2pm to 4pm")
 
 **Routines (r)**: Recurring activities.
+
 - Symbol: ↻
 - Can recur daily, weekly, monthly
 - Examples: "every day", "every Monday", "first Tuesday of each month"
 
-**Notes (no prefix or *)**: Thoughts, ideas, references.
+**Notes (no prefix or \*)**: Thoughts, ideas, references.
+
 - Symbol: ↝
 - Never appear in the timeline
 - Can have subnotes for elaboration
@@ -121,12 +127,14 @@ Hover over any item and click the edit icon (✎). The item appears with its sym
 ### View Modes
 
 **Infinite Scrolling** (Default):
+
 - See all days at once (30 days past to 30 days future)
 - Scroll seamlessly through your timeline
 - Snap-to-day sections for easy navigation
 - Great for capturing and planning
 
 **Book Style**:
+
 - One day per "page"
 - Scroll to the top or bottom and keep scrolling to flip to previous/next day
 - Page-turn animation (like flipping pages in a book)
@@ -138,6 +146,7 @@ Switch between modes in Settings (⚙️ icon in header).
 ### Search
 
 Click the search icon (🔍) in the header to filter items across all days. The search works on:
+
 - Item content
 - Tags (use #tag in your items)
 - Nested items (searching finds parent items too)
@@ -145,6 +154,7 @@ Click the search icon (🔍) in the header to filter items across all days. The 
 ### Themes
 
 Choose your visual preference in Settings:
+
 - **Light**: Clean, bright interface
 - **Dark**: Easy on the eyes
 - **System**: Automatically matches your OS preference
@@ -154,17 +164,20 @@ Choose your visual preference in Settings:
 The app is fully optimized for mobile devices (phones and tablets):
 
 **Single-Pane Navigation**:
+
 - On screens < 768px, view one pane at a time
 - Swipe left/right to switch between Thoughts and Time
 - Footer navigation with active pane indicator
 
 **Touch-Optimized**:
+
 - Floating Action Button (FAB) for quick capture
 - Bottom sheet for input (slides up from bottom)
 - All buttons meet 44px minimum touch target size
 - Haptic feedback on interactions (where supported)
 
 **Smart Keyboard Handling**:
+
 - Footer automatically hides when keyboard appears
 - Optimized input layouts for touch typing
 - iOS safe area support for notched devices
@@ -174,6 +187,7 @@ See [MOBILE_IMPLEMENTATION.md](./MOBILE_IMPLEMENTATION.md) for complete mobile d
 ### Tags
 
 Add tags anywhere in your text with `#tagname`:
+
 - `t review #work #quarterly report`
 - `interesting thought #philosophy #book-ideas`
 - Tags appear below the item in smaller text
@@ -291,6 +305,7 @@ All your data is stored locally in your browser's localStorage. Nothing is sent 
 This project is licensed under the **GNU Affero General Public License v3.0 (AGPL-3.0)**.
 
 **What this means:**
+
 - ✅ You can use, modify, and distribute this software (including commercially)
 - ✅ If you run a modified version as a network service, you must make the source code available
 - ✅ You must give appropriate credit to "Thoughts & Time by Sawt Dakhili"
@@ -306,14 +321,18 @@ See the [LICENSE](LICENSE) file for details or visit [AGPL-3.0](https://www.gnu.
 ## Deployment Options
 
 ### 🆓 Free Tier (Self-Hosted)
+
 Run your own instance using PocketBase:
+
 - Complete control over your data
 - No usage limits
 - Community support
 - See [SELF_HOSTING.md](SELF_HOSTING.md) (coming soon)
 
 ### 💎 Hosted Service (Coming Soon)
+
 Let us handle the infrastructure:
+
 - ✅ **1-week free trial** - No credit card required
 - ✅ Automatic backups and sync across devices
 - ✅ Always up-to-date with latest features
@@ -326,4 +345,4 @@ Let us handle the infrastructure:
 
 **Status**: Feature-complete MVP ✅
 
-*Built with care for thoughtful work.*
+_Built with care for thoughtful work._
