@@ -91,10 +91,12 @@ export default function HelpDrawer({ isOpen, onClose }: HelpDrawerProps) {
       {/* Backdrop */}
       <div className="fixed inset-0 bg-black/30 z-40" aria-hidden="true" />
 
-      {/* Drawer - positioned below the ? button on the right */}
+      {/* Drawer - full width on mobile, positioned dropdown on desktop */}
       <div
         ref={drawerRef}
-        className="fixed top-[60px] right-12 z-50 w-72 bg-background border border-border-subtle rounded-lg shadow-lg animate-drawer-in"
+        className="fixed z-50 bg-background border border-border-subtle shadow-lg animate-drawer-in
+          top-0 left-0 right-0 rounded-b-lg
+          md:top-[60px] md:right-12 md:left-auto md:w-72 md:rounded-lg"
         role="dialog"
         aria-modal="true"
         aria-label="Input prefix help"

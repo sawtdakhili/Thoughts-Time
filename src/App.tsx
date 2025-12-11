@@ -337,6 +337,10 @@ function App() {
             triggerHaptic('light');
             setIsSearchOpen(true);
           }}
+          onHelpClick={() => {
+            triggerHaptic('light');
+            setIsHelpOpen(true);
+          }}
           onSettingsClick={() => {
             triggerHaptic('light');
             setIsSettingsOpen(true);
