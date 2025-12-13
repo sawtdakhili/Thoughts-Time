@@ -5,6 +5,7 @@ interface MobileFooterProps {
   activePane: 'thoughts' | 'time';
   onPaneSwitch: (pane: 'thoughts' | 'time') => void;
   onSearchClick: () => void;
+  onHelpClick: () => void;
   onSettingsClick: () => void;
   isVisible: boolean;
 }
@@ -16,6 +17,7 @@ export default function MobileFooter({
   activePane,
   onPaneSwitch,
   onSearchClick,
+  onHelpClick,
   onSettingsClick,
   isVisible,
 }: MobileFooterProps) {
@@ -36,6 +38,11 @@ export default function MobileFooter({
   const handleSettingsClick = () => {
     triggerHaptic('light');
     onSettingsClick();
+  };
+
+  const handleHelpClick = () => {
+    triggerHaptic('light');
+    onHelpClick();
   };
 
   return (
@@ -84,7 +91,19 @@ export default function MobileFooter({
       </div>
 
       {/* Action Buttons */}
-      <div className="flex items-center gap-12">
+      <div className="flex items-center gap-8">
+        <button
+          onClick={handleHelpClick}
+          className="text-base touch-target"
+          aria-label="Input help"
+          type="button"
+          style={{
+            minWidth: `${MOBILE.MIN_TOUCH_TARGET}px`,
+            minHeight: `${MOBILE.MIN_TOUCH_TARGET}px`,
+          }}
+        >
+          ?
+        </button>
         <button
           onClick={handleSearchClick}
           className="text-base touch-target"

@@ -158,6 +158,7 @@ npm run lint         # ESLint
 - `src/components/AuthModal.tsx` - Sign in/up modal
 - `src/components/AuthBanner.tsx` - Guest mode banner
 - `src/components/UserMenu.tsx` - User dropdown menu
+- `src/components/HelpDrawer.tsx` - Interactive help drawer with input prefix reference
 - `src/hooks/useWheelNavigation.ts` - Shared wheel navigation for book mode
 - `src/hooks/useFocusTrap.ts` - Focus trap for modals
 - `src/components/BottomSheet.tsx` - Mobile bottom sheet modal

@@ -5,6 +5,7 @@ import Settings from './components/Settings';
 import ToastContainer from './components/Toast';
 import PaneErrorBoundary from './components/PaneErrorBoundary';
 import MobileFooter from './components/MobileFooter';
+import HelpDrawer from './components/HelpDrawer';
 import AuthBanner from './components/AuthBanner';
 import UserMenu from './components/UserMenu';
 import { useSettingsStore } from './store/useSettingsStore';
@@ -26,6 +27,7 @@ function App() {
   const searchQuery = useDebouncedSearch(searchInput, 300);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
   const viewMode = useSettingsStore((state) => state.viewMode);
   const activeMobilePane = useSettingsStore((state) => state.activeMobilePane);
   const setActiveMobilePane = useSettingsStore((state) => state.setActiveMobilePane);
@@ -199,11 +201,13 @@ function App() {
         if (isSearchOpen) {
           setIsSearchOpen(false);
           setSearchInput('');
+        } else if (isHelpOpen) {
+          setIsHelpOpen(false);
         } else if (isSettingsOpen) {
           setIsSettingsOpen(false);
         }
       },
-      description: 'Close search or settings',
+      description: 'Close search, help, or settings',
     },
   ]);
 
@@ -222,6 +226,9 @@ function App() {
 
       {/* Settings Modal */}
       <Settings isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+
+      {/* Help Drawer */}
+      <HelpDrawer isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
 
       {/* Header - Desktop only */}
       {!isMobile && (
@@ -243,6 +250,14 @@ function App() {
                 autoFocus
               />
             )}
+            <button
+              onClick={() => setIsHelpOpen(!isHelpOpen)}
+              className="text-base hover:opacity-70 transition-opacity"
+              title="Input help"
+              aria-label={isHelpOpen ? 'Close help' : 'Open input help'}
+            >
+              ?
+            </button>
             <button
               onClick={() => {
                 setIsSearchOpen(!isSearchOpen);
@@ -351,6 +366,10 @@ function App() {
           onSearchClick={() => {
             triggerHaptic('light');
             setIsSearchOpen(true);
+          }}
+          onHelpClick={() => {
+            triggerHaptic('light');
+            setIsHelpOpen(true);
           }}
           onSettingsClick={() => {
             triggerHaptic('light');

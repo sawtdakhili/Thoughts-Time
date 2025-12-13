@@ -67,12 +67,14 @@ The magic happens when these two views coexist. An idea can become a task. A tas
    - `r exercise` → Creates a routine
    - `my thought` or `* my thought` → Creates a note (no prefix needed for top-level notes)
 
-2. **Adding Time**: Include time naturally in your text:
+2. **Need a reminder?** Click the **?** button in the header (next to the search icon) to open a quick-reference panel showing all prefixes, their symbols, and example usage.
+
+3. **Adding Time**: Include time naturally in your text:
    - `t buy milk at 5pm`
    - `e team meeting from 2pm to 3pm`
    - `t submit report on Friday`
 
-3. **Nesting Items**: Use indentation (Tab key) to create subtasks or subnotes:
+4. **Nesting Items**: Use indentation (Tab key) to create subtasks or subnotes:
    ```
    t plan party
        t book venue

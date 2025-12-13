@@ -38,7 +38,7 @@
     --mobile-bottom-sheet-border-radius: 16px;
 
     /* Z-index layers */
-    --z-floating-header: 30;  /* Floating date header overlay in infinite scroll mode */
+    --z-floating-header: 30; /* Floating date header overlay in infinite scroll mode */
     --z-footer: 30;
     --z-fab: 40;
     --z-bottom-sheet-backdrop: 50;
@@ -259,6 +259,38 @@
 
   .animate-slide-down {
     animation: slideDown 0.3s ease-out;
+  }
+
+  /* Drawer slide in from top */
+  @keyframes slideInFromTop {
+    from {
+      transform: translateY(-100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .animate-drawer-in {
+    animation: slideInFromTop 0.25s ease-out;
+  }
+
+  /* Fade in animation */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.2s ease-out;
   }
 
   /* FAB scale animation */

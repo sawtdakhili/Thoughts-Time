@@ -16,6 +16,7 @@ describe('MobileFooter', () => {
     activePane: 'thoughts' as const,
     onPaneSwitch: vi.fn(),
     onSearchClick: vi.fn(),
+    onHelpClick: vi.fn(),
     onSettingsClick: vi.fn(),
     isVisible: true,
   };
@@ -218,9 +219,10 @@ describe('MobileFooter', () => {
     it('should have aria-label for pane switch button', () => {
       render(<MobileFooter {...mockProps} activePane="thoughts" />);
 
-      expect(
-        screen.getByRole('button', { name: 'Switch to Time pane' })
-      ).toHaveAttribute('aria-label', 'Switch to Time pane');
+      expect(screen.getByRole('button', { name: 'Switch to Time pane' })).toHaveAttribute(
+        'aria-label',
+        'Switch to Time pane'
+      );
     });
 
     it('should mark arrow as aria-hidden', () => {
