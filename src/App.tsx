@@ -234,7 +234,7 @@ function App() {
       {!isMobile && (
         <header className="h-[60px] border-b border-border-subtle flex items-center justify-center px-48 relative">
           <h1 className="text-lg font-serif">Thoughts & Time</h1>
-          <div className="absolute right-48 flex items-center gap-2">
+          <div className="absolute right-48 flex items-center gap-8">
             {isSearchOpen && (
               <input
                 type="text"
