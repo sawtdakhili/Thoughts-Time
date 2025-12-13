@@ -91,7 +91,7 @@ export default function MobileFooter({
       </div>
 
       {/* Action Buttons */}
-      <div className="flex items-center gap-8">
+      <div className="flex items-center gap-4">
         <button
           onClick={handleHelpClick}
           className="text-base touch-target"
