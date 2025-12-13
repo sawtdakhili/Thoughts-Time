@@ -125,11 +125,12 @@ export default function HelpDrawer({ isOpen, onClose }: HelpDrawerProps) {
                 onClick={() => setSelectedPrefix(p)}
                 className="group flex items-center gap-3 p-3 rounded-lg border border-border-subtle hover:border-text-secondary hover:bg-hover-bg transition-all text-left"
               >
-                <span className="text-xl font-mono w-6">{p.symbol}</span>
                 <div className="flex-1">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-sm text-text-secondary">Type</span>
                     <span className="text-sm font-mono text-text-primary">{p.prefix}</span>
-                    <span className="text-xs text-text-secondary">— {p.name}</span>
+                    <span className="text-sm text-text-secondary">— Creates a {p.name}</span>
+                    <span className="text-base font-mono text-text-secondary">({p.symbol})</span>
                   </div>
                 </div>
               </button>
