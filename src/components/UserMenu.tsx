@@ -43,9 +43,6 @@ export default function UserMenu() {
         <div className="w-24 h-24 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-bold">
           {user?.email?.[0].toUpperCase()}
         </div>
-        <span className="text-sm text-text-secondary hidden sm:block">
-          {user?.email}
-        </span>
       </button>
 
       {isOpen && (
