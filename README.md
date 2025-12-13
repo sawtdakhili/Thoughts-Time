@@ -12,6 +12,8 @@
 
 A simple productivity app with two panes: one for your thoughts (notes, tasks, ideas), and one for your timeline (what's scheduled, what's coming up). Everything syncs automatically and works offline.
 
+**🌐 Live at: [thoughtsandtime.vercel.app](https://thoughtsandtime.vercel.app)**
+
 ## Screenshots
 
 ### Desktop Interface (Book Mode)
@@ -282,7 +284,9 @@ Once installed, the app works offline and feels like a native application.
 
 ## Data Storage
 
-All your data is stored locally in your browser's localStorage. Nothing is sent to a server. Your thoughts and tasks stay on your machine.
+**Guest Mode**: All your data is stored locally in your browser's localStorage. Nothing is sent to a server. Your thoughts and tasks stay on your machine.
+
+**Authenticated Mode** (optional): When you create an account, your data syncs to Supabase (PostgreSQL database) for cross-device access and backup. You can switch between guest and authenticated modes at any time.
 
 ---
 
@@ -305,25 +309,29 @@ See the [LICENSE](LICENSE) file for details or visit [AGPL-3.0](https://www.gnu.
 
 ## Deployment Options
 
-### 🆓 Free Tier (Self-Hosted)
+### 🌐 Hosted Service (Live Now!)
+**Try it now at [thoughtsandtime.vercel.app](https://thoughtsandtime.vercel.app)**
+- ✅ **Free to use** - No credit card required
+- ✅ Automatic backups and sync across devices (with account)
+- ✅ Always up-to-date with latest features
+- ✅ Works in guest mode or create an account
+- ✅ PWA installable on all devices
+
+**Features:**
+- Guest mode: Works offline with localStorage
+- Authenticated mode: Sync across devices with Supabase
+- Cross-device sync, real-time updates
+- Email/password authentication
+
+### 🆓 Self-Hosted (Coming Soon)
 Run your own instance using PocketBase:
 - Complete control over your data
 - No usage limits
 - Community support
 - See [SELF_HOSTING.md](SELF_HOSTING.md) (coming soon)
 
-### 💎 Hosted Service (Coming Soon)
-Let us handle the infrastructure:
-- ✅ **1-week free trial** - No credit card required
-- ✅ Automatic backups and sync across devices
-- ✅ Always up-to-date with latest features
-- ✅ Premium support
-- 📊 Pricing tiers starting at **$1/month**
-
-**Interested in early access?** Star this repo and watch for updates!
-
 ---
 
-**Status**: Feature-complete MVP ✅
+**Status**: Feature-complete MVP ✅ | **Live**: https://thoughtsandtime.vercel.app 🚀
 
 *Built with care for thoughtful work.*

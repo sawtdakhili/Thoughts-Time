@@ -201,6 +201,15 @@ npm run lint         # ESLint
 - **Settings**: Stored separately in `thoughts-time-settings`
 - **Dual Operation**: App works offline (localStorage) and online (Supabase sync)
 
+## Production Deployment
+
+- **Platform**: Vercel
+- **Live URL**: https://thoughtsandtime.vercel.app
+- **Auto-Deploy**: Enabled on push to `main` branch
+- **Environment**: Production environment variables configured on Vercel
+- **Build**: Automatic via Vercel (detects Vite, runs `npm run build`)
+- **Supabase**: Connected with redirect URLs and email confirmation enabled
+
 ## View Modes
 
 - **Infinite Scroll**: All days visible, continuous scrolling
@@ -275,6 +284,8 @@ See `MOBILE_IMPLEMENTATION.md` for complete mobile documentation.
 18. **Direct state selection** - In auth components, use `useAuthStore((state) => state.mode)` NOT `isGuest()` functions (prevents re-render loops)
 19. **User ID strategy** - All items default to `userId: 'guest'`, transformed to actual userId only during Supabase sync
 20. **Environment variables** - Supabase credentials in `.env.local` (VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY)
+21. **Production deployment** - App is live at https://thoughtsandtime.vercel.app, auto-deploys from `main` branch
+22. **Email confirmation** - Enabled in Supabase for new user signups
 
 ## License
 

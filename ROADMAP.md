@@ -1,7 +1,7 @@
 # Thoughts & Time - Development Roadmap
 
-**Last Updated**: December 11, 2025
-**Current Status**: MVP with core features ✅ + Authentication system ✅
+**Last Updated**: December 13, 2025
+**Current Status**: MVP with core features ✅ + Authentication system ✅ + Live on Vercel 🚀
 
 ---
 
@@ -455,6 +455,37 @@ domain: 13px, #6A6A6A
 - `src/App.tsx` - Added auth components, fetch items on auth
 - `src/store/useStore.ts` - Added sync calls, changed to 'guest' default userId
 - `src/utils/itemFactory.ts` - Changed to 'guest' default userId
+
+---
+
+### 🚀 Production Deployment (Vercel)
+
+**Status**: ✅ Completed (December 13, 2025)
+
+**Deployment Details**:
+- **Platform**: Vercel
+- **Production URL**: https://thoughtsandtime.vercel.app
+- **Build Command**: `npm run build`
+- **Output Directory**: `dist`
+- **Framework**: Vite (auto-detected)
+- **Auto-Deploy**: Enabled on `main` branch push
+
+**Environment Variables Configured**:
+- `VITE_SUPABASE_URL`: Supabase project URL
+- `VITE_SUPABASE_ANON_KEY`: Supabase anonymous key
+
+**Supabase Configuration**:
+- ✅ Site URL: `https://thoughtsandtime.vercel.app`
+- ✅ Redirect URLs: `https://thoughtsandtime.vercel.app/**`
+- ✅ Email confirmation: Enabled
+- ✅ Authentication: Email/password with magic links
+
+**Features Live**:
+- ✅ Guest mode (localStorage only)
+- ✅ Authenticated mode (Supabase sync)
+- ✅ PWA installable on all devices
+- ✅ Mobile responsive
+- ✅ Offline capable
 
 **Database Schema**:
 
