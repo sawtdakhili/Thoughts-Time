@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Populate Harry Du Bois Sample Data</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 600px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #0a0a0a;
+      color: #f5f5f5;
+    }
+    button {
+      background: #f5f5f5;
+      color: #0a0a0a;
+      border: none;
+      padding: 12px 24px;
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 4px;
+      margin: 10px 0;
+    }
+    button:hover {
+      background: #e0e0e0;
+    }
+    .warning {
+      color: #ff6b6b;
+      padding: 12px;
+      background: #1a0000;
+      border: 1px solid #ff6b6b;
+      border-radius: 4px;
+      margin: 20px 0;
+    }
+    .success {
+      color: #51cf66;
+      padding: 12px;
+      background: #001a00;
+      border: 1px solid #51cf66;
+      border-radius: 4px;
+      margin: 20px 0;
+      display: none;
+    }
+    pre {
+      background: #1a1a1a;
+      padding: 12px;
+      border-radius: 4px;
+      overflow-x: auto;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Populate Harry Du Bois Sample Data</h1>
+
+  <div class="warning">
+    <strong>⚠️ Warning:</strong> This will DELETE all current data and replace it with sample data inspired by Harry Du Bois from Disco Elysium.
+  </div>
+
+  <button onclick="populateData()">Clear Data & Populate Harry's Items</button>
+  <button onclick="window.location.href='http://localhost:5173'">Go to App</button>
+
+  <div id="success" class="success"></div>
+  <div id="output"></div>
+
+  <script>
+    function populateData() {
+      const now = new Date();
+
+      // Helper functions
+      const getDaysAgo = (daysAgo) => {
+        const date = new Date();
+        date.setDate(date.getDate() - daysAgo);
+        return date.toISOString().split('T')[0];
+      };
+
+      const getTimeString = (daysAgo, hour, minute = 0) => {
+        const date = new Date();
+        date.setDate(date.getDate() - daysAgo);
+        date.setHours(hour, minute, 0, 0);
+        return date.toISOString();
+      };
+
+      const userId = 'user-1';
+
+      const items = [
+        // Day 10
+        {
+          id: 'item-001',
+          userId,
+          type: 'note',
+          content: 'Woke up. Don\'t remember my name. Badge says Detective. Kim says we have a case - body hanging in the yard behind the Whirling-in-Rags.',
+          createdDate: getDaysAgo(10),
+          scheduledTime: getTimeString(10, 8, 30),
+          hasTime: true,
+          children: [],
+          depthLevel: 0,
+        },
+        {
+          id: 'item-002',
+          userId,
+          type: 'todo',
+          content: 'Interview witnesses about the hanging',
+          createdDate: getDaysAgo(10),
+          scheduledTime: getTimeString(10, 10, 0),
+          hasTime: true,
+          children: [
+            {
+              id: 'item-002-1',
+              userId,
+              type: 'todo',
+              content: 'Talk to the union boss',
+              createdDate: getDaysAgo(10),
+              parentId: 'item-002',
+              depthLevel: 1,
+              children: [],
+            },
+            {
+              id: 'item-002-2',
+              userId,
+              type: 'todo',
+              content: 'Question locals at the cafeteria',
+              createdDate: getDaysAgo(10),
+              parentId: 'item-002',
+              depthLevel: 1,
+              children: [],
+            },
+          ],
+          depthLevel: 0,
+        },
+        {
+          id: 'item-003',
+          userId,
+          type: 'event',
+          content: 'Meet with Kim Kitsuragi - partner briefing',
+          createdDate: getDaysAgo(10),
+          scheduledTime: getTimeString(10, 14, 0),
+          endTime: getTimeString(10, 15, 30),
+          hasTime: true,
+          children: [],
+          depthLevel: 0,
+        },
+
+        // Day 9
+        {
+          id: 'item-004',
+          userId,
+          type: 'note',
+          content: 'The world is full of places I don\'t remember visiting. The city feels familiar and alien at once.',
+          createdDate: getDaysAgo(9),
+          scheduledTime: getTimeString(9, 7, 15),
+          hasTime: true,
+          children: [],
+          depthLevel: 0,
+        },
+        {
+          id: 'item-005',
+          userId,
+          type: 'todo',
+          content: 'Search the crime scene for evidence',
+          createdDate: getDaysAgo(9),
+          scheduledTime: getTimeString(9, 9, 0),
+          hasTime: true,
+          completedAt: getTimeString(9, 11, 30),
+          children: [],
+          depthLevel: 0,
+        },
+        {
+          id: 'item-006',
+          userId,
+          type: 'event',
+          content: 'Tribunal with union workers and mercenaries',
+          createdDate: getDaysAgo(9),
+          scheduledTime: getTimeString(9, 16, 0),
+          endTime: getTimeString(9, 18, 0),
+          hasTime: true,
+          children: [
+            {
+              id: 'item-006-1',
+              userId,
+              type: 'note',
+              content: 'Violence is a question poorly asked',
+              createdDate: getDaysAgo(9),
+              parentId: 'item-006',
+              depthLevel: 1,
+              children: [],
+            },
+          ],
+          depthLevel: 0,
+        },
+
+        // Day 8
+        {
+          id: 'item-007',
+          userId,
+          type: 'note',
+          content: 'Ancient reptilian brain wants spirits. Logic brain says no. Limbic system suggests compromise: just one drink.',
+          createdDate: getDaysAgo(8),
+          scheduledTime: getTimeString(8, 8, 0),
+          hasTime: true,
+          children: [],
+          depthLevel: 0,
+        },
+        {
+          id: 'item-008',
+          userId,
+          type: 'todo',
+          content: 'Review case notes with Kim',
+          createdDate: getDaysAgo(8),
+          scheduledTime: getTimeString(8, 10, 0),
+          hasTime: true,
+          completedAt: getTimeString(8, 11, 0),
+          children: [],
+          depthLevel: 0,
+        },
+        {
+          id: 'item-009',
+          userId,
+          type: 'todo',
+          content: 'Follow up on leads from harbor area',
+          createdDate: getDaysAgo(8),
+          scheduledTime: getTimeString(8, 13, 30),
+          hasTime: true,
+          children: [
+            {
+              id: 'item-009-1',
+              userId,
+              type: 'todo',
+              content: 'Check shipping manifests',
+              createdDate: getDaysAgo(8),
+              parentId: 'item-009',
+              depthLevel: 1,
+              completedAt: getTimeString(8, 14, 15),
+              children: [],
+            },
+            {
+              id: 'item-009-2',
+              userId,
+              type: 'todo',
+              content: 'Interview dock workers',
+              createdDate: getDaysAgo(8),
+              parentId: 'item-009',
+              depthLevel: 1,
+              children: [],
+            },
+          ],
+          depthLevel: 0,
+        },
+
+        // Day 7
+        {
+          id: 'item-010',
+          userId,
+          type: 'note',
+          content: 'Kim is patient. Too patient. Why does he tolerate me? Must be a saint or deeply compromised.',
+          createdDate: getDaysAgo(7),
+          scheduledTime: getTimeString(7, 7, 45),
+          hasTime: true,
+          children: [],
+          depthLevel: 0,
+        },
+        {
+          id: 'item-011',
+          userId,
+          type: 'event',
+          content: 'Precinct meeting - report on investigation progress',
+          createdDate: getDaysAgo(7),
+          scheduledTime: getTimeString(7, 9, 0),
+          endTime: getTimeString(7, 10, 30),
+          hasTime: true,
+          children: [],
+          depthLevel: 0,
+        },
+        {
+          id: 'item-012',
+          userId,
+          type: 'todo',
+          content: 'Apologize to Kim for yesterday\'s breakdown',
+          createdDate: getDaysAgo(7),
+          scheduledTime: getTimeString(7, 11, 0),
+          hasTime: true,
+          completedAt: getTimeString(7, 11, 15),
+          children: [],
+          depthLevel: 0,
+        },
+        {
+          id: 'item-013',
+          userId,
+          type: 'note',
+          content: 'Thought: What if communism could work if we just tried harder? Encyclopedia says no. Rhetoric says maybe. Authority says stop being ridiculous.',
+          createdDate: getDaysAgo(7),
+          scheduledTime: getTimeString(7, 15, 0),
+          hasTime: true,
+          children: [],
+          depthLevel: 0,
+        },
+
+        // Day 6
+        {
+          id: 'item-014',
+          userId,
+          type: 'todo',
+          content: 'Examine ballistics evidence',
+          createdDate: getDaysAgo(6),
+          scheduledTime: getTimeString(6, 9, 30),
+          hasTime: true,
+          completedAt: getTimeString(6, 10, 45),
+          children: [],
+          depthLevel: 0,
+        },
+        {
+          id: 'item-015',
+          userId,
+          type: 'note',
+          content: 'The city is a corpse. Beautiful and rotting. I am a corpse. Less beautiful, also rotting.',
+          createdDate: getDaysAgo(6),
+          scheduledTime: getTimeString(6, 12, 0),
+          hasTime: true,
+          children: [],
+          depthLevel: 0,
+        },
+        {
+          id: 'item-016',
+          userId,
+          type: 'event',
+          content: 'Stakeout at the fishing village',
+          createdDate: getDaysAgo(6),
+          scheduledTime: getTimeString(6, 18, 0),
+          endTime: getTimeString(6, 22, 0),
+          hasTime: true,
+          children: [
+            {
+              id: 'item-016-1',
+              userId,
+              type: 'note',
+              content: 'Waiting is the hardest part. Brain fills silence with bad memories and worse ideas.',
+              createdDate: getDaysAgo(6),
+              parentId: 'item-016',
+              depthLevel: 1,
+              children: [],
+            },
+          ],
+          depthLevel: 0,
+        },
+
+        // Day 5
+        {
+          id: 'item-017',
+          userId,
+          type: 'note',
+          content: 'Empathy suggests the suspect is scared. Logic suggests he should be. Inland Empire suggests reality is questionable.',
+          createdDate: getDaysAgo(5),
+          scheduledTime: getTimeString(5, 8, 0),
+          hasTime: true,
+          children: [],
+          depthLevel: 0,
+        },
+        {
+          id: 'item-018',
+          userId,
+          type: 'todo',
+          content: 'Interrogate prime suspect',
+          createdDate: getDaysAgo(5),
+          scheduledTime: getTimeString(5, 10, 0),
+          hasTime: true,
+          children: [
+            {
+              id: 'item-018-1',
+              userId,
+              type: 'todo',
+              content: 'Prepare questions',
+              createdDate: getDaysAgo(5),
+              parentId: 'item-018',
+              depthLevel: 1,
+              completedAt: getTimeString(5, 9, 30),
+              children: [],
+            },
+            {
+              id: 'item-018-2',
+              userId,
+              type: 'todo',
+              content: 'Review suspect background',
+              createdDate: getDaysAgo(5),
+              parentId: 'item-018',
+              depthLevel: 1,
+              completedAt: getTimeString(5, 9, 45),
+              children: [],
+            },
+          ],
+          depthLevel: 0,
+        },
+        {
+          id: 'item-019',
+          userId,
+          type: 'todo',
+          content: 'Buy cigarettes for Kim',
+          createdDate: getDaysAgo(5),
+          scheduledTime: getTimeString(5, 14, 0),
+          hasTime: true,
+          completedAt: getTimeString(5, 14, 20),
+          children: [],
+          depthLevel: 0,
+        },
+
+        // Day 4
+        {
+          id: 'item-020',
+          userId,
+          type: 'note',
+          content: 'Realized today: I\'m not a good detective because I\'m smart. I\'m a good detective because I refuse to give up. Even on myself.',
+          createdDate: getDaysAgo(4),
+          scheduledTime: getTimeString(4, 7, 30),
+          hasTime: true,
+          children: [],
+          depthLevel: 0,
+        },
+        {
+          id: 'item-021',
+          userId,
+          type: 'event',
+          content: 'Meeting with union representative',
+          createdDate: getDaysAgo(4),
+          scheduledTime: getTimeString(4, 11, 0),
+          endTime: getTimeString(4, 12, 0),
+          hasTime: true,
+          children: [],
+          depthLevel: 0,
+        },
+        {
+          id: 'item-022',
+          userId,
+          type: 'todo',
+          content: 'Write up preliminary case report',
+          createdDate: getDaysAgo(4),
+          scheduledTime: getTimeString(4, 15, 0),
+          hasTime: true,
+          children: [],
+          depthLevel: 0,
+        },
+        {
+          id: 'item-023',
+          userId,
+          type: 'note',
+          content: 'Spotted a cryptid. Or maybe just a large bird. Perception is unreliable but insistent.',
+          createdDate: getDaysAgo(4),
+          scheduledTime: getTimeString(4, 17, 30),
+          hasTime: true,
+          children: [],
+          depthLevel: 0,
+        },
+
+        // Day 3
+        {
+          id: 'item-024',
+          userId,
+          type: 'todo',
+          content: 'Return evidence to forensics',
+          createdDate: getDaysAgo(3),
+          scheduledTime: getTimeString(3, 9, 0),
+          hasTime: true,
+          completedAt: getTimeString(3, 9, 30),
+          children: [],
+          depthLevel: 0,
+        },
+        {
+          id: 'item-025',
+          userId,
+          type: 'note',
+          content: 'Political alignment check: Still don\'t know what I believe. Every ideology sounds right for five minutes then terrible forever.',
+          createdDate: getDaysAgo(3),
+          scheduledTime: getTimeString(3, 11, 30),
+          hasTime: true,
+          children: [],
+          depthLevel: 0,
+        },
+        {
+          id: 'item-026',
+          userId,
+          type: 'event',
+          content: 'Lunch with Kim - discuss case theory',
+          createdDate: getDaysAgo(3),
+          scheduledTime: getTimeString(3, 13, 0),
+          endTime: getTimeString(3, 14, 0),
+          hasTime: true,
+          children: [],
+          depthLevel: 0,
+        },
+        {
+          id: 'item-027',
+          userId,
+          type: 'todo',
+          content: 'Check abandoned church for clues',
+          createdDate: getDaysAgo(3),
+          scheduledTime: getTimeString(3, 16, 0),
+          hasTime: true,
+          children: [],
+          depthLevel: 0,
+        },
+
+        // Day 2
+        {
+          id: 'item-028',
+          userId,
+          type: 'note',
+          content: 'Pain threshold reached. Body is a failing machine. Continue operating failing machine.',
+          createdDate: getDaysAgo(2),
+          scheduledTime: getTimeString(2, 8, 0),
+          hasTime: true,
+          children: [],
+          depthLevel: 0,
+        },
+        {
+          id: 'item-029',
+          userId,
+          type: 'todo',
+          content: 'Follow up on witness statement inconsistencies',
+          createdDate: getDaysAgo(2),
+          scheduledTime: getTimeString(2, 10, 0),
+          hasTime: true,
+          children: [
+            {
+              id: 'item-029-1',
+              userId,
+              type: 'todo',
+              content: 'Re-interview first witness',
+              createdDate: getDaysAgo(2),
+              parentId: 'item-029',
+              depthLevel: 1,
+              completedAt: getTimeString(2, 10, 45),
+              children: [],
+            },
+          ],
+          depthLevel: 0,
+        },
+        {
+          id: 'item-030',
+          userId,
+          type: 'event',
+          content: 'Breakthrough interrogation session',
+          createdDate: getDaysAgo(2),
+          scheduledTime: getTimeString(2, 14, 0),
+          endTime: getTimeString(2, 16, 30),
+          hasTime: true,
+          children: [],
+          depthLevel: 0,
+        },
+        {
+          id: 'item-031',
+          userId,
+          type: 'note',
+          content: 'Kim said I did good work today. Filed under: Reasons To Keep Going.',
+          createdDate: getDaysAgo(2),
+          scheduledTime: getTimeString(2, 19, 0),
+          hasTime: true,
+          children: [],
+          depthLevel: 0,
+        },
+
+        // Day 1
+        {
+          id: 'item-032',
+          userId,
+          type: 'todo',
+          content: 'Prepare final arrest documentation',
+          createdDate: getDaysAgo(1),
+          scheduledTime: getTimeString(1, 9, 0),
+          hasTime: true,
+          children: [
+            {
+              id: 'item-032-1',
+              userId,
+              type: 'todo',
+              content: 'Gather all physical evidence',
+              createdDate: getDaysAgo(1),
+              parentId: 'item-032',
+              depthLevel: 1,
+              completedAt: getTimeString(1, 9, 30),
+              children: [],
+            },
+            {
+              id: 'item-032-2',
+              userId,
+              type: 'todo',
+              content: 'Type up chain of custody forms',
+              createdDate: getDaysAgo(1),
+              parentId: 'item-032',
+              depthLevel: 1,
+              completedAt: getTimeString(1, 10, 15),
+              children: [],
+            },
+          ],
+          depthLevel: 0,
+        },
+        {
+          id: 'item-033',
+          userId,
+          type: 'note',
+          content: 'Final thought: The case is almost closed. I still don\'t remember who I was. Maybe that\'s okay. Maybe I can be someone better.',
+          createdDate: getDaysAgo(1),
+          scheduledTime: getTimeString(1, 12, 0),
+          hasTime: true,
+          children: [],
+          depthLevel: 0,
+        },
+        {
+          id: 'item-034',
+          userId,
+          type: 'event',
+          content: 'Arrest coordination with precinct',
+          createdDate: getDaysAgo(1),
+          scheduledTime: getTimeString(1, 15, 0),
+          endTime: getTimeString(1, 17, 0),
+          hasTime: true,
+          children: [],
+          depthLevel: 0,
+        },
+
+        // Day 0 (today)
+        {
+          id: 'item-035',
+          userId,
+          type: 'note',
+          content: 'New day. Same body. Different thoughts. The work continues.',
+          createdDate: getDaysAgo(0),
+          scheduledTime: getTimeString(0, 7, 0),
+          hasTime: true,
+          children: [],
+          depthLevel: 0,
+        },
+        {
+          id: 'item-036',
+          userId,
+          type: 'todo',
+          content: 'Submit final case report',
+          createdDate: getDaysAgo(0),
+          scheduledTime: getTimeString(0, 10, 0),
+          hasTime: true,
+          children: [],
+          depthLevel: 0,
+        },
+        {
+          id: 'item-037',
+          userId,
+          type: 'todo',
+          content: 'Thank Kim properly',
+          createdDate: getDaysAgo(0),
+          scheduledTime: getTimeString(0, 14, 0),
+          hasTime: true,
+          children: [],
+          depthLevel: 0,
+        },
+        {
+          id: 'item-038',
+          userId,
+          type: 'note',
+          content: 'Authority says: You survived. Empathy says: Others helped. Electrochemistry says: Celebrate with substances. Volition says: Just be proud.',
+          createdDate: getDaysAgo(0),
+          scheduledTime: getTimeString(0, 16, 30),
+          hasTime: true,
+          children: [],
+          depthLevel: 0,
+        },
+      ];
+
+      // Create storage object
+      const storage = {
+        state: {
+          items: items,
+        },
+        version: 0,
+      };
+
+      // Clear and populate localStorage
+      localStorage.setItem('thoughts-time-storage', JSON.stringify(storage));
+
+      // Show success message
+      const successDiv = document.getElementById('success');
+      successDiv.style.display = 'block';
+      successDiv.innerHTML = `
+        <strong>✓ Success!</strong><br>
+        Populated ${items.length} items across 10 days.<br>
+        Data includes ${items.filter(i => i.type === 'todo').length} todos,
+        ${items.filter(i => i.type === 'event').length} events, and
+        ${items.filter(i => i.type === 'note').length} notes.<br><br>
+        <strong>Refresh the app to see Harry's detective work!</strong>
+      `;
+
+      // Show summary
+      const output = document.getElementById('output');
+      output.innerHTML = `
+        <h3>Data Summary</h3>
+        <pre>${JSON.stringify(storage, null, 2).substring(0, 1000)}...\n\n(truncated - see localStorage for full data)</pre>
+      `;
+    }
+  </script>
+</body>
+</html>

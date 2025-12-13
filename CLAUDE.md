@@ -10,6 +10,7 @@
 - **Build**: Vite 7
 - **Styling**: Tailwind CSS 3
 - **State**: Zustand with localStorage persistence
+- **Backend**: Supabase (PostgreSQL, authentication, real-time sync)
 - **Date Parsing**: chrono-node (natural language), date-fns
 - **Editor**: CodeMirror 6 (indentation, keymaps, symbol conversion)
 - **Virtualization**: @tanstack/react-virtual
@@ -19,16 +20,20 @@
 
 ```
 src/
-├── components/     # React components (TimePane, ThoughtsPane, ItemDisplay, BottomSheet, FAB, MobileFooter, etc.)
-├── store/          # Zustand stores (useStore.ts, useHistory.ts, useSettingsStore.ts, itemHelpers.ts)
+├── components/     # React components (TimePane, ThoughtsPane, ItemDisplay, BottomSheet, FAB, MobileFooter, AuthModal, AuthBanner, AuthProvider, UserMenu, etc.)
+├── store/          # Zustand stores (useStore.ts, useHistory.ts, useSettingsStore.ts, useAuthStore.ts, itemHelpers.ts)
 ├── hooks/          # Custom hooks (useKeyboardShortcuts, useWheelNavigation, useFocusTrap, useMobileLayout, useSwipeGesture, useHapticFeedback, useKeyboardDetection, etc.)
 ├── utils/          # Utilities (parser.ts, formatting.ts, itemFactory.ts, search.tsx)
+├── services/       # Services (syncService.ts - Supabase data sync)
+├── lib/            # External integrations (supabase.ts - Supabase client)
 ├── constants/      # App constants (including mobile breakpoints and sizes)
 ├── test/           # Test setup
 ├── types.ts        # TypeScript type definitions
+├── env.d.ts        # Environment variable types
 ├── App.tsx         # Root component
 └── main.tsx        # Entry point
 e2e/                # Playwright end-to-end tests
+.env.local          # Environment variables (Supabase credentials)
 ```
 
 ## Key Concepts
@@ -53,7 +58,19 @@ e2e/                # Playwright end-to-end tests
 - `useStore` (src/store/useStore.ts): Main app state with items CRUD
 - `useHistory` (src/store/useHistory.ts): Undo/redo functionality
 - `useSettingsStore`: Theme and view mode preferences
+- `useAuthStore` (src/store/useAuthStore.ts): Authentication state (user, session, sign in/out)
 - All stores use Zustand persist middleware for localStorage
+
+### Authentication System
+
+- **Dual Mode**: Guest mode (localStorage only) or Authenticated (syncs to Supabase)
+- **Email/Password**: Sign up, sign in, sign out flows
+- **Session Management**: Supabase handles JWT tokens and session persistence
+- **Data Sync**: Items sync to Supabase when authenticated, stay local in guest mode
+- **User ID Strategy**: All items use 'guest' as default userId, transformed during sync
+- **Storage Keys**:
+  - Supabase session: `thoughts-time-auth` (localStorage)
+  - Auth mode: `thoughts-time-auth-mode` (Zustand persist)
 
 ## Development Commands
 
@@ -125,7 +142,10 @@ npm run lint         # ESLint
 - `src/types.ts` - All TypeScript interfaces
 - `src/store/useStore.ts` - Core state management
 - `src/store/useHistory.ts` - Undo/redo history management
+- `src/store/useAuthStore.ts` - Authentication state management
 - `src/store/itemHelpers.ts` - Validation and tree operations helpers
+- `src/lib/supabase.ts` - Supabase client initialization
+- `src/services/syncService.ts` - Data sync to Supabase
 - `src/utils/parser.ts` - Input parsing logic
 - `src/components/ThoughtsPane.tsx` - Left pane (thoughts)
 - `src/components/TimePane.tsx` - Right pane (timeline)
@@ -134,6 +154,11 @@ npm run lint         # ESLint
 - `src/components/ItemEditor.tsx` - Item edit mode (uses SymbolEditor)
 - `src/components/SymbolEditor.tsx` - CodeMirror 6 editor with Tab/indentation
 - `src/components/PaneErrorBoundary.tsx` - Error isolation for panes
+- `src/components/AuthProvider.tsx` - Auth state listener (wraps app)
+- `src/components/AuthModal.tsx` - Sign in/up modal
+- `src/components/AuthBanner.tsx` - Guest mode banner
+- `src/components/UserMenu.tsx` - User dropdown menu
+- `src/components/HelpDrawer.tsx` - Interactive help drawer with input prefix reference
 - `src/hooks/useWheelNavigation.ts` - Shared wheel navigation for book mode
 - `src/hooks/useFocusTrap.ts` - Focus trap for modals
 - `src/components/BottomSheet.tsx` - Mobile bottom sheet modal
@@ -170,9 +195,21 @@ npm run lint         # ESLint
 
 ## Data Storage
 
-- All data persisted to localStorage under key `thoughts-time-storage`
-- No backend/server - fully client-side
-- Settings stored separately in `thoughts-time-settings`
+- **Guest Mode**: All data persisted to localStorage under key `thoughts-time-storage`
+- **Authenticated Mode**: Data syncs to Supabase PostgreSQL database
+- **Auth Session**: Stored in localStorage under key `thoughts-time-auth` (Supabase)
+- **Auth Mode**: Stored in localStorage under key `thoughts-time-auth-mode` (Zustand)
+- **Settings**: Stored separately in `thoughts-time-settings`
+- **Dual Operation**: App works offline (localStorage) and online (Supabase sync)
+
+## Production Deployment
+
+- **Platform**: Vercel
+- **Live URL**: https://thoughtsandtime.vercel.app
+- **Auto-Deploy**: Enabled on push to `main` branch
+- **Environment**: Production environment variables configured on Vercel
+- **Build**: Automatic via Vercel (detects Vite, runs `npm run build`)
+- **Supabase**: Connected with redirect URLs and email confirmation enabled
 
 ## View Modes
 
@@ -242,6 +279,14 @@ See `MOBILE_IMPLEMENTATION.md` for complete mobile documentation.
 12. **Reference date parsing** - Reschedule actions use today as reference (not original date)
 13. **Mobile responsive** - Complete mobile implementation with swipe gestures, bottom sheet, FAB, and footer navigation
 14. **Touch-optimized** - 44×44px minimum touch targets, haptic feedback, keyboard detection
+15. **Authentication system** - Dual mode (guest/authenticated), email/password sign in/up, Supabase backend
+16. **Storage key separation** - Supabase uses `thoughts-time-auth`, Zustand uses `thoughts-time-auth-mode` (CRITICAL: different keys to avoid conflicts)
+17. **Rules of Hooks** - NEVER put early returns before hooks (caused "rendered more hooks" crash in UserMenu)
+18. **Direct state selection** - In auth components, use `useAuthStore((state) => state.mode)` NOT `isGuest()` functions (prevents re-render loops)
+19. **User ID strategy** - All items default to `userId: 'guest'`, transformed to actual userId only during Supabase sync
+20. **Environment variables** - Supabase credentials in `.env.local` (VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY)
+21. **Production deployment** - App is live at https://thoughtsandtime.vercel.app, auto-deploys from `main` branch
+22. **Email confirmation** - Enabled in Supabase for new user signups
 
 ## License
 

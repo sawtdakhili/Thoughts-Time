@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import ThoughtsPane, { ThoughtsPaneHandle } from './components/ThoughtsPane';
 import TimePane from './components/TimePane';
 import Settings from './components/Settings';
@@ -6,6 +6,8 @@ import ToastContainer from './components/Toast';
 import PaneErrorBoundary from './components/PaneErrorBoundary';
 import MobileFooter from './components/MobileFooter';
 import HelpDrawer from './components/HelpDrawer';
+import AuthBanner from './components/AuthBanner';
+import UserMenu from './components/UserMenu';
 import { useSettingsStore } from './store/useSettingsStore';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useUndoRedo } from './hooks/useUndoRedo';
@@ -16,6 +18,9 @@ import { useSwipeGesture } from './hooks/useSwipeGesture';
 import { useHapticFeedback } from './hooks/useHapticFeedback';
 import { useKeyboardDetection } from './hooks/useKeyboardDetection';
 import { Item } from './types';
+import { useAuthStore } from './store/useAuthStore';
+import { useStore } from './store/useStore';
+import * as syncService from './services/syncService';
 
 function App() {
   const [searchInput, setSearchInput] = useState('');
@@ -37,6 +42,25 @@ function App() {
 
   // Setup undo/redo
   const { undo, redo } = useUndoRedo();
+
+  // Auth state - directly access mode instead of calling function
+  const authMode = useAuthStore((state) => state.mode);
+  const authUserId = useAuthStore((state) => state.user?.id);
+
+  // Fetch items from Supabase on authentication
+  useEffect(() => {
+    if (authMode === 'authenticated' && authUserId) {
+      syncService
+        .fetchItems()
+        .then((items) => {
+          // Replace local items with Supabase items (skip history to avoid undo/redo issues)
+          useStore.setState({ items, skipHistory: false });
+        })
+        .catch((error) => {
+          console.error('Error fetching items from Supabase:', error);
+        });
+    }
+  }, [authMode, authUserId]);
 
   // Lazy load dates for better performance
   const { dates, loadMorePast, loadMoreFuture, canLoadMorePast, canLoadMoreFuture, todayIndex } =
@@ -197,6 +221,9 @@ function App() {
         Skip to main content
       </a>
 
+      {/* Auth Banner - Guest Mode Only */}
+      <AuthBanner />
+
       {/* Settings Modal */}
       <Settings isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
 
@@ -252,6 +279,9 @@ function App() {
             >
               ⚙️
             </button>
+
+            {/* User Menu */}
+            <UserMenu />
           </div>
         </header>
       )}

@@ -93,18 +93,6 @@ export default function MobileFooter({
       {/* Action Buttons */}
       <div className="flex items-center gap-8">
         <button
-          onClick={handleSearchClick}
-          className="text-base touch-target"
-          aria-label="Search"
-          type="button"
-          style={{
-            minWidth: `${MOBILE.MIN_TOUCH_TARGET}px`,
-            minHeight: `${MOBILE.MIN_TOUCH_TARGET}px`,
-          }}
-        >
-          🔍
-        </button>
-        <button
           onClick={handleHelpClick}
           className="text-base touch-target"
           aria-label="Input help"
@@ -115,6 +103,18 @@ export default function MobileFooter({
           }}
         >
           ?
+        </button>
+        <button
+          onClick={handleSearchClick}
+          className="text-base touch-target"
+          aria-label="Search"
+          type="button"
+          style={{
+            minWidth: `${MOBILE.MIN_TOUCH_TARGET}px`,
+            minHeight: `${MOBILE.MIN_TOUCH_TARGET}px`,
+          }}
+        >
+          🔍
         </button>
         <button
           onClick={handleSettingsClick}

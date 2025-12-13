@@ -34,6 +34,7 @@
     "@codemirror/language": "^6.11.3",
     "@codemirror/state": "^6.5.2",
     "@codemirror/view": "^6.38.8",
+    "@supabase/supabase-js": "^2.87.1",
     "@tanstack/react-virtual": "^3.13.12",
     "chrono-node": "^2.9.0",
     "date-fns": "^4.1.0",

@@ -13,6 +13,7 @@ import {
   getDeletedItemsWithIndices,
   VALIDATION_MESSAGES,
 } from './itemHelpers';
+import * as syncService from '../services/syncService';
 
 /**
  * Main application state interface for Thoughts & Time.
@@ -148,7 +149,7 @@ export const useStore = create<AppState>()(
 
         const baseItem = {
           id: newId,
-          userId: 'user-1',
+          userId: 'guest', // Always use 'guest' - will be transformed on sync
           content: parsed.content,
           createdAt: now,
           createdDate,
@@ -247,6 +248,9 @@ export const useStore = create<AppState>()(
           }));
         }
 
+        // Sync to Supabase (syncService will check if authenticated)
+        syncService.createItem(newItem).catch(console.error);
+
         return newId;
       },
 
@@ -312,7 +316,7 @@ export const useStore = create<AppState>()(
 
           const baseItem = {
             id: newId,
-            userId: 'user-1',
+            userId: 'guest', // Always use 'guest' - will be transformed on sync
             content: line.content,
             createdAt: now,
             createdDate,
@@ -441,6 +445,11 @@ export const useStore = create<AppState>()(
           return { items: updatedItems };
         });
 
+        // Sync all new items to Supabase (syncService will check if authenticated)
+        for (const item of newItems) {
+          syncService.createItem(item).catch(console.error);
+        }
+
         return { ids, errors: [], needsTimePrompt };
       },
 
@@ -459,6 +468,9 @@ export const useStore = create<AppState>()(
         set((state) => ({
           items: [...state.items, item],
         }));
+
+        // Sync to Supabase (syncService will check if authenticated)
+        syncService.createItem(item).catch(console.error);
       },
 
       addItemAtIndex: (item: Item, index: number) => {
@@ -469,6 +481,9 @@ export const useStore = create<AppState>()(
           newItems.splice(insertIndex, 0, item);
           return { items: newItems };
         });
+
+        // Sync to Supabase (syncService will check if authenticated)
+        syncService.createItem(item).catch(console.error);
       },
 
       updateItem: (id: string, updates: Partial<Item>) => {
@@ -496,6 +511,12 @@ export const useStore = create<AppState>()(
             item.id === id ? ({ ...item, ...updates, updatedAt: new Date() } as Item) : item
           ),
         }));
+
+        // Sync to Supabase (syncService will check if authenticated)
+        if (oldItem) {
+          const updatedItem = { ...oldItem, ...updates, updatedAt: new Date() } as Item;
+          syncService.updateItem(updatedItem).catch(console.error);
+        }
       },
 
       deleteItem: (id: string) => {
@@ -535,6 +556,11 @@ export const useStore = create<AppState>()(
               }),
           };
         });
+
+        // Sync deletions to Supabase (syncService will check if authenticated)
+        for (const itemId of idsToDelete) {
+          syncService.deleteItem(itemId).catch(console.error);
+        }
       },
 
       toggleTodoComplete: (id: string) => {
@@ -591,6 +617,22 @@ export const useStore = create<AppState>()(
             }),
           };
         });
+
+        // Sync to Supabase (syncService will check if authenticated)
+        // Get updated items from the state
+        const updatedItems = get().items;
+        const parentTodo = updatedItems.find((i) => i.id === id);
+        if (parentTodo) {
+          syncService.updateItem(parentTodo).catch(console.error);
+
+          // Also sync all affected subtasks
+          const subtasks = updatedItems.filter(
+            (item) => item.type === 'todo' && item.parentId === id
+          );
+          for (const subtask of subtasks) {
+            syncService.updateItem(subtask).catch(console.error);
+          }
+        }
       },
 
       getItemsByDate: () => {

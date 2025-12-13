@@ -1,7 +1,7 @@
 # Thoughts & Time - Development Roadmap
 
-**Last Updated**: December 6, 2025
-**Current Status**: MVP with core features ✅
+**Last Updated**: December 13, 2025
+**Current Status**: MVP with core features ✅ + Authentication system ✅ + Live on Vercel 🚀
 
 ---
 
@@ -368,7 +368,7 @@ domain: 13px, #6A6A6A
 
 #### 11. User Accounts & Cloud Sync (Supabase + PocketBase)
 
-**Status**: Planned 🟡
+**Status**: Phase 1-3 Authentication ✅ Completed (December 11, 2025)
 
 **Strategy**: Dual backend approach for maximum flexibility
 
@@ -385,41 +385,107 @@ domain: 13px, #6A6A6A
 
 **Implementation Steps**:
 
-1. **Supabase Project Setup** (Week 1)
-   - [ ] Create Supabase project
-   - [ ] Configure authentication providers
-   - [ ] Set up development and production environments
+1. **Supabase Project Setup** ✅ Completed
+   - [x] Create Supabase project
+   - [x] Configure authentication providers (email/password)
+   - [x] Set up development environment
 
-2. **Database Schema** (Week 1-2)
-   - [ ] Create `users` table
-   - [ ] Create `items` table (polymorphic for all types: todo, event, routine, note)
+2. **Database Schema** ✅ Completed
+   - [x] Create `users` table (handled by Supabase Auth)
+   - [x] Create `items` table (polymorphic for all types: todo, event, routine, note)
+   - [x] Set up row-level security (RLS) policies
    - [ ] Create `routine_occurrences` table
    - [ ] Create `completion_links` table
-   - [ ] Set up row-level security (RLS) policies
    - [ ] Create indexes for performance
 
-3. **Authentication Layer** (Week 2-3)
-   - [ ] Create `src/lib/supabase.ts` (client setup)
-   - [ ] Create `src/store/useAuthStore.ts` (auth state management)
-   - [ ] Build login/signup UI components
-   - [ ] Add email verification flow
+3. **Authentication Layer** ✅ Completed
+   - [x] Create `src/lib/supabase.ts` (client setup)
+   - [x] Create `src/store/useAuthStore.ts` (auth state management)
+   - [x] Build login/signup UI components (AuthModal, AuthBanner, UserMenu)
+   - [x] Add email verification flow
+   - [x] Add AuthProvider with auth state listener
    - [ ] Add password reset flow
    - [ ] Add OAuth providers (Google, GitHub)
 
-4. **Data Migration & Sync** (Week 3-4)
-   - [ ] Create `src/utils/sync.ts` (sync queue implementation)
-   - [ ] Update `src/store/useStore.ts` to support both localStorage and Supabase
+4. **Data Migration & Sync** 🚀 In Progress
+   - [x] Create `src/services/syncService.ts` (basic sync implementation)
+   - [x] Update `src/store/useStore.ts` to support both localStorage and Supabase
+   - [x] Implement basic data sync (create operations)
+   - [ ] Implement full CRUD sync (update, delete operations)
    - [ ] Implement optimistic updates (instant UI, background sync)
    - [ ] Add conflict resolution (last-write-wins with timestamps)
    - [ ] Add offline mode detection and queue
    - [ ] Build "Import from localStorage" migration tool
 
-5. **Testing & Polish** (Week 4-5)
+5. **Testing & Polish** 🟡 Pending
+   - [x] Test sign up/sign in/sign out flows
+   - [x] Test basic data sync to Supabase
    - [ ] Test multi-device sync
    - [ ] Test offline mode and conflict resolution
    - [ ] Test data migration from localStorage
    - [ ] Performance testing with large datasets
    - [ ] Add loading states and error handling
+
+**Critical Bug Fixes** (December 11, 2025):
+
+1. **localStorage Key Conflict** - Fixed infinite sign-in/sign-out loop
+   - **Problem**: Supabase client and Zustand persist both used `'thoughts-time-auth'` key
+   - **Solution**: Renamed Zustand persist key to `'thoughts-time-auth-mode'`
+   - **File**: `src/store/useAuthStore.ts:177`
+
+2. **Rules of Hooks Violation** - Fixed "rendered more hooks" crash
+   - **Problem**: Early return in UserMenu before `useEffect` hook
+   - **Solution**: Moved early return after all hooks
+   - **File**: `src/components/UserMenu.tsx:28`
+
+**Files Created**:
+- `.env.local` - Supabase environment variables
+- `src/env.d.ts` - TypeScript environment types
+- `src/lib/supabase.ts` - Supabase client initialization
+- `src/store/useAuthStore.ts` - Authentication state management
+- `src/services/syncService.ts` - Data sync service
+- `src/components/AuthProvider.tsx` - Auth state listener
+- `src/components/AuthModal.tsx` - Sign in/up modal
+- `src/components/AuthBanner.tsx` - Guest mode banner
+- `src/components/UserMenu.tsx` - User dropdown menu
+
+**Files Modified**:
+- `.gitignore` - Added .env files
+- `src/main.tsx` - Wrapped with AuthProvider
+- `src/App.tsx` - Added auth components, fetch items on auth
+- `src/store/useStore.ts` - Added sync calls, changed to 'guest' default userId
+- `src/utils/itemFactory.ts` - Changed to 'guest' default userId
+
+---
+
+### 🚀 Production Deployment (Vercel)
+
+**Status**: ✅ Completed (December 13, 2025)
+
+**Deployment Details**:
+- **Platform**: Vercel
+- **Production URL**: https://thoughtsandtime.vercel.app
+- **Build Command**: `npm run build`
+- **Output Directory**: `dist`
+- **Framework**: Vite (auto-detected)
+- **Auto-Deploy**: Enabled on `main` branch push
+
+**Environment Variables Configured**:
+- `VITE_SUPABASE_URL`: Supabase project URL
+- `VITE_SUPABASE_ANON_KEY`: Supabase anonymous key
+
+**Supabase Configuration**:
+- ✅ Site URL: `https://thoughtsandtime.vercel.app`
+- ✅ Redirect URLs: `https://thoughtsandtime.vercel.app/**`
+- ✅ Email confirmation: Enabled
+- ✅ Authentication: Email/password with magic links
+
+**Features Live**:
+- ✅ Guest mode (localStorage only)
+- ✅ Authenticated mode (Supabase sync)
+- ✅ PWA installable on all devices
+- ✅ Mobile responsive
+- ✅ Offline capable
 
 **Database Schema**:
 

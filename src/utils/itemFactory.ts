@@ -1,5 +1,6 @@
 import { format } from 'date-fns';
 import { Item, Todo, Event, Routine, Note, ParsedInput } from '../types';
+// import { useAuthStore } from '../store/useAuthStore';
 
 /**
  * Factory functions for creating properly typed Item objects
@@ -14,11 +15,12 @@ interface CreateItemParams {
 }
 
 export function createTodoItem(params: CreateItemParams): Todo {
-  const { content, createdAt, createdDate, parsed, userId = 'user-1' } = params;
+  const { content, createdAt, createdDate, parsed, userId } = params;
+  const finalUserId = userId ?? 'guest'; // Always use 'guest' - will be transformed on sync
 
   return {
     id: '', // Will be set by caller
-    userId,
+    userId: finalUserId,
     type: 'todo',
     content,
     createdAt,
@@ -38,11 +40,12 @@ export function createTodoItem(params: CreateItemParams): Todo {
 }
 
 export function createEventItem(params: CreateItemParams): Event {
-  const { content, createdAt, createdDate, parsed, userId = 'user-1' } = params;
+  const { content, createdAt, createdDate, parsed, userId } = params;
+  const finalUserId = userId ?? 'guest'; // Always use 'guest' - will be transformed on sync
 
   return {
     id: '', // Will be set by caller
-    userId,
+    userId: finalUserId,
     type: 'event',
     content,
     createdAt,
@@ -65,11 +68,12 @@ export function createEventItem(params: CreateItemParams): Event {
 }
 
 export function createRoutineItem(params: CreateItemParams): Routine {
-  const { content, createdAt, createdDate, parsed, userId = 'user-1' } = params;
+  const { content, createdAt, createdDate, parsed, userId } = params;
+  const finalUserId = userId ?? 'guest'; // Always use 'guest' - will be transformed on sync
 
   return {
     id: '', // Will be set by caller
-    userId,
+    userId: finalUserId,
     type: 'routine',
     content,
     createdAt,
@@ -91,11 +95,12 @@ export function createRoutineItem(params: CreateItemParams): Routine {
 }
 
 export function createNoteItem(params: CreateItemParams): Note {
-  const { content, createdAt, createdDate, userId = 'user-1' } = params;
+  const { content, createdAt, createdDate, userId } = params;
+  const finalUserId = userId ?? 'guest'; // Always use 'guest' - will be transformed on sync
 
   return {
     id: '', // Will be set by caller
-    userId,
+    userId: finalUserId,
     type: 'note',
     content,
     createdAt,
