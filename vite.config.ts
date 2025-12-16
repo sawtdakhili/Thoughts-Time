@@ -94,6 +94,42 @@ export default defineConfig({
       }
     })
   ],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Vendor chunk: Core React and state management
+          'vendor': [
+            'react',
+            'react-dom',
+            'zustand'
+          ],
+          // Date utilities chunk
+          'date-utils': [
+            'date-fns',
+            'chrono-node'
+          ],
+          // Editor chunk: CodeMirror is large (~200KB)
+          'codemirror': [
+            '@codemirror/view',
+            '@codemirror/state',
+            '@codemirror/commands',
+            '@codemirror/language'
+          ],
+          // Supabase chunk: Database and auth
+          'supabase': [
+            '@supabase/supabase-js'
+          ],
+          // Virtualization chunk
+          'virtual': [
+            '@tanstack/react-virtual'
+          ]
+        }
+      }
+    },
+    // Increase threshold since we're splitting into multiple chunks
+    chunkSizeWarningLimit: 600
+  },
   test: {
     globals: true,
     environment: 'happy-dom',

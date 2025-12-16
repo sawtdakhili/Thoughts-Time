@@ -1,6 +1,51 @@
 import { supabase } from '../lib/supabase';
-import { Item, Todo, Event, Routine, Note } from '../types';
+import { Item, Todo, Event, Routine, Note, ItemType } from '../types';
 import { useAuthStore } from '../store/useAuthStore';
+
+// Define proper types for database fields (replacing 'any')
+interface RecurrencePattern {
+  frequency: 'daily' | 'weekly' | 'monthly';
+  interval: number;
+  daysOfWeek?: number[];
+  dayOfMonth?: number;
+  nthDayOfWeek?: number;
+  dayOfWeek?: number;
+}
+
+interface LinkPreview {
+  url: string;
+  title?: string;
+  description?: string;
+  image?: string;
+  domain?: string;
+}
+
+// Type guards for runtime validation of database data
+function isValidItemType(type: unknown): type is ItemType {
+  return typeof type === 'string' && ['todo', 'event', 'routine', 'note'].includes(type);
+}
+
+function isValidParentType(
+  parentType: unknown,
+  itemType: ItemType
+): parentType is Todo['parentType'] | Event['parentType'] | Note['parentType'] | null {
+  if (parentType === null || parentType === undefined) return true;
+
+  if (typeof parentType !== 'string') return false;
+
+  // Validate parent type based on item type constraints
+  if (itemType === 'todo') {
+    return ['todo', 'event', 'note'].includes(parentType);
+  } else if (itemType === 'event') {
+    return parentType === 'note';
+  } else if (itemType === 'note') {
+    return parentType === 'note';
+  } else if (itemType === 'routine') {
+    return false; // Routines don't have parents
+  }
+
+  return false;
+}
 
 // Database row type (matches Supabase schema)
 interface DatabaseItem {
@@ -27,11 +72,11 @@ interface DatabaseItem {
   is_all_day: boolean | null;
   split_start_id: string | null;
   split_end_id: string | null;
-  recurrence_pattern: any | null;
+  recurrence_pattern: RecurrencePattern | null;
   routine_scheduled_time: string | null;
   streak: number | null;
   last_completed: string | null;
-  link_previews: any | null;
+  link_previews: LinkPreview[] | null;
   order_index: number | null;
 }
 
@@ -59,11 +104,11 @@ function itemToDatabaseFormat(item: Item): Omit<DatabaseItem, 'id' | 'user_id'> 
     is_all_day: null as boolean | null,
     split_start_id: null as string | null,
     split_end_id: null as string | null,
-    recurrence_pattern: null as any | null,
+    recurrence_pattern: null as RecurrencePattern | null,
     routine_scheduled_time: null as string | null,
     streak: null as number | null,
     last_completed: null as string | null,
-    link_previews: null as any | null,
+    link_previews: null as LinkPreview[] | null,
     order_index: null as number | null,
   };
 
@@ -128,10 +173,15 @@ function itemToDatabaseFormat(item: Item): Omit<DatabaseItem, 'id' | 'user_id'> 
 
 // Transform database format to app Item
 function databaseToItemFormat(dbItem: DatabaseItem): Item {
+  // Validate item type
+  if (!isValidItemType(dbItem.type)) {
+    throw new Error(`Invalid item type from database: ${dbItem.type}`);
+  }
+
   const base = {
     id: dbItem.item_id,
     userId: dbItem.user_id,
-    type: dbItem.type as Item['type'],
+    type: dbItem.type,
     content: dbItem.content,
     createdAt: new Date(dbItem.created_at),
     createdDate: dbItem.created_date,
@@ -141,6 +191,11 @@ function databaseToItemFormat(dbItem: DatabaseItem): Item {
   };
 
   if (dbItem.type === 'todo') {
+    // Validate parent type for todo
+    if (!isValidParentType(dbItem.parent_type, 'todo')) {
+      throw new Error(`Invalid parent type for todo: ${dbItem.parent_type}`);
+    }
+
     return {
       ...base,
       type: 'todo',
@@ -154,6 +209,11 @@ function databaseToItemFormat(dbItem: DatabaseItem): Item {
       completionLinkId: dbItem.completion_link_id,
     } as Todo;
   } else if (dbItem.type === 'event') {
+    // Validate parent type for event
+    if (!isValidParentType(dbItem.parent_type, 'event')) {
+      throw new Error(`Invalid parent type for event: ${dbItem.parent_type}`);
+    }
+
     return {
       ...base,
       type: 'event',
@@ -170,6 +230,11 @@ function databaseToItemFormat(dbItem: DatabaseItem): Item {
       children: dbItem.children ?? [],
     } as Event;
   } else if (dbItem.type === 'routine') {
+    // Routines should not have parents
+    if (dbItem.parent_type !== null) {
+      throw new Error(`Routines cannot have parents, found: ${dbItem.parent_type}`);
+    }
+
     return {
       ...base,
       type: 'routine',
@@ -186,6 +251,11 @@ function databaseToItemFormat(dbItem: DatabaseItem): Item {
     } as Routine;
   } else {
     // note
+    // Validate parent type for note
+    if (!isValidParentType(dbItem.parent_type, 'note')) {
+      throw new Error(`Invalid parent type for note: ${dbItem.parent_type}`);
+    }
+
     return {
       ...base,
       type: 'note',

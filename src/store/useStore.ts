@@ -16,6 +16,41 @@ import {
 import * as syncService from '../services/syncService';
 
 /**
+ * Wrapper for sync operations that handles errors with user feedback.
+ * Retries failed sync operations up to maxRetries times with exponential backoff.
+ */
+async function handleSync<T>(
+  operation: () => Promise<T>,
+  action: 'create' | 'update' | 'delete',
+  maxRetries = 2
+): Promise<void> {
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      await operation();
+      return; // Success
+    } catch (error) {
+      const isLastAttempt = attempt === maxRetries;
+
+      if (isLastAttempt) {
+        // Show error toast on final failure
+        const actionVerb = action === 'create' ? 'saving' : action === 'update' ? 'updating' : 'deleting';
+        const message = error instanceof Error ? error.message : 'Unknown error';
+
+        useToast.getState().addToast(
+          `Failed ${actionVerb} item: ${message}. Data saved locally.`,
+          'warning'
+        );
+
+        console.error(`Sync ${action} failed after ${maxRetries + 1} attempts:`, error);
+      } else {
+        // Wait before retry (exponential backoff: 500ms, 1000ms)
+        await new Promise((resolve) => setTimeout(resolve, 500 * Math.pow(2, attempt)));
+      }
+    }
+  }
+}
+
+/**
  * Main application state interface for Thoughts & Time.
  *
  * Manages all items (todos, events, routines, notes) with CRUD operations,
@@ -248,8 +283,8 @@ export const useStore = create<AppState>()(
           }));
         }
 
-        // Sync to Supabase (syncService will check if authenticated)
-        syncService.createItem(newItem).catch(console.error);
+        // Sync to Supabase with error handling
+        handleSync(() => syncService.createItem(newItem), 'create');
 
         return newId;
       },
@@ -447,7 +482,7 @@ export const useStore = create<AppState>()(
 
         // Sync all new items to Supabase (syncService will check if authenticated)
         for (const item of newItems) {
-          syncService.createItem(item).catch(console.error);
+          handleSync(() => syncService.createItem(item), 'create');
         }
 
         return { ids, errors: [], needsTimePrompt };
@@ -515,7 +550,7 @@ export const useStore = create<AppState>()(
         // Sync to Supabase (syncService will check if authenticated)
         if (oldItem) {
           const updatedItem = { ...oldItem, ...updates, updatedAt: new Date() } as Item;
-          syncService.updateItem(updatedItem).catch(console.error);
+          handleSync(() => syncService.updateItem(updatedItem), 'update');
         }
       },
 
@@ -559,7 +594,7 @@ export const useStore = create<AppState>()(
 
         // Sync deletions to Supabase (syncService will check if authenticated)
         for (const itemId of idsToDelete) {
-          syncService.deleteItem(itemId).catch(console.error);
+          handleSync(() => syncService.deleteItem(itemId), 'delete');
         }
       },
 
@@ -623,14 +658,14 @@ export const useStore = create<AppState>()(
         const updatedItems = get().items;
         const parentTodo = updatedItems.find((i) => i.id === id);
         if (parentTodo) {
-          syncService.updateItem(parentTodo).catch(console.error);
+          handleSync(() => syncService.updateItem(parentTodo), 'update');
 
           // Also sync all affected subtasks
           const subtasks = updatedItems.filter(
             (item) => item.type === 'todo' && item.parentId === id
           );
           for (const subtask of subtasks) {
-            syncService.updateItem(subtask).catch(console.error);
+            handleSync(() => syncService.updateItem(subtask), 'update');
           }
         }
       },

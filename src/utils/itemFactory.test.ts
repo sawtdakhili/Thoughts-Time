@@ -38,7 +38,7 @@ describe('createTodoItem', () => {
     expect(todo.hasTime).toBe(true);
     expect(todo.completedAt).toBeNull();
     expect(todo.children).toEqual([]);
-    expect(todo.userId).toBe('user-1');
+    expect(todo.userId).toBe('guest'); // Default userId is 'guest'
   });
 
   it('creates todo with embedded notes', () => {

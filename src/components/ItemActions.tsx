@@ -1,3 +1,5 @@
+import { memo } from 'react';
+
 interface ItemActionsProps {
   onEdit: () => void;
   onDelete: () => void;
@@ -6,8 +8,9 @@ interface ItemActionsProps {
 
 /**
  * Action buttons (edit/delete) that appear on hover for items.
+ * Memoized to prevent unnecessary re-renders when parent updates.
  */
-function ItemActions({ onEdit, onDelete, onJumpToSource }: ItemActionsProps) {
+const ItemActions = memo(function ItemActions({ onEdit, onDelete, onJumpToSource }: ItemActionsProps) {
   return (
     <div className="flex gap-4 flex-shrink-0">
       {onJumpToSource && (
@@ -38,6 +41,6 @@ function ItemActions({ onEdit, onDelete, onJumpToSource }: ItemActionsProps) {
       </button>
     </div>
   );
-}
+});
 
 export default ItemActions;

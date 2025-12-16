@@ -94,11 +94,19 @@ function ItemDisplay({
   };
 
   // Serialize item and all children into multi-line format with tabs
+  // Uses visited set to prevent infinite loops from circular references
   const serializeItemWithChildren = (
     targetItem: Item,
     allItems: Item[],
-    level: number = 0
+    level: number = 0,
+    visited = new Set<string>()
   ): string => {
+    // Prevent infinite recursion on circular references
+    if (visited.has(targetItem.id)) {
+      return '';
+    }
+    visited.add(targetItem.id);
+
     const symbol = typeToSymbol[targetItem.type] || '';
     const tabs = '\t'.repeat(level);
     // Format: tabs + symbol + space + content (for visual indentation)
@@ -110,7 +118,7 @@ function ItemDisplay({
       const childLines = childIds
         .map((childId: string) => allItems.find((i) => i.id === childId))
         .filter(Boolean)
-        .map((child) => serializeItemWithChildren(child as Item, allItems, level + 1));
+        .map((child) => serializeItemWithChildren(child as Item, allItems, level + 1, visited));
       line += '\n' + childLines.join('\n');
     }
 

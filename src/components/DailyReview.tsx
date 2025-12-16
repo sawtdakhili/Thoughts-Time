@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { format, differenceInDays } from 'date-fns';
 import { useStore } from '../store/useStore';
 import { useToast } from '../hooks/useToast';
@@ -35,6 +35,9 @@ function DailyReview({ searchQuery = '', isMobile: _isMobile = false }: DailyRev
   const today = format(new Date(), 'yyyy-MM-dd');
   const now = new Date();
 
+  // Create item map for O(1) lookups in search (performance optimization)
+  const itemMap = useMemo(() => new Map(items.map((i) => [i.id, i])), [items]);
+
   // Generate undone todos from previous days that need attention
   // Only include parent-level todos (not subtasks)
   const reviewItems: DailyReviewItem[] = items
@@ -55,8 +58,8 @@ function DailyReview({ searchQuery = '', isMobile: _isMobile = false }: DailyRev
         !todo.parentId && // Only show parent-level todos
         !isScheduledForTodayOrLater; // Exclude if already scheduled for today/future
 
-      // Apply search filter
-      return isReviewCandidate && matchesSearch(item, searchQuery, items);
+      // Apply search filter with optimized item map
+      return isReviewCandidate && matchesSearch(item, searchQuery, itemMap);
     })
     .map((item) => {
       const todo = item as Todo;

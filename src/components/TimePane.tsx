@@ -75,10 +75,13 @@ function TimePane({
     itemId: null,
   });
 
+  // Create item map for O(1) lookups in search (memoized for performance)
+  const itemMap = useMemo(() => new Map(items.map((i) => [i.id, i])), [items]);
+
   // Filter items based on search query
   const filteredItems = useMemo(
-    () => (searchQuery ? items.filter((item) => matchesSearch(item, searchQuery, items)) : items),
-    [items, searchQuery]
+    () => (searchQuery ? items.filter((item) => matchesSearch(item, searchQuery, itemMap)) : items),
+    [items, searchQuery, itemMap]
   );
 
   // Collect all scheduled todos for checking event overlaps (memoized for performance)

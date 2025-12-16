@@ -99,14 +99,34 @@ function Settings({ isOpen, onClose }: SettingsProps) {
     a.download = `thoughts-time-backup-${new Date().toISOString().split('T')[0]}.json`;
     document.body.appendChild(a);
     a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+
+    // Cleanup with delay to ensure download completes
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 100);
+
     addToast('Data exported successfully', 'success');
   };
 
   const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
+
+    // Security: Validate file type
+    if (!file.type.includes('application/json') && !file.name.endsWith('.json')) {
+      addToast('Only JSON files are supported', 'error');
+      event.target.value = ''; // Reset input
+      return;
+    }
+
+    // Security: Validate file size (5MB limit to prevent DOS)
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+    if (file.size > MAX_FILE_SIZE) {
+      addToast('File too large (maximum 5MB)', 'error');
+      event.target.value = ''; // Reset input
+      return;
+    }
 
     const reader = new FileReader();
     reader.onload = (e) => {

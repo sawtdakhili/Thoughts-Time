@@ -44,25 +44,29 @@ describe('matchesSearch', () => {
 
   it('returns true when query is empty', () => {
     const todo = createTodo('Buy milk');
-    expect(matchesSearch(todo, '', [])).toBe(true);
+    const itemMap = new Map([[todo.id, todo]]);
+    expect(matchesSearch(todo, '', itemMap)).toBe(true);
   });
 
   it('matches content case-insensitively', () => {
     const todo = createTodo('Buy MILK');
-    expect(matchesSearch(todo, 'milk', [])).toBe(true);
-    expect(matchesSearch(todo, 'MILK', [])).toBe(true);
-    expect(matchesSearch(todo, 'Milk', [])).toBe(true);
+    const itemMap = new Map([[todo.id, todo]]);
+    expect(matchesSearch(todo, 'milk', itemMap)).toBe(true);
+    expect(matchesSearch(todo, 'MILK', itemMap)).toBe(true);
+    expect(matchesSearch(todo, 'Milk', itemMap)).toBe(true);
   });
 
   it('returns false when content does not match', () => {
     const todo = createTodo('Buy eggs');
-    expect(matchesSearch(todo, 'milk', [])).toBe(false);
+    const itemMap = new Map([[todo.id, todo]]);
+    expect(matchesSearch(todo, 'milk', itemMap)).toBe(false);
   });
 
   it('matches partial content', () => {
     const todo = createTodo('Buy groceries');
-    expect(matchesSearch(todo, 'groc', [])).toBe(true);
-    expect(matchesSearch(todo, 'ceries', [])).toBe(true);
+    const itemMap = new Map([[todo.id, todo]]);
+    expect(matchesSearch(todo, 'groc', itemMap)).toBe(true);
+    expect(matchesSearch(todo, 'ceries', itemMap)).toBe(true);
   });
 
   describe('recursive search', () => {
@@ -71,7 +75,11 @@ describe('matchesSearch', () => {
       subtask.id = 'subtask-1';
       const parent = createTodo('Shopping trip', ['subtask-1']);
 
-      expect(matchesSearch(parent, 'milk', [parent, subtask])).toBe(true);
+      const itemMap = new Map([
+        [parent.id, parent],
+        [subtask.id, subtask],
+      ]);
+      expect(matchesSearch(parent, 'milk', itemMap)).toBe(true);
     });
 
     it('matches if note sub-item matches', () => {
@@ -79,7 +87,11 @@ describe('matchesSearch', () => {
       subNote.id = 'sub-note-1';
       const parent = createNote('Project notes', ['sub-note-1']);
 
-      expect(matchesSearch(parent, 'reminder', [parent, subNote])).toBe(true);
+      const itemMap = new Map([
+        [parent.id, parent],
+        [subNote.id, subNote],
+      ]);
+      expect(matchesSearch(parent, 'reminder', itemMap)).toBe(true);
     });
 
     it('matches deeply nested items', () => {
@@ -89,8 +101,12 @@ describe('matchesSearch', () => {
       child.id = 'child-1';
       const parent = createTodo('Parent', ['child-1']);
 
-      const items = [parent, child, deepChild];
-      expect(matchesSearch(parent, 'Deep', items)).toBe(true);
+      const itemMap = new Map([
+        [parent.id, parent],
+        [child.id, child],
+        [deepChild.id, deepChild],
+      ]);
+      expect(matchesSearch(parent, 'Deep', itemMap)).toBe(true);
     });
   });
 });

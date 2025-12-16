@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { format, parseISO } from 'date-fns';
 
 interface FloatingDateHeaderProps {
@@ -5,7 +6,11 @@ interface FloatingDateHeaderProps {
   isToday: boolean;
 }
 
-export function FloatingDateHeader({ date, isToday }: FloatingDateHeaderProps) {
+/**
+ * Floating date header for infinite scroll mode.
+ * Memoized to prevent re-renders when scrolling.
+ */
+export const FloatingDateHeader = memo(function FloatingDateHeader({ date, isToday }: FloatingDateHeaderProps) {
   return (
     <div
       className={`sticky top-0 z-30 bg-background py-3 border-b border-border-subtle ${
@@ -19,4 +24,4 @@ export function FloatingDateHeader({ date, isToday }: FloatingDateHeaderProps) {
       </h3>
     </div>
   );
-}
+});

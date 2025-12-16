@@ -3,16 +3,18 @@ import { Item } from '../types';
 
 /**
  * Recursively checks if an item or any of its children match the search query.
+ * PERFORMANCE: Uses item map for O(1) child lookups instead of O(n) array.find()
  *
  * @param item - The item to check
  * @param query - The search query string
- * @param items - All items in the store (for looking up children)
+ * @param itemMap - Map of item IDs to items for fast lookups
  * @returns True if the item or any child matches the query
  *
  * @example
- * const matches = matchesSearch(todo, 'meeting', allItems);
+ * const itemMap = new Map(items.map(i => [i.id, i]));
+ * const matches = matchesSearch(todo, 'meeting', itemMap);
  */
-export function matchesSearch(item: Item, query: string, items: Item[]): boolean {
+export function matchesSearch(item: Item, query: string, itemMap: Map<string, Item>): boolean {
   if (!query) return true;
 
   const lowerQuery = query.toLowerCase();
@@ -22,17 +24,27 @@ export function matchesSearch(item: Item, query: string, items: Item[]): boolean
     return true;
   }
 
-  // Recursively check children
+  // Recursively check children using O(1) map lookup
   const childIds = 'children' in item ? item.children : [];
 
   for (const childId of childIds) {
-    const childItem = items.find((i) => i.id === childId);
-    if (childItem && matchesSearch(childItem, query, items)) {
+    const childItem = itemMap.get(childId);
+    if (childItem && matchesSearch(childItem, query, itemMap)) {
       return true;
     }
   }
 
   return false;
+}
+
+/**
+ * Legacy wrapper for backward compatibility with array-based search.
+ * Prefer using matchesSearch with itemMap for better performance.
+ * @deprecated Use matchesSearch with Map instead
+ */
+export function matchesSearchArray(item: Item, query: string, items: Item[]): boolean {
+  const itemMap = new Map(items.map(i => [i.id, i]));
+  return matchesSearch(item, query, itemMap);
 }
 
 /**
@@ -54,7 +66,6 @@ export function highlightMatches(text: string, query: string): (string | React.R
   const lowerQuery = query.toLowerCase();
   let lastIndex = 0;
   let index = lowerText.indexOf(lowerQuery);
-  let keyCounter = 0;
 
   while (index !== -1) {
     // Add text before match
@@ -62,9 +73,9 @@ export function highlightMatches(text: string, query: string): (string | React.R
       parts.push(text.substring(lastIndex, index));
     }
 
-    // Add highlighted match
+    // Add highlighted match with position-based stable key
     parts.push(
-      <mark key={keyCounter++} className="bg-yellow-200 dark:bg-yellow-800 px-0.5 rounded-sm">
+      <mark key={`mark-${index}`} className="bg-yellow-200 dark:bg-yellow-800 px-0.5 rounded-sm">
         {text.substring(index, index + query.length)}
       </mark>
     );

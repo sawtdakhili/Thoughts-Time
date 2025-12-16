@@ -46,10 +46,11 @@ describe('HelpDrawer', () => {
     it('renders prefix symbols', () => {
       render(<HelpDrawer isOpen={true} onClose={mockOnClose} />);
 
-      expect(screen.getByText('□')).toBeInTheDocument();
-      expect(screen.getByText('↹')).toBeInTheDocument();
-      expect(screen.getByText('↻')).toBeInTheDocument();
-      expect(screen.getByText('↝')).toBeInTheDocument();
+      // Symbols are rendered with parentheses in the buttons
+      expect(screen.getByText('(□)')).toBeInTheDocument();
+      expect(screen.getByText('(↹)')).toBeInTheDocument();
+      expect(screen.getByText('(↻)')).toBeInTheDocument();
+      expect(screen.getByText('(↝)')).toBeInTheDocument();
     });
   });
 
