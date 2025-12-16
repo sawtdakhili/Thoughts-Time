@@ -366,8 +366,33 @@ function ItemDisplay({
           className={highlightedItemId === item.id ? 'highlight-flash' : ''}
         >
           {depth === 0 && (
-            <div className="text-xs font-mono text-text-secondary mt-3 mb-0.5">
-              {getTimeDisplay()}
+            <div className="flex items-center gap-2 text-xs font-mono text-text-secondary mt-3 mb-0.5">
+              <span>{getTimeDisplay()}</span>
+              {item.syncStatus && item.syncStatus !== 'synced' && (
+                <span
+                  className={`inline-flex items-center ${
+                    item.syncStatus === 'error' ? 'text-red-500' : 'opacity-40'
+                  }`}
+                  title={
+                    item.syncStatus === 'error'
+                      ? `Sync error: ${item.syncError || 'Unknown error'}`
+                      : item.syncStatus === 'syncing'
+                        ? 'Syncing...'
+                        : 'Pending sync'
+                  }
+                  aria-label={
+                    item.syncStatus === 'error'
+                      ? `Sync error: ${item.syncError || 'Unknown error'}`
+                      : item.syncStatus === 'syncing'
+                        ? 'Syncing to cloud'
+                        : 'Pending sync to cloud'
+                  }
+                >
+                  {item.syncStatus === 'pending' && '⏳'}
+                  {item.syncStatus === 'syncing' && '🔄'}
+                  {item.syncStatus === 'error' && '⚠️'}
+                </span>
+              )}
             </div>
           )}
 
@@ -533,6 +558,8 @@ export default memo(ItemDisplay, (prevProps, nextProps) => {
     prevProps.item.id === nextProps.item.id &&
     prevProps.item.updatedAt === nextProps.item.updatedAt &&
     prevProps.item.content === nextProps.item.content &&
+    prevProps.item.syncStatus === nextProps.item.syncStatus &&
+    prevProps.item.syncError === nextProps.item.syncError &&
     prevProps.highlightedItemId === nextProps.highlightedItemId &&
     prevProps.searchQuery === nextProps.searchQuery &&
     prevProps.showTime === nextProps.showTime &&

@@ -1,10 +1,11 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { format } from 'date-fns';
-import { Item, Todo, Event, Routine, Note, ParsedLine } from '../types';
+import { Item, Todo, Event, Routine, Note, ParsedLine, SyncStatus } from '../types';
 import { parseInput, parseMultiLine } from '../utils/parser';
 import { useHistory } from './useHistory';
 import { useToast } from '../hooks/useToast';
+import { useConflict } from '../hooks/useConflict';
 import {
   generateId,
   validateDepth,
@@ -14,21 +15,85 @@ import {
   VALIDATION_MESSAGES,
 } from './itemHelpers';
 import * as syncService from '../services/syncService';
+import { ConflictError } from '../services/syncService';
 
 /**
  * Wrapper for sync operations that handles errors with user feedback.
  * Retries failed sync operations up to maxRetries times with exponential backoff.
+ * Supports optimistic updates by tracking sync status.
+ * Special handling for ConflictError - shows conflict dialog instead of retrying.
  */
 async function handleSync<T>(
   operation: () => Promise<T>,
   action: 'create' | 'update' | 'delete',
+  itemId?: string,
   maxRetries = 2
 ): Promise<void> {
+  // Set syncing status
+  if (itemId) {
+    useStore.getState().updateItemSyncStatus(itemId, 'syncing');
+  }
+
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       await operation();
-      return; // Success
+
+      // Success - mark as synced
+      if (itemId) {
+        useStore.getState().updateItemSyncStatus(itemId, 'synced');
+      }
+      return;
     } catch (error) {
+      // Handle conflict errors specially - don't retry
+      if (error instanceof ConflictError) {
+        // Mark as error
+        if (itemId) {
+          useStore.getState().updateItemSyncStatus(itemId, 'error', 'Sync conflict');
+        }
+
+        // Show conflict dialog
+        useConflict.getState().showConflict(
+          error.localItem,
+          error.serverItem,
+          // Use local version - force update
+          async () => {
+            try {
+              // Update local item's timestamp to be newer than server
+              const updatedItem = {
+                ...error.localItem,
+                updatedAt: new Date(), // Current time - newer than server
+              };
+              useStore.getState().updateItemDirect(updatedItem.id, updatedItem);
+
+              // Retry sync with updated timestamp
+              await syncService.updateItem(updatedItem);
+
+              if (itemId) {
+                useStore.getState().updateItemSyncStatus(itemId, 'synced');
+              }
+
+              useToast.getState().addToast('Using your version', 'success');
+            } catch (err) {
+              console.error('Error using local version:', err);
+              useToast.getState().addToast('Failed to sync your version', 'error');
+              if (itemId) {
+                useStore.getState().updateItemSyncStatus(itemId, 'error', 'Failed to sync');
+              }
+            }
+          },
+          // Use server version - update local state
+          () => {
+            useStore.getState().updateItemDirect(error.serverItem.id, error.serverItem);
+            if (itemId) {
+              useStore.getState().updateItemSyncStatus(itemId, 'synced');
+            }
+            useToast.getState().addToast('Using other device version', 'success');
+          }
+        );
+
+        return; // Don't continue retry loop
+      }
+
       const isLastAttempt = attempt === maxRetries;
 
       if (isLastAttempt) {
@@ -42,6 +107,11 @@ async function handleSync<T>(
         );
 
         console.error(`Sync ${action} failed after ${maxRetries + 1} attempts:`, error);
+
+        // Mark as error
+        if (itemId) {
+          useStore.getState().updateItemSyncStatus(itemId, 'error', message);
+        }
       } else {
         // Wait before retry (exponential backoff: 500ms, 1000ms)
         await new Promise((resolve) => setTimeout(resolve, 500 * Math.pow(2, attempt)));
@@ -103,6 +173,21 @@ interface AppState {
    * @param updates - Partial item properties to merge
    */
   updateItem: (id: string, updates: Partial<Item>) => void;
+
+  /**
+   * Update the sync status of an item (for optimistic updates).
+   * @param id - Item ID to update
+   * @param status - New sync status
+   * @param error - Optional error message
+   */
+  updateItemSyncStatus: (id: string, status: SyncStatus, error?: string) => void;
+
+  /**
+   * Update an item directly without triggering sync (used for conflict resolution).
+   * @param id - Item ID to update
+   * @param item - Complete item object to replace with
+   */
+  updateItemDirect: (id: string, item: Item) => void;
 
   /**
    * Delete an item and all its children (cascade delete).
@@ -187,6 +272,7 @@ export const useStore = create<AppState>()(
           userId: 'guest', // Always use 'guest' - will be transformed on sync
           content: parsed.content,
           createdAt: now,
+          syncStatus: 'pending' as SyncStatus, // Optimistic update - pending sync
           createdDate,
           updatedAt: now,
           completedAt: null,
@@ -283,8 +369,8 @@ export const useStore = create<AppState>()(
           }));
         }
 
-        // Sync to Supabase with error handling
-        handleSync(() => syncService.createItem(newItem), 'create');
+        // Sync to Supabase with error handling (optimistic update - item already added to state)
+        handleSync(() => syncService.createItem(newItem), 'create', newId);
 
         return newId;
       },
@@ -354,6 +440,7 @@ export const useStore = create<AppState>()(
             userId: 'guest', // Always use 'guest' - will be transformed on sync
             content: line.content,
             createdAt: now,
+            syncStatus: 'pending' as SyncStatus, // Optimistic update - pending sync
             createdDate,
             updatedAt: now,
             completedAt: null,
@@ -482,7 +569,7 @@ export const useStore = create<AppState>()(
 
         // Sync all new items to Supabase (syncService will check if authenticated)
         for (const item of newItems) {
-          handleSync(() => syncService.createItem(item), 'create');
+          handleSync(() => syncService.createItem(item), 'create', item.id);
         }
 
         return { ids, errors: [], needsTimePrompt };
@@ -550,8 +637,30 @@ export const useStore = create<AppState>()(
         // Sync to Supabase (syncService will check if authenticated)
         if (oldItem) {
           const updatedItem = { ...oldItem, ...updates, updatedAt: new Date() } as Item;
-          handleSync(() => syncService.updateItem(updatedItem), 'update');
+          handleSync(() => syncService.updateItem(updatedItem), 'update', id);
         }
+      },
+
+      updateItemSyncStatus: (id: string, status: SyncStatus, error?: string) => {
+        set((state) => ({
+          items: state.items.map((item) =>
+            item.id === id
+              ? {
+                  ...item,
+                  syncStatus: status,
+                  syncError: status === 'error' ? error : undefined,
+                }
+              : item
+          ),
+        }));
+      },
+
+      updateItemDirect: (id: string, item: Item) => {
+        set((state) => ({
+          items: state.items.map((existingItem) =>
+            existingItem.id === id ? item : existingItem
+          ),
+        }));
       },
 
       deleteItem: (id: string) => {
@@ -594,7 +703,7 @@ export const useStore = create<AppState>()(
 
         // Sync deletions to Supabase (syncService will check if authenticated)
         for (const itemId of idsToDelete) {
-          handleSync(() => syncService.deleteItem(itemId), 'delete');
+          handleSync(() => syncService.deleteItem(itemId), 'delete', itemId);
         }
       },
 
@@ -658,14 +767,14 @@ export const useStore = create<AppState>()(
         const updatedItems = get().items;
         const parentTodo = updatedItems.find((i) => i.id === id);
         if (parentTodo) {
-          handleSync(() => syncService.updateItem(parentTodo), 'update');
+          handleSync(() => syncService.updateItem(parentTodo), 'update', id);
 
           // Also sync all affected subtasks
           const subtasks = updatedItems.filter(
             (item) => item.type === 'todo' && item.parentId === id
           );
           for (const subtask of subtasks) {
-            handleSync(() => syncService.updateItem(subtask), 'update');
+            handleSync(() => syncService.updateItem(subtask), 'update', subtask.id);
           }
         }
       },

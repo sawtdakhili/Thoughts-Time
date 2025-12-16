@@ -2,6 +2,8 @@
 export type ItemType = 'todo' | 'event' | 'routine' | 'note';
 export const ItemTypes = ['todo', 'event', 'routine', 'note'] as const;
 
+export type SyncStatus = 'pending' | 'syncing' | 'synced' | 'error';
+
 export interface BaseItem {
   id: string;
   userId: string;
@@ -12,6 +14,8 @@ export interface BaseItem {
   updatedAt: Date;
   completedAt: Date | null;
   cancelledAt: Date | null;
+  syncStatus?: SyncStatus; // Track sync state for optimistic updates
+  syncError?: string; // Error message if sync fails
 }
 
 export interface Todo extends BaseItem {

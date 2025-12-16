@@ -3,6 +3,7 @@ import ThoughtsPane, { ThoughtsPaneHandle } from './components/ThoughtsPane';
 import TimePane from './components/TimePane';
 import Settings from './components/Settings';
 import ToastContainer from './components/Toast';
+import ConflictDialog from './components/ConflictDialog';
 import PaneErrorBoundary from './components/PaneErrorBoundary';
 import MobileFooter from './components/MobileFooter';
 import HelpDrawer from './components/HelpDrawer';
@@ -17,6 +18,7 @@ import { useMobileLayout } from './hooks/useMobileLayout';
 import { useSwipeGesture } from './hooks/useSwipeGesture';
 import { useHapticFeedback } from './hooks/useHapticFeedback';
 import { useKeyboardDetection } from './hooks/useKeyboardDetection';
+import { useConflict } from './hooks/useConflict';
 import { Item } from './types';
 import { useAuthStore } from './store/useAuthStore';
 import { useStore } from './store/useStore';
@@ -46,6 +48,9 @@ function App() {
   // Auth state - directly access mode instead of calling function
   const authMode = useAuthStore((state) => state.mode);
   const authUserId = useAuthStore((state) => state.user?.id);
+
+  // Conflict resolution state
+  const conflictState = useConflict();
 
   // Fetch items from Supabase on authentication
   useEffect(() => {
@@ -381,6 +386,18 @@ function App() {
 
       {/* Toast Notifications */}
       <ToastContainer />
+
+      {/* Conflict Resolution Dialog */}
+      {conflictState.isOpen && conflictState.localItem && conflictState.serverItem && (
+        <ConflictDialog
+          isOpen={conflictState.isOpen}
+          localItem={conflictState.localItem}
+          serverItem={conflictState.serverItem}
+          onUseLocal={() => conflictState.onUseLocal?.()}
+          onUseServer={() => conflictState.onUseServer?.()}
+          onCancel={() => conflictState.closeConflict()}
+        />
+      )}
     </div>
   );
 }

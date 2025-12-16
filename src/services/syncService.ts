@@ -2,6 +2,18 @@ import { supabase } from '../lib/supabase';
 import { Item, Todo, Event, Routine, Note, ItemType } from '../types';
 import { useAuthStore } from '../store/useAuthStore';
 
+// Conflict error for concurrent edits
+export class ConflictError extends Error {
+  constructor(
+    message: string,
+    public localItem: Item,
+    public serverItem: Item
+  ) {
+    super(message);
+    this.name = 'ConflictError';
+  }
+}
+
 // Define proper types for database fields (replacing 'any')
 interface RecurrencePattern {
   frequency: 'daily' | 'weekly' | 'monthly';
@@ -290,6 +302,33 @@ export async function fetchItems(): Promise<Item[]> {
   return (data || []).map(databaseToItemFormat);
 }
 
+// Fetch a single item by ID
+export async function fetchItemById(itemId: string): Promise<Item | null> {
+  const userId = useAuthStore.getState().getUserId();
+
+  if (userId === 'guest') {
+    return null;
+  }
+
+  const { data, error } = await supabase
+    .from('items')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('item_id', itemId)
+    .single();
+
+  if (error) {
+    if (error.code === 'PGRST116') {
+      // Not found - item doesn't exist in database
+      return null;
+    }
+    console.error('Error fetching item:', error);
+    throw error;
+  }
+
+  return databaseToItemFormat(data as DatabaseItem);
+}
+
 // Create a new item
 export async function createItem(item: Item): Promise<void> {
   const userId = useAuthStore.getState().getUserId();
@@ -311,7 +350,7 @@ export async function createItem(item: Item): Promise<void> {
   }
 }
 
-// Update an existing item
+// Update an existing item with conflict detection
 export async function updateItem(item: Item): Promise<void> {
   const userId = useAuthStore.getState().getUserId();
 
@@ -319,6 +358,25 @@ export async function updateItem(item: Item): Promise<void> {
     return; // Don't sync for guest users
   }
 
+  // Fetch current server version to check for conflicts
+  const serverItem = await fetchItemById(item.id);
+
+  if (serverItem) {
+    // Compare timestamps - if server version is newer, we have a conflict
+    const serverTime = new Date(serverItem.updatedAt).getTime();
+    const localTime = new Date(item.updatedAt).getTime();
+
+    if (serverTime > localTime) {
+      // Server has newer version - conflict!
+      throw new ConflictError(
+        'Item was modified on another device',
+        item, // local version
+        serverItem // server version
+      );
+    }
+  }
+
+  // No conflict - safe to update
   const dbItem = itemToDatabaseFormat(item);
 
   const { error } = await supabase
