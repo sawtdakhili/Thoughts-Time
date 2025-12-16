@@ -139,32 +139,35 @@ npm run lint         # ESLint
 
 ## Important Files to Know
 
-- `src/types.ts` - All TypeScript interfaces
-- `src/store/useStore.ts` - Core state management with sync error handling
+- `src/types.ts` - All TypeScript interfaces (includes SyncStatus)
+- `src/store/useStore.ts` - Core state management with optimistic updates and conflict handling
 - `src/store/useHistory.ts` - Undo/redo history management
 - `src/store/useAuthStore.ts` - Authentication state management
 - `src/store/itemHelpers.ts` - Validation and tree operations helpers
 - `src/lib/supabase.ts` - Supabase client initialization
-- `src/services/syncService.ts` - Data sync to Supabase with type guards and validation
+- `src/services/syncService.ts` - Data sync to Supabase with conflict detection, type guards, and validation
+- `src/utils/migration.ts` - localStorage to Supabase migration utility
 - `vite.config.ts` - Build configuration with code splitting optimization
 - `src/utils/parser.ts` - Input parsing logic
 - `src/components/ThoughtsPane.tsx` - Left pane (thoughts)
 - `src/components/TimePane.tsx` - Right pane (timeline)
 - `src/components/FloatingDateHeader.tsx` - Floating date header for infinite scroll mode (memoized)
-- `src/components/ItemDisplay.tsx` - Item rendering with circular reference protection
+- `src/components/ItemDisplay.tsx` - Item rendering with circular reference protection and sync status indicator
 - `src/components/ItemEditor.tsx` - Item edit mode (uses SymbolEditor)
 - `src/components/ItemActions.tsx` - Edit/delete/jump buttons (memoized)
 - `src/components/SymbolEditor.tsx` - CodeMirror 6 editor with Tab/indentation
+- `src/components/ConflictDialog.tsx` - Sync conflict resolution UI
 - `src/components/PaneErrorBoundary.tsx` - Error isolation for panes
 - `src/components/AuthProvider.tsx` - Auth state listener (wraps app)
 - `src/components/AuthModal.tsx` - Sign in/up modal
 - `src/components/AuthBanner.tsx` - Guest mode banner
 - `src/components/UserMenu.tsx` - User dropdown menu
 - `src/components/HelpDrawer.tsx` - Interactive help drawer with input prefix reference
+- `src/hooks/useConflict.ts` - Conflict dialog state management
 - `src/hooks/useWheelNavigation.ts` - Shared wheel navigation for book mode
 - `src/hooks/useFocusTrap.ts` - Focus trap for modals
 - `src/components/BottomSheet.tsx` - Mobile bottom sheet modal
-- `src/components/FAB.tsx` - Mobile floating action button
+- `src/components/FAB.tsx` - Floating action button
 - `src/components/MobileFooter.tsx` - Mobile bottom navigation
 - `src/hooks/useMobileLayout.ts` - Mobile breakpoint detection
 - `src/hooks/useSwipeGesture.ts` - Touch gesture detection
@@ -275,7 +278,7 @@ See `MOBILE_IMPLEMENTATION.md` for complete mobile documentation.
 6. **localStorage persistence** - changes auto-persist via Zustand middleware
 7. **Error boundaries** - Each pane has its own error boundary for isolation
 8. **Accessibility** - App includes skip navigation link and ARIA labels
-9. **Test coverage** - 429 tests covering stores, hooks, and components (109 mobile-specific, 27 performance regression)
+9. **Test coverage** - 429 tests covering stores, hooks, and components (109 mobile-specific, 27 performance regression, sync features)
 10. **TimePane subtasks** - Only todo children appear in timeline (notes filtered out)
 11. **Daily Review filtering** - Excludes todos already scheduled for today/future to prevent duplication
 12. **Reference date parsing** - Reschedule actions use today as reference (not original date)
@@ -293,6 +296,9 @@ See `MOBILE_IMPLEMENTATION.md` for complete mobile documentation.
 24. **Sync reliability** - Exponential backoff retry logic with user-facing error toasts, graceful degradation to localStorage
 25. **Performance optimizations** - Code splitting (835KB → 294KB bundle), search optimization (O(n²) → O(n) with Map-based lookups), React.memo for frequently re-rendered components
 26. **Bundle size** - Main bundle reduced 65% through manual chunk configuration (vendor, date-utils, codemirror, supabase, virtual)
+27. **Optimistic updates** - Items show instant UI feedback with sync status indicators (⏳ pending, 🔄 syncing, ⚠️ error)
+28. **Conflict resolution** - Timestamp-based last-write-wins with user-facing conflict dialog when editing on multiple devices
+29. **Data migration** - One-click localStorage to Supabase migration tool with progress tracking for guest → authenticated transitions
 
 ## License
 

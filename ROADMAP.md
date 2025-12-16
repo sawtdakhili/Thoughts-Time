@@ -1,6 +1,6 @@
 # Thoughts & Time - Development Roadmap
 
-**Last Updated**: December 13, 2025
+**Last Updated**: December 16, 2025
 **Current Status**: MVP with core features ✅ + Authentication system ✅ + Live on Vercel 🚀
 
 ---
@@ -407,24 +407,51 @@ domain: 13px, #6A6A6A
    - [ ] Add password reset flow
    - [ ] Add OAuth providers (Google, GitHub)
 
-4. **Data Migration & Sync** 🚀 In Progress
+4. **Data Migration & Sync** ✅ Completed (December 16, 2025)
    - [x] Create `src/services/syncService.ts` (basic sync implementation)
    - [x] Update `src/store/useStore.ts` to support both localStorage and Supabase
    - [x] Implement basic data sync (create operations)
-   - [ ] Implement full CRUD sync (update, delete operations)
-   - [ ] Implement optimistic updates (instant UI, background sync)
-   - [ ] Add conflict resolution (last-write-wins with timestamps)
-   - [ ] Add offline mode detection and queue
-   - [ ] Build "Import from localStorage" migration tool
+   - [x] Implement full CRUD sync (update, delete operations)
+   - [x] Implement optimistic updates (instant UI, background sync with status indicators)
+   - [x] Add conflict resolution (last-write-wins with timestamps and user dialog)
+   - [x] Build "Import from localStorage" migration tool with progress tracking
+   - [ ] Add offline mode detection and queue (deferred)
 
-5. **Testing & Polish** 🟡 Pending
+   **Optimistic Updates Implementation**:
+   - Added SyncStatus type ('pending' | 'syncing' | 'synced' | 'error')
+   - Items show ⏳ pending, 🔄 syncing, or ⚠️ error indicators
+   - Instant UI updates, background sync with status tracking
+   - Enhanced handleSync with sync status lifecycle management
+
+   **Conflict Resolution Implementation**:
+   - Timestamp-based conflict detection in updateItem
+   - ConflictDialog component shows both versions side-by-side
+   - User chooses "Use Your Version" or "Use Other Device Version"
+   - fetchItemById function for server version checking
+   - ConflictError class with local and server item details
+
+   **Migration Tool Implementation**:
+   - migrateLocalDataToSupabase with batch upload and progress tracking
+   - getMigratableItemCount to count items with userId 'guest'
+   - Migration UI in Settings (only for authenticated users with local data)
+   - Real-time progress bar with success/failure statistics
+   - Graceful error handling with partial migration support
+
+   **Files Created**:
+   - `src/components/ConflictDialog.tsx` - Conflict resolution UI
+   - `src/hooks/useConflict.ts` - Conflict state management
+   - `src/utils/migration.ts` - Migration utility with progress tracking
+
+5. **Testing & Polish** 🚀 In Progress
    - [x] Test sign up/sign in/sign out flows
    - [x] Test basic data sync to Supabase
-   - [ ] Test multi-device sync
-   - [ ] Test offline mode and conflict resolution
-   - [ ] Test data migration from localStorage
+   - [x] Implement optimistic updates with sync status indicators
+   - [x] Implement conflict resolution with user dialog
+   - [x] Implement data migration tool with progress tracking
+   - [ ] Test multi-device sync in production
+   - [ ] Test offline mode and conflict resolution in production
    - [ ] Performance testing with large datasets
-   - [ ] Add loading states and error handling
+   - [x] Add loading states and error handling (optimistic updates + conflict dialog)
 
 **Critical Bug Fixes** (December 11, 2025):
 
@@ -1484,7 +1511,59 @@ Tests: 429 passed (429)
 
 ---
 
-Last updated: December 15, 2025
+---
+
+## Recent Sync Improvements (December 16, 2025)
+
+### ✅ Optimistic Updates & Conflict Resolution
+
+**Implementation**: Complete sync experience with instant UI feedback and multi-device conflict handling.
+
+**Features Completed**:
+
+1. **Optimistic Updates** - Instant UI feedback with background sync
+   - Added SyncStatus type to BaseItem (pending/syncing/synced/error)
+   - Sync status indicators in ItemDisplay (⏳ pending, 🔄 syncing, ⚠️ error)
+   - Enhanced handleSync to track status throughout sync lifecycle
+   - Items update immediately in UI, sync happens in background
+   - Error states show in tooltip with error message
+
+2. **Conflict Resolution** - Last-write-wins with user choice
+   - Timestamp-based conflict detection using updatedAt comparison
+   - ConflictError class with localItem and serverItem
+   - fetchItemById function to get current server version
+   - ConflictDialog component showing both versions side-by-side
+   - User chooses: "Use Your Version" (force sync) or "Use Other Device Version" (apply server)
+   - Integrated in handleSync to catch conflicts automatically
+
+3. **Migration Tool** - localStorage to Supabase with progress tracking
+   - migrateLocalDataToSupabase function with batch upload
+   - getMigratableItemCount to check items with userId 'guest'
+   - Migration UI in Settings modal (authenticated users only)
+   - Real-time progress bar showing X of Y items migrated
+   - Error handling with partial migration support (migrates what it can)
+   - Success/failure statistics in toast notifications
+
+**Files Created**:
+- `src/components/ConflictDialog.tsx`
+- `src/hooks/useConflict.ts`
+- `src/utils/migration.ts`
+
+**Files Modified**:
+- `src/types.ts` - Added SyncStatus type and fields
+- `src/store/useStore.ts` - Optimistic updates + conflict handling
+- `src/services/syncService.ts` - Conflict detection + ConflictError
+- `src/components/ItemDisplay.tsx` - Sync status indicator
+- `src/components/Settings.tsx` - Migration UI
+- `src/App.tsx` - ConflictDialog integration
+
+**Commits**:
+- `69a4e53` - Implement optimistic updates and conflict resolution
+- `87a0ea5` - Add localStorage to Supabase migration tool
+
+---
+
+Last updated: December 16, 2025
 
 ---
 
