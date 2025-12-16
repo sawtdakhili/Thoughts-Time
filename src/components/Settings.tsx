@@ -1,9 +1,11 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { useStore } from '../store/useStore';
+import { useAuthStore } from '../store/useAuthStore';
 import { useToast } from '../hooks/useToast';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { Item, ItemTypes } from '../types';
+import { migrateLocalDataToSupabase, getMigratableItemCount, MigrationProgress } from '../utils/migration';
 
 interface SettingsProps {
   isOpen: boolean;
@@ -76,9 +78,14 @@ function Settings({ isOpen, onClose }: SettingsProps) {
   const setTimeFormat = useSettingsStore((state) => state.setTimeFormat);
 
   const items = useStore((state) => state.items);
+  const authMode = useAuthStore((state) => state.mode);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const addToast = useToast((state) => state.addToast);
   const focusTrapRef = useFocusTrap<HTMLDivElement>(isOpen);
+
+  // Migration state
+  const [isMigrating, setIsMigrating] = useState(false);
+  const [migrationProgress, setMigrationProgress] = useState<MigrationProgress | null>(null);
 
   const handleExport = () => {
     const exportData: ExportData = {
@@ -179,6 +186,54 @@ function Settings({ isOpen, onClose }: SettingsProps) {
     // Reset input so same file can be selected again
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
+    }
+  };
+
+  const handleMigrate = async () => {
+    if (authMode !== 'authenticated') {
+      addToast('Please sign in to migrate data to cloud', 'error');
+      return;
+    }
+
+    const migratableCount = getMigratableItemCount(items);
+    if (migratableCount === 0) {
+      addToast('No local data to migrate', 'info');
+      return;
+    }
+
+    setIsMigrating(true);
+    setMigrationProgress({ total: migratableCount, completed: 0, failed: 0, errors: [] });
+
+    try {
+      const result = await migrateLocalDataToSupabase(items, (progress) => {
+        setMigrationProgress(progress);
+      });
+
+      if (result.success) {
+        addToast(
+          `Migration complete! Migrated ${result.migrated} of ${result.total} items`,
+          'success'
+        );
+
+        if (result.failed > 0) {
+          addToast(
+            `${result.failed} items failed to migrate. Check console for details.`,
+            'warning'
+          );
+          console.error('Migration errors:', result.errors);
+        }
+      } else {
+        addToast('Migration failed. No items were migrated.', 'error');
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      addToast(`Migration failed: ${message}`, 'error');
+      console.error('Migration error:', error);
+    } finally {
+      setIsMigrating(false);
+      setTimeout(() => {
+        setMigrationProgress(null);
+      }, 3000); // Clear progress after 3 seconds
     }
   };
 
@@ -324,6 +379,46 @@ function Settings({ isOpen, onClose }: SettingsProps) {
               Export creates a JSON backup. Import replaces all current data.
             </p>
           </div>
+
+          {/* Cloud Migration - Only show for authenticated users */}
+          {authMode === 'authenticated' && getMigratableItemCount(items) > 0 && (
+            <div>
+              <label className="block text-sm font-serif mb-8">Cloud Migration</label>
+              <button
+                onClick={handleMigrate}
+                disabled={isMigrating}
+                className="w-full px-16 py-8 text-sm font-mono border rounded-sm transition-colors bg-text-primary text-background border-text-primary hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isMigrating ? 'Migrating...' : `Migrate to Cloud (${getMigratableItemCount(items)} items)`}
+              </button>
+              {migrationProgress && (
+                <div className="mt-8">
+                  <div className="flex justify-between text-xs text-text-secondary mb-4">
+                    <span>Progress</span>
+                    <span>
+                      {migrationProgress.completed} of {migrationProgress.total}
+                    </span>
+                  </div>
+                  <div className="w-full bg-hover-bg border border-border-subtle rounded-sm h-[8px] overflow-hidden">
+                    <div
+                      className="h-full bg-text-primary transition-all duration-300"
+                      style={{
+                        width: `${(migrationProgress.completed / migrationProgress.total) * 100}%`,
+                      }}
+                    />
+                  </div>
+                  {migrationProgress.failed > 0 && (
+                    <p className="text-xs text-red-500 mt-4">
+                      {migrationProgress.failed} items failed
+                    </p>
+                  )}
+                </div>
+              )}
+              <p className="text-xs text-text-secondary mt-8">
+                Import your local data to cloud storage. This is a one-time operation.
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </>
