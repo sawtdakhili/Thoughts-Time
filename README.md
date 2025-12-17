@@ -218,6 +218,17 @@ Subtasks and subnotes create rich context for your work.
 - **Tab**: Indent (create nested item)
 - Type prefix + space: Convert to symbol (works in input and when editing)
 
+### Notifications
+
+Stay on top of your schedule with browser notifications:
+
+- **Event Reminders**: Get notified before events start (configurable: 5, 10, 15, 30, or 60 minutes before)
+- **Routine Reminders**: Notifications at your routine's scheduled time
+- **Auto-Scheduling**: Notifications are automatically scheduled when you create or update items
+- **Browser-Based**: Uses the Push API with Service Worker support (no external dependencies)
+
+**Setup**: Go to Settings (⚙️) and enable notifications. You'll be prompted to grant browser permission. Then choose your reminder preferences.
+
 ## Tips for Effective Use
 
 1. **Start each day in Book Style**: Review yesterday, plan today with focused attention.
@@ -276,13 +287,16 @@ Once installed, the app works offline and feels like a native application.
 
 ## Technical Stack
 
-- **Frontend**: React 18 + TypeScript
-- **Build Tool**: Vite
-- **Styling**: Tailwind CSS
+- **Frontend**: React 19 + TypeScript 5.9
+- **Build Tool**: Vite 7
+- **Styling**: Tailwind CSS 3
 - **State Management**: Zustand with persistence
 - **Date Parsing**: Chrono (natural language understanding)
 - **Date Utilities**: date-fns
-- **Storage**: localStorage (persistent across sessions)
+- **Editor**: CodeMirror 6
+- **Backend**: Supabase (PostgreSQL, authentication, real-time sync)
+- **Notifications**: Push API with Service Worker support
+- **Storage**: localStorage (guest mode) or Supabase (authenticated mode)
 
 ## Data Storage
 
@@ -325,15 +339,28 @@ See the [LICENSE](LICENSE) file for details or visit [AGPL-3.0](https://www.gnu.
 - Cross-device sync, real-time updates
 - Email/password authentication
 
-### 🆓 Self-Hosted (Coming Soon)
-Run your own instance using PocketBase:
+### 🆓 Self-Hosted (Available Now!)
+Run your own instance using Docker:
 - Complete control over your data
+- Full Supabase stack included (PostgreSQL, Auth, Storage, Real-time)
 - No usage limits
-- Community support
-- See [SELF_HOSTING.md](SELF_HOSTING.md) (coming soon)
+- One-command deployment
+- Automated backups included
+- See [SELF_HOSTING.md](SELF_HOSTING.md) for complete guide
+
+**Quick Start**:
+```bash
+git clone https://github.com/yourusername/thoughts-time.git
+cd thoughts-time
+cp .env.example .env
+# Edit .env with your configuration
+docker-compose up -d
+```
+
+Access your instance at `http://localhost:3000`
 
 ---
 
-**Status**: Feature-complete MVP ✅ | **Live**: https://thoughtsandtime.vercel.app 🚀
+**Status**: Production Ready ✅ | **Live**: https://thoughtsandtime.vercel.app 🚀
 
 *Built with care for thoughtful work.*

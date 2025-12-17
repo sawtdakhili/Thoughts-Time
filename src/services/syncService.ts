@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabase';
 import { Item, Todo, Event, Routine, Note, ItemType } from '../types';
 import { useAuthStore } from '../store/useAuthStore';
+import { logger } from '../utils/logger';
 
 // Conflict error for concurrent edits
 export class ConflictError extends Error {
@@ -295,7 +296,7 @@ export async function fetchItems(): Promise<Item[]> {
     .eq('user_id', userId);
 
   if (error) {
-    console.error('Error fetching items:', error);
+    logger.error('Error fetching items:', error);
     throw error;
   }
 
@@ -322,7 +323,7 @@ export async function fetchItemById(itemId: string): Promise<Item | null> {
       // Not found - item doesn't exist in database
       return null;
     }
-    console.error('Error fetching item:', error);
+    logger.error('Error fetching item:', error);
     throw error;
   }
 
@@ -345,7 +346,7 @@ export async function createItem(item: Item): Promise<void> {
   const { error } = await supabase.from('items').insert(dbItem);
 
   if (error) {
-    console.error('Error creating item:', error);
+    logger.error('Error creating item:', error);
     throw error;
   }
 }
@@ -386,7 +387,7 @@ export async function updateItem(item: Item): Promise<void> {
     .eq('item_id', item.id);
 
   if (error) {
-    console.error('Error updating item:', error);
+    logger.error('Error updating item:', error);
     throw error;
   }
 }
@@ -406,7 +407,7 @@ export async function deleteItem(itemId: string): Promise<void> {
     .eq('item_id', itemId);
 
   if (error) {
-    console.error('Error deleting item:', error);
+    logger.error('Error deleting item:', error);
     throw error;
   }
 }

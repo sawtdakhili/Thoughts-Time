@@ -540,6 +540,23 @@ const ThoughtsPane = forwardRef<ThoughtsPaneHandle, ThoughtsPaneProps>(
             </div>
           )}
 
+          {/* Empty state - no items at all */}
+          {!searchQuery && items.length === 0 && (
+            <div className="flex flex-col items-center justify-center h-full text-text-secondary px-32">
+              <p className="text-lg font-serif mb-8 text-center">Welcome to Thoughts & Time</p>
+              <div className="text-sm text-center space-y-4 max-w-md">
+                <p>Start by capturing a thought, task, or event below.</p>
+                <div className="text-xs text-left space-y-2 bg-hover-bg border border-border-subtle rounded p-12 mt-12">
+                  <p className="font-semibold text-text-primary mb-4">Quick Start:</p>
+                  <p><span className="font-mono">t Buy groceries at 5pm</span> → Todo</p>
+                  <p><span className="font-mono">e Team meeting 2-3pm</span> → Event</p>
+                  <p><span className="font-mono">r Morning jog at 6am daily</span> → Routine</p>
+                  <p><span className="font-mono">n Random thought</span> → Note</p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Virtualized list for infinite mode */}
           {viewMode === 'infinite' && visibleDates.length > 0 && (
             <div

@@ -22,8 +22,8 @@
 src/
 ├── components/     # React components (TimePane, ThoughtsPane, ItemDisplay, BottomSheet, FAB, MobileFooter, AuthModal, AuthBanner, AuthProvider, UserMenu, etc.)
 ├── store/          # Zustand stores (useStore.ts, useHistory.ts, useSettingsStore.ts, useAuthStore.ts, itemHelpers.ts)
-├── hooks/          # Custom hooks (useKeyboardShortcuts, useWheelNavigation, useFocusTrap, useMobileLayout, useSwipeGesture, useHapticFeedback, useKeyboardDetection, etc.)
-├── utils/          # Utilities (parser.ts, formatting.ts, itemFactory.ts, search.tsx)
+├── hooks/          # Custom hooks (useKeyboardShortcuts, useWheelNavigation, useFocusTrap, useMobileLayout, useSwipeGesture, useHapticFeedback, useKeyboardDetection, useNotifications, etc.)
+├── utils/          # Utilities (parser.ts, formatting.ts, itemFactory.ts, search.tsx, notifications.ts, logger.ts, migration.ts)
 ├── services/       # Services (syncService.ts - Supabase data sync)
 ├── lib/            # External integrations (supabase.ts - Supabase client)
 ├── constants/      # App constants (including mobile breakpoints and sizes)
@@ -33,7 +33,13 @@ src/
 ├── App.tsx         # Root component
 └── main.tsx        # Entry point
 e2e/                # Playwright end-to-end tests
+scripts/            # Deployment scripts (backup.sh, restore.sh, init-db.sql, kong.yml)
 .env.local          # Environment variables (Supabase credentials)
+.env.example        # Environment template for self-hosting
+docker-compose.yml  # Self-hosting stack with Supabase
+Dockerfile          # Production container build
+nginx.conf          # Production web server config
+SELF_HOSTING.md     # Complete self-hosting guide
 ```
 
 ## Key Concepts
@@ -57,7 +63,7 @@ e2e/                # Playwright end-to-end tests
 
 - `useStore` (src/store/useStore.ts): Main app state with items CRUD
 - `useHistory` (src/store/useHistory.ts): Undo/redo functionality
-- `useSettingsStore`: Theme and view mode preferences
+- `useSettingsStore`: Theme, view mode, time format, and notification preferences
 - `useAuthStore` (src/store/useAuthStore.ts): Authentication state (user, session, sign in/out)
 - All stores use Zustand persist middleware for localStorage
 
@@ -68,9 +74,25 @@ e2e/                # Playwright end-to-end tests
 - **Session Management**: Supabase handles JWT tokens and session persistence
 - **Data Sync**: Items sync to Supabase when authenticated, stay local in guest mode
 - **User ID Strategy**: All items use 'guest' as default userId, transformed during sync
+- **Loading States**: All auth operations show loading indicators and disable buttons
 - **Storage Keys**:
   - Supabase session: `thoughts-time-auth` (localStorage)
   - Auth mode: `thoughts-time-auth-mode` (Zustand persist)
+
+### Notifications System
+
+- **Browser Notifications**: Push API integration with Service Worker support
+- **Permission Handling**: Request permission on first enable with user-friendly flow
+- **Event Reminders**: Configurable notifications (5/10/15/30/60 minutes before events)
+- **Routine Reminders**: Notifications at scheduled routine times
+- **Auto-Scheduling**: Notifications automatically scheduled when items are created/updated
+- **Settings UI**: Toggle switches and time selector in Settings modal
+- **Smart Filtering**: Only schedules for future times, skips past items
+- **Graceful Degradation**: Fallback to regular browser notifications if Service Worker unavailable
+- **Files**:
+  - `src/utils/notifications.ts` - Permission, scheduling, display logic
+  - `src/hooks/useNotifications.ts` - Auto-scheduling hook
+  - Settings store includes: `notificationsEnabled`, `eventReminderMinutes`, `routineReminderEnabled`
 
 ## Development Commands
 
@@ -209,12 +231,39 @@ npm run lint         # ESLint
 
 ## Production Deployment
 
+### Hosted Version (Vercel)
+
 - **Platform**: Vercel
 - **Live URL**: https://thoughtsandtime.vercel.app
 - **Auto-Deploy**: Enabled on push to `main` branch
 - **Environment**: Production environment variables configured on Vercel
 - **Build**: Automatic via Vercel (detects Vite, runs `npm run build`)
 - **Supabase**: Connected with redirect URLs and email confirmation enabled
+
+### Self-Hosting (Docker)
+
+- **Guide**: See `SELF_HOSTING.md` for complete documentation
+- **Stack**: Docker + Docker Compose + Full Supabase Stack
+- **Services**: 9 containerized services (app, database, auth, realtime, storage, API gateway, etc.)
+- **Requirements**: Docker 20.10+, 2GB RAM, 10GB disk space
+- **Deployment**: One-command setup (`docker-compose up -d`)
+- **Features**:
+  - Complete Supabase infrastructure (PostgreSQL, GoTrue, PostgREST, Realtime, Storage, Kong)
+  - Automated backups with retention policies (`./scripts/backup.sh`)
+  - Easy restore (`./scripts/restore.sh`)
+  - Production-ready Nginx configuration with security headers
+  - Row-Level Security (RLS) policies on database
+  - Health checks on all services
+  - Volume persistence for data and storage
+  - SMTP support for email confirmations
+  - SSL/TLS ready (use with reverse proxy)
+- **Quick Start**:
+  ```bash
+  cp .env.example .env
+  # Edit .env with your configuration
+  docker-compose up -d
+  # Access at http://localhost:3000
+  ```
 
 ## View Modes
 
@@ -278,6 +327,12 @@ See `MOBILE_IMPLEMENTATION.md` for complete mobile documentation.
 6. **localStorage persistence** - changes auto-persist via Zustand middleware
 7. **Error boundaries** - Each pane has its own error boundary for isolation
 8. **Accessibility** - App includes skip navigation link and ARIA labels
+9. **Production logging** - Use `logger` utility from `src/utils/logger.ts`, NOT console.log (logs are no-ops in production)
+10. **Empty states** - ThoughtsPane and TimePane show welcoming onboarding messages when `items.length === 0`
+11. **Loading states** - All auth operations (sign in/up/out) show loading indicators and disable buttons during async operations
+12. **Notifications** - Browser notifications for events/routines, auto-scheduled via `useNotifications` hook, configurable in Settings
+13. **Self-hosting** - Complete Docker setup available, see `SELF_HOSTING.md` and `docker-compose.yml`
+14. **Drag-to-reorder** - Will NEVER be implemented (see ROADMAP.md), app uses chronological ordering by creation date
 9. **Test coverage** - 429 tests covering stores, hooks, and components (109 mobile-specific, 27 performance regression, sync features)
 10. **TimePane subtasks** - Only todo children appear in timeline (notes filtered out)
 11. **Daily Review filtering** - Excludes todos already scheduled for today/future to prevent duplication

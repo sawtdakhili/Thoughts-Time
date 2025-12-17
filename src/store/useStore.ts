@@ -16,6 +16,7 @@ import {
 } from './itemHelpers';
 import * as syncService from '../services/syncService';
 import { ConflictError } from '../services/syncService';
+import { logger } from '../utils/logger';
 
 /**
  * Wrapper for sync operations that handles errors with user feedback.
@@ -74,7 +75,7 @@ async function handleSync<T>(
 
               useToast.getState().addToast('Using your version', 'success');
             } catch (err) {
-              console.error('Error using local version:', err);
+              logger.error('Error using local version:', err);
               useToast.getState().addToast('Failed to sync your version', 'error');
               if (itemId) {
                 useStore.getState().updateItemSyncStatus(itemId, 'error', 'Failed to sync');
@@ -106,7 +107,7 @@ async function handleSync<T>(
           'warning'
         );
 
-        console.error(`Sync ${action} failed after ${maxRetries + 1} attempts:`, error);
+        logger.error(`Sync ${action} failed after ${maxRetries + 1} attempts:`, error);
 
         // Mark as error
         if (itemId) {
@@ -592,7 +593,7 @@ export const useStore = create<AppState>()(
         }));
 
         // Sync to Supabase (syncService will check if authenticated)
-        syncService.createItem(item).catch(console.error);
+        syncService.createItem(item).catch(logger.error);
       },
 
       addItemAtIndex: (item: Item, index: number) => {
@@ -605,7 +606,7 @@ export const useStore = create<AppState>()(
         });
 
         // Sync to Supabase (syncService will check if authenticated)
-        syncService.createItem(item).catch(console.error);
+        syncService.createItem(item).catch(logger.error);
       },
 
       updateItem: (id: string, updates: Partial<Item>) => {

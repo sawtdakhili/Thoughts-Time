@@ -1,0 +1,116 @@
+_format_version: "2.1"
+
+services:
+  - name: auth
+    url: http://supabase-auth:9999
+    routes:
+      - name: auth-route
+        paths:
+          - /auth/v1/
+        strip_path: false
+    plugins:
+      - name: cors
+        config:
+          origins:
+            - "*"
+          methods:
+            - GET
+            - POST
+            - PUT
+            - PATCH
+            - DELETE
+            - OPTIONS
+          headers:
+            - Accept
+            - Authorization
+            - Content-Type
+            - X-Client-Info
+          exposed_headers:
+            - X-Total-Count
+          credentials: true
+          max_age: 3600
+
+  - name: rest
+    url: http://supabase-rest:3000
+    routes:
+      - name: rest-route
+        paths:
+          - /rest/v1/
+        strip_path: false
+    plugins:
+      - name: cors
+        config:
+          origins:
+            - "*"
+          methods:
+            - GET
+            - POST
+            - PUT
+            - PATCH
+            - DELETE
+            - OPTIONS
+          headers:
+            - Accept
+            - Authorization
+            - Content-Type
+            - X-Client-Info
+            - Prefer
+          exposed_headers:
+            - X-Total-Count
+            - Content-Range
+          credentials: true
+          max_age: 3600
+
+  - name: realtime
+    url: http://supabase-realtime:4000/socket
+    routes:
+      - name: realtime-route
+        paths:
+          - /realtime/v1/
+        strip_path: false
+    plugins:
+      - name: cors
+        config:
+          origins:
+            - "*"
+          methods:
+            - GET
+            - POST
+            - OPTIONS
+          headers:
+            - Accept
+            - Authorization
+            - Content-Type
+            - X-Client-Info
+          credentials: true
+          max_age: 3600
+
+  - name: storage
+    url: http://supabase-storage:5000
+    routes:
+      - name: storage-route
+        paths:
+          - /storage/v1/
+        strip_path: false
+    plugins:
+      - name: cors
+        config:
+          origins:
+            - "*"
+          methods:
+            - GET
+            - POST
+            - PUT
+            - PATCH
+            - DELETE
+            - OPTIONS
+          headers:
+            - Accept
+            - Authorization
+            - Content-Type
+            - X-Client-Info
+            - Cache-Control
+          exposed_headers:
+            - ETag
+          credentials: true
+          max_age: 3600

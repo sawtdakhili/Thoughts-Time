@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { User, Session, AuthError } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
+import { logger } from '../utils/logger';
 
 export type AuthMode = 'guest' | 'authenticated';
 
@@ -50,17 +51,17 @@ export const useAuthStore = create<AuthState>()(
             },
           });
 
-          console.log('Sign up response:', { data, error });
+          logger.log('Sign up response:', { data, error });
 
           if (error) {
-            console.error('Sign up error:', error);
+            logger.error('Sign up error:', error);
             set({ isLoading: false, error });
             return { error };
           }
 
           // Check if we got a session (auto-confirmed) or need email confirmation
           if (data.user && data.session) {
-            console.log('User signed up with session');
+            logger.log('User signed up with session');
             set({
               user: data.user,
               session: data.session,
@@ -72,7 +73,7 @@ export const useAuthStore = create<AuthState>()(
             localStorage.removeItem('thoughts-time-storage');
           } else if (data.user && !data.session) {
             // User created but needs email confirmation
-            console.log('User needs email confirmation');
+            logger.log('User needs email confirmation');
             const confirmationError = {
               message: 'Please check your email to confirm your account',
               name: 'EmailConfirmationRequired',
@@ -81,13 +82,13 @@ export const useAuthStore = create<AuthState>()(
             set({ isLoading: false, error: confirmationError });
             return { error: confirmationError };
           } else {
-            console.log('Unexpected signup response');
+            logger.log('Unexpected signup response');
             set({ isLoading: false });
           }
 
           return { error: null };
         } catch (err) {
-          console.error('Sign up exception:', err);
+          logger.error('Sign up exception:', err);
           const error = {
             message: err instanceof Error ? err.message : 'Sign up failed',
             name: 'SignUpException',

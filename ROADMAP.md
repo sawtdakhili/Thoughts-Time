@@ -1,7 +1,7 @@
 # Thoughts & Time - Development Roadmap
 
-**Last Updated**: December 16, 2025
-**Current Status**: MVP with core features ✅ + Authentication system ✅ + Live on Vercel 🚀
+**Last Updated**: December 17, 2025
+**Current Status**: Production Ready ✅ | Authentication ✅ | Live on Vercel 🚀 | Self-hosting ready 🐳
 
 ---
 
@@ -17,7 +17,7 @@ This app enforces a strict scheduling philosophy: **every single task, event, an
 
 ### Current Implementation Status
 
-#### ✅ Completed Features (MVP)
+#### ✅ Completed Features
 
 - [x] Basic capture system with prefix detection (t, e, r, n)
 - [x] Four item types: Todo, Event, Routine, Note
@@ -731,25 +731,39 @@ await backend.items.create(newItem)
 
 #### 13. Notifications System
 
-**Status**: Not implemented
+**Status**: Completed ✅ (December 17, 2025)
 
-**Requirements**:
+**Implementation**:
 
-- [ ] Push notification setup
-- [ ] Service worker registration
-- [ ] Notification permission request
-- [ ] Schedule notifications for events (X minutes before)
-- [ ] Schedule notifications for routines
-- [ ] Notification settings UI
-- [ ] User preferences storage
-- [ ] Dismiss handling
+- [x] Push notification setup with Push API
+- [x] Service worker integration (via vite-plugin-pwa)
+- [x] Notification permission request flow
+- [x] Schedule notifications for events (5, 10, 15, 30, 60 minutes before)
+- [x] Schedule notifications for routines (at scheduled time)
+- [x] Notification settings UI with toggle and time selector
+- [x] User preferences storage in useSettingsStore
+- [x] Auto-scheduling when items created/updated
+- [x] useNotifications hook for lifecycle management
 
-**Files to create/modify**:
+**Features**:
 
-- `public/service-worker.js` (new file)
-- `src/utils/notifications.ts` (new file)
-- `src/components/Settings.tsx` (add notification preferences)
-- `src/store/useSettingsStore.ts` (add notification settings)
+- Browser-based notifications with graceful degradation
+- Configurable event reminder times (5/10/15/30/60 minutes before)
+- Routine reminders at scheduled time
+- Permission request on first enable with user-friendly flow
+- Settings toggles for enabling/disabling notifications
+- Auto-cleanup of old scheduled notifications
+
+**Files created**:
+
+- `src/utils/notifications.ts` (notification utilities)
+- `src/hooks/useNotifications.ts` (auto-scheduling hook)
+
+**Files modified**:
+
+- `src/store/useSettingsStore.ts` (added notification preferences)
+- `src/components/Settings.tsx` (added notification UI - 78 lines)
+- `src/App.tsx` (integrated useNotifications hook)
 
 ---
 
@@ -1299,24 +1313,27 @@ n		Subnote (two Tabs = level 2)
 
 ### Immediate (This Week)
 
-1. PWA support (web manifest, service worker, offline mode)
-2. Mobile E2E tests (Playwright tests for mobile viewports)
-3. Full accessibility audit (manual testing)
+1. Mobile E2E tests (Playwright tests for mobile viewports)
+2. Full accessibility audit (manual testing)
+3. Multi-device sync testing in production
 
 ### Short Term (Next 2 Weeks)
 
 1. URL link previews for notes
+2. Performance monitoring and optimization
+3. User feedback collection and analysis
 
 ### Medium Term (Next Month)
 
-1. Database backend (Supabase)
-2. Notifications system
+1. OAuth providers (Google, GitHub)
+2. Password reset flow
+3. Enhanced mobile experience refinements
 
 ### Long Term (Next Quarter)
 
-1. User authentication
-2. Cross-device sync
-3. Beta testing and polish
+1. Collaboration features (shared items, team workspaces)
+2. Advanced search and filtering
+3. Calendar integrations
 
 ---
 
@@ -1324,18 +1341,21 @@ n		Subnote (two Tabs = level 2)
 
 ### Abandoned Features
 
-#### Drag & Drop Rescheduling
-**Decision**: Not implementing drag & drop for rescheduling items
+#### Drag & Drop / Drag-to-Reorder
+**Decision**: Will NEVER be implemented in this app
 **Reasoning**:
-- Keyboard-first workflow is more efficient for power users
+- Goes against the app's keyboard-first philosophy
 - Daily Review + natural language parsing already provides intuitive rescheduling
 - Drag & drop adds complexity without significant UX benefit for this use case
 - Mobile implementation would be challenging and potentially confusing
+- Items are intentionally ordered by creation date (oldest to newest) - manual reordering conflicts with this chronological flow
+- Adds visual clutter with drag handles and hover states
 
 **Current Approach**:
 - Reschedule via Daily Review (edit and add new time)
 - Edit items directly in timeline or thoughts pane
 - Natural language parsing handles date/time updates elegantly
+- Chronological ordering by creation date maintains simplicity
 
 ---
 
@@ -1563,77 +1583,170 @@ Tests: 429 passed (429)
 
 ---
 
-Last updated: December 16, 2025
+## Polish & UX Improvements (December 17, 2025)
+
+### ✅ Completed Improvements
+
+**Status**: Completed ✅
+
+#### 1. Loading States for Auth Operations
+
+- [x] Added isLoading state to auth store
+- [x] Sign out button shows loading state with "Signing out..." text
+- [x] Button disabled during sign out to prevent double-clicks
+- [x] Improved UX with visual feedback for async operations
+
+**Files Modified**:
+- `src/components/UserMenu.tsx` - Loading state for sign out button
+
+#### 2. Empty State Messages
+
+- [x] **ThoughtsPane** - Welcoming empty state with quick start guide
+  - Shows item type examples with prefix syntax
+  - Friendly onboarding message for first-time users
+  - Styled card with border and background
+- [x] **TimePane** - Informative empty state explaining timeline
+  - Explains what appears in timeline (scheduled todos, events, routines)
+  - Notes that unscheduled items stay in Thoughts pane
+  - Helps users understand the dual-pane concept
+
+**Files Modified**:
+- `src/components/ThoughtsPane.tsx` - Added empty state UI (25 lines)
+- `src/components/TimePane.tsx` - Added empty state UI (22 lines)
+
+#### 3. Production-Safe Logging
+
+- [x] Created logger utility that no-ops in production
+- [x] Replaced all console.log/error/warn with logger equivalents
+- [x] Updated 6 critical files to use production-safe logging
+- [x] Prevents debugging info from appearing in production builds
+- [x] Development mode still shows full logs
+
+**Files Created**:
+- `src/utils/logger.ts` - Production-safe logging utility
+
+**Files Modified**:
+- `src/store/useAuthStore.ts` - 6 console replacements
+- `src/services/syncService.ts` - 5 console replacements
+- `src/store/useStore.ts` - 3 console replacements
+- `src/components/AuthProvider.tsx` - 6 console replacements
+- `src/components/UserMenu.tsx` - 2 console replacements
+- `src/components/Settings.tsx` - 1 console replacement
+
+**Impact**:
+- **UX**: Better first-time user experience with welcoming empty states
+- **Feedback**: Clear loading indicators for async operations
+- **Production**: Clean console with no debug logs in production
+- **Security**: Prevents accidental exposure of sensitive debugging info
+
+---
+
+Last updated: December 17, 2025
 
 ---
 
 ## Self-Hosted Version
 
-**Status**: Planned 🟢
+**Status**: Completed ✅ (December 17, 2025)
 
 ### Overview
 
-A self-hosted version of Thoughts & Time for users who want full control over their data and deployment.
+Complete self-hosting infrastructure for Thoughts & Time, giving users full control over their data and deployment.
 
-### Requirements
+### Implementation
 
-- [ ] Docker containerization
-- [ ] Docker Compose setup for easy deployment
-- [ ] Environment variable configuration
-- [ ] Optional Supabase backend support
-- [ ] SQLite fallback for simple deployments
-- [ ] Deployment documentation
-- [ ] Nginx reverse proxy configuration
-- [ ] SSL/TLS certificate setup guide
-- [ ] Backup and restore scripts
-- [ ] Update/migration path documentation
+**Docker Infrastructure**:
 
-### Deployment Options
+- [x] Multi-stage Dockerfile (Node build + Nginx production)
+- [x] Docker Compose orchestration (9 services)
+- [x] Full Supabase stack included (PostgreSQL, Auth, Real-time, Storage, REST API, Kong Gateway)
+- [x] Environment variable configuration via .env
+- [x] Production-ready Nginx configuration
+- [x] Health checks for all services
 
-1. **Docker (Recommended)**
-   - Single container with built-in SQLite
-   - Multi-container with separate database service
-   - Docker Compose for orchestration
+**Services Deployed** (9 containers):
 
-2. **Traditional Hosting**
-   - Static file hosting for frontend
-   - Optional backend API server
-   - Database configuration (PostgreSQL/SQLite)
+1. **app** - Thoughts & Time React frontend (Nginx)
+2. **supabase-db** - PostgreSQL 15 database
+3. **supabase-studio** - Admin UI (port 3001)
+4. **supabase-auth** - GoTrue authentication service
+5. **supabase-realtime** - WebSocket real-time subscriptions
+6. **supabase-rest** - PostgREST API
+7. **supabase-meta** - Database metadata service
+8. **supabase-storage** - File storage service
+9. **supabase-kong** - API Gateway (port 8000)
 
-3. **Cloud Platforms**
-   - Railway
-   - Fly.io
-   - DigitalOcean App Platform
-   - Heroku
-   - Vercel (frontend) + Supabase (backend)
+**Database & Security**:
 
-### Documentation Needed
+- [x] PostgreSQL schema with Row-Level Security (RLS)
+- [x] User authentication via Supabase Auth
+- [x] Automated database initialization (init-db.sql)
+- [x] Backup and restore scripts with retention policies
+- [x] Kong API Gateway with CORS configuration
 
-- `SELF_HOSTING.md` - Complete self-hosting guide
-- `docker-compose.yml` - Docker orchestration
-- `Dockerfile` - Container build instructions
-- `.env.example` - Environment variables template
-- Deployment scripts for common platforms
+**Documentation**:
 
-### Security Considerations
+- [x] `SELF_HOSTING.md` - Complete 9.1KB guide with quick start, configuration, deployment options, troubleshooting, security checklist
+- [x] Prerequisites and system requirements
+- [x] Environment variable documentation (40+ variables)
+- [x] Nginx reverse proxy examples with SSL
+- [x] Backup/restore procedures with cron examples
+- [x] Production security checklist
+- [x] Architecture overview with service descriptions
 
-- [ ] User authentication for multi-user deployments
-- [ ] Environment variable encryption
-- [ ] Database connection security
-- [ ] Rate limiting
-- [ ] CORS configuration
-- [ ] Session management
-- [ ] Backup encryption
+### Files Created
 
-### Files to Create
+**Docker Infrastructure**:
+- `Dockerfile` - Multi-stage build (Node + Nginx)
+- `docker-compose.yml` - 9-service orchestration (6.7KB)
+- `.dockerignore` - Build optimization
+- `nginx.conf` - Production web server config
+- `.env.example` - Configuration template (2.7KB)
 
-- `Dockerfile`
-- `docker-compose.yml`
-- `.dockerignore`
-- `SELF_HOSTING.md`
-- `scripts/backup.sh`
-- `scripts/restore.sh`
-- `scripts/update.sh`
-- `nginx.conf` (example)
+**Database & Scripts**:
+- `scripts/init-db.sql` - Database schema with RLS (3.1KB)
+- `scripts/kong.yml` - API Gateway routing (2.4KB)
+- `scripts/backup.sh` - Automated backup with retention (1.9KB)
+- `scripts/restore.sh` - Database restore utility (2.2KB)
+
+**Documentation**:
+- `SELF_HOSTING.md` - Complete self-hosting guide (9.1KB)
+
+### Quick Start
+
+```bash
+git clone https://github.com/yourusername/thoughts-time.git
+cd thoughts-time
+cp .env.example .env
+# Edit .env with your JWT_SECRET and POSTGRES_PASSWORD
+docker-compose up -d
+```
+
+**Access**:
+- Application: http://localhost:3000
+- Supabase Studio: http://localhost:3001
+- API Gateway: http://localhost:8000
+
+### Architecture
+
+**Stack**: Docker + Docker Compose + Full Supabase Stack
+**Database**: PostgreSQL 15 with Row-Level Security
+**Storage**: Docker volumes for persistence (supabase-db-data, supabase-storage-data)
+**Backup**: Automated scripts with 30-day retention
+**Deployment**: One-command deployment with `docker-compose up -d`
+
+### Features
+
+- ✅ One-command deployment
+- ✅ Full Supabase stack (no external dependencies)
+- ✅ Automated database initialization
+- ✅ Row-Level Security for data isolation
+- ✅ Automated backups with retention policies
+- ✅ Production-ready Nginx configuration
+- ✅ Health checks for all services
+- ✅ Environment-based configuration
+- ✅ Reverse proxy examples (Nginx with SSL)
+- ✅ Complete troubleshooting guide
+- ✅ Security hardening checklist
 
 ---

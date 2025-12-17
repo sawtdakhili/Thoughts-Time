@@ -8,6 +8,7 @@ export default function UserMenu() {
   // Select state values directly instead of calling helper functions
   const mode = useAuthStore((state) => state.mode);
   const user = useAuthStore((state) => state.user);
+  const isLoading = useAuthStore((state) => state.isLoading);
   const signOut = useAuthStore((state) => state.signOut);
 
   // Close on outside click
@@ -37,8 +38,9 @@ export default function UserMenu() {
     <div ref={menuRef} className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center hover:opacity-70 transition-opacity"
+        className="flex items-center hover:opacity-70 transition-opacity disabled:opacity-50"
         aria-label="User menu"
+        disabled={isLoading}
       >
         <div className="w-24 h-24 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-bold">
           {user?.email?.[0].toUpperCase()}
@@ -53,9 +55,10 @@ export default function UserMenu() {
           </div>
           <button
             onClick={handleSignOut}
-            className="w-full px-12 py-8 text-left text-sm hover:bg-hover-bg transition-colors"
+            disabled={isLoading}
+            className="w-full px-12 py-8 text-left text-sm hover:bg-hover-bg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Sign Out
+            {isLoading ? 'Signing out...' : 'Sign Out'}
           </button>
         </div>
       )}

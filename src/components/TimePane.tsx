@@ -889,6 +889,25 @@ function TimePane({
             </div>
           )}
 
+          {/* Empty state - no items at all */}
+          {!searchQuery && items.length === 0 && (
+            <div className="flex flex-col items-center justify-center h-full text-text-secondary px-32">
+              <p className="text-lg font-serif mb-8 text-center">Your Timeline</p>
+              <div className="text-sm text-center space-y-4 max-w-md">
+                <p>Schedule your tasks and events to see them appear here.</p>
+                <div className="text-xs text-left space-y-2 bg-hover-bg border border-border-subtle rounded p-12 mt-12">
+                  <p className="font-semibold text-text-primary mb-4">What appears here:</p>
+                  <p>• Todos with scheduled times</p>
+                  <p>• Events with start and end times</p>
+                  <p>• Routines with recurrence patterns</p>
+                  <p className="mt-4 pt-4 border-t border-border-subtle text-text-secondary">
+                    Items without times stay in the Thoughts pane.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Virtualized list for infinite mode */}
           {viewMode === 'infinite' && visibleDates.length > 0 && (
             <div

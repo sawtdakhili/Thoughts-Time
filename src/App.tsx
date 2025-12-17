@@ -19,6 +19,7 @@ import { useSwipeGesture } from './hooks/useSwipeGesture';
 import { useHapticFeedback } from './hooks/useHapticFeedback';
 import { useKeyboardDetection } from './hooks/useKeyboardDetection';
 import { useConflict } from './hooks/useConflict';
+import { useNotifications } from './hooks/useNotifications';
 import { Item } from './types';
 import { useAuthStore } from './store/useAuthStore';
 import { useStore } from './store/useStore';
@@ -44,6 +45,9 @@ function App() {
 
   // Setup undo/redo
   const { undo, redo } = useUndoRedo();
+
+  // Setup notifications
+  useNotifications();
 
   // Auth state - directly access mode instead of calling function
   const authMode = useAuthStore((state) => state.mode);

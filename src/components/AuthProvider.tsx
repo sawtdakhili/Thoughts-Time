@@ -1,6 +1,7 @@
 import { useEffect, ReactNode } from 'react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { useAuthStore } from '../store/useAuthStore';
+import { logger } from '../utils/logger';
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -12,7 +13,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     // Skip auth if Supabase isn't configured
     if (!isSupabaseConfigured) {
-      console.warn('Supabase not configured - running in guest mode only');
+      logger.warn('Supabase not configured - running in guest mode only');
       return;
     }
 
@@ -23,12 +24,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!ignore) {
         const userId = session?.user?.id ?? null;
-        console.log('Session retrieved:', userId || 'guest');
+        logger.log('Session retrieved:', userId || 'guest');
         lastUserId = userId;
         setUser(session?.user ?? null, session);
       }
     }).catch((error) => {
-      console.error('Error getting session:', error);
+      logger.error('Error getting session:', error);
     });
 
     // Listen for auth state changes (sign in, sign out, token refresh)
@@ -39,11 +40,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
         const userId = session?.user?.id ?? null;
         // Only update if user actually changed to prevent infinite loops
         if (userId !== lastUserId) {
-          console.log('Auth state changed:', _event, userId || 'guest');
+          logger.log('Auth state changed:', _event, userId || 'guest');
           lastUserId = userId;
           setUser(session?.user ?? null, session);
         } else {
-          console.log('Auth state changed but user unchanged, skipping update');
+          logger.log('Auth state changed but user unchanged, skipping update');
         }
       }
     });

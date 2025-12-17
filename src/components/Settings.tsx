@@ -77,6 +77,13 @@ function Settings({ isOpen, onClose }: SettingsProps) {
   const setViewMode = useSettingsStore((state) => state.setViewMode);
   const setTimeFormat = useSettingsStore((state) => state.setTimeFormat);
 
+  const notificationsEnabled = useSettingsStore((state) => state.notificationsEnabled);
+  const eventReminderMinutes = useSettingsStore((state) => state.eventReminderMinutes);
+  const routineReminderEnabled = useSettingsStore((state) => state.routineReminderEnabled);
+  const setNotificationsEnabled = useSettingsStore((state) => state.setNotificationsEnabled);
+  const setEventReminderMinutes = useSettingsStore((state) => state.setEventReminderMinutes);
+  const setRoutineReminderEnabled = useSettingsStore((state) => state.setRoutineReminderEnabled);
+
   const items = useStore((state) => state.items);
   const authMode = useAuthStore((state) => state.mode);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -349,6 +356,84 @@ function Settings({ isOpen, onClose }: SettingsProps) {
                 24-hour
               </button>
             </div>
+          </div>
+
+          {/* Notifications */}
+          <div>
+            <label className="block text-sm font-serif mb-8">Notifications</label>
+
+            {/* Enable Notifications Toggle */}
+            <div className="flex items-center justify-between mb-12">
+              <span className="text-sm text-text-secondary">Enable Notifications</span>
+              <button
+                onClick={async () => {
+                  if (!notificationsEnabled) {
+                    // Request permission when enabling
+                    const { requestNotificationPermission } = await import('../utils/notifications');
+                    const permission = await requestNotificationPermission();
+                    if (permission === 'granted') {
+                      setNotificationsEnabled(true);
+                    }
+                  } else {
+                    setNotificationsEnabled(false);
+                  }
+                }}
+                className={`relative w-48 h-24 rounded-full transition-colors ${
+                  notificationsEnabled ? 'bg-blue-500' : 'bg-border-subtle'
+                }`}
+                aria-label={`Notifications ${notificationsEnabled ? 'enabled' : 'disabled'}`}
+              >
+                <div
+                  className={`absolute top-2 w-20 h-20 bg-white rounded-full transition-transform ${
+                    notificationsEnabled ? 'translate-x-26' : 'translate-x-2'
+                  }`}
+                />
+              </button>
+            </div>
+
+            {/* Event Reminder Minutes */}
+            {notificationsEnabled && (
+              <div className="space-y-12">
+                <div>
+                  <label className="block text-xs text-text-secondary mb-4">
+                    Event Reminders (minutes before)
+                  </label>
+                  <select
+                    value={eventReminderMinutes}
+                    onChange={(e) => setEventReminderMinutes(Number(e.target.value))}
+                    className="w-full px-12 py-8 bg-hover-bg border border-border-subtle rounded-sm text-sm font-mono focus:outline-none focus:border-text-secondary"
+                  >
+                    <option value="5">5 minutes</option>
+                    <option value="10">10 minutes</option>
+                    <option value="15">15 minutes</option>
+                    <option value="30">30 minutes</option>
+                    <option value="60">1 hour</option>
+                  </select>
+                </div>
+
+                {/* Routine Reminders Toggle */}
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-text-secondary">Routine Reminders</span>
+                  <button
+                    onClick={() => setRoutineReminderEnabled(!routineReminderEnabled)}
+                    className={`relative w-48 h-24 rounded-full transition-colors ${
+                      routineReminderEnabled ? 'bg-blue-500' : 'bg-border-subtle'
+                    }`}
+                    aria-label={`Routine reminders ${routineReminderEnabled ? 'enabled' : 'disabled'}`}
+                  >
+                    <div
+                      className={`absolute top-2 w-20 h-20 bg-white rounded-full transition-transform ${
+                        routineReminderEnabled ? 'translate-x-26' : 'translate-x-2'
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <p className="text-xs text-text-secondary mt-8">
+              Get reminded about upcoming events and routines
+            </p>
           </div>
 
           {/* Data Management */}
