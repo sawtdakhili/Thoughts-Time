@@ -31,31 +31,81 @@ A simple productivity app with two panes: one for your thoughts (notes, tasks, i
 
 *Mobile views in infinite scroll mode showing the floating date header at the top. Left: Thoughts pane with all item types (notes, tasks, events) arranged chronologically. Right: Time pane with scheduled items and Daily Review section displaying incomplete tasks from previous days. Both panes feature swipe navigation and touch-optimized controls.*
 
+---
+
+## 🚀 Try It Now
+
+### **[thoughtsandtime.vercel.app](https://thoughtsandtime.vercel.app)**
+
+- ✅ No sign-up required
+- ✅ Works on all devices (desktop, tablet, mobile)
+- ✅ Data stays private (local-first)
+- ✅ Install as an app (PWA)
+
+**Quick start**: Visit the link above, type `t buy milk at 5pm` in the input box, press Enter. That's it.
+
+---
+
+## ✨ Key Features
+
+- 🎯 **Dual-Pane Design** - Thoughts on left, timeline on right
+- 🗣️ **Natural Language** - "meeting tomorrow at 2pm" just works
+- 📵 **Works Offline** - Everything stored locally, syncs optionally
+- 🔔 **Smart Notifications** - Reminders before events (5-60 minutes)
+- ⌨️ **Keyboard-First** - Quick input with prefixes (t, e, r, n)
+- 🌙 **Dark Mode** - Easy on the eyes, respects system preference
+- 📱 **Mobile Optimized** - Swipe gestures, touch-friendly, PWA support
+- 🔒 **Privacy-Focused** - Guest mode keeps everything local
+- ☁️ **Optional Sync** - Cross-device with Supabase (free account)
+- 🐳 **Self-Hostable** - Run your own instance with Docker
+
+---
+
 ## Philosophy
 
-**Thoughts & Time** is built on the principle that productive work emerges from the intersection of free-flowing thoughts and structured time. Most productivity tools force you to choose between capturing ideas and scheduling tasks. This app bridges that gap.
+**The Challenge**: Most productivity tools force a false choice—capture ideas OR schedule tasks. You can't do both well in the same place.
+
+**Our Answer**: Two panes, one system.
 
 ### The Two Panes
 
-- **Thoughts (Left Pane)**: Your stream of consciousness. Capture ideas, notes, tasks, and reflections as they come to you. This pane is for thinking, not just doing.
+**Thoughts (Left)** → Your stream of consciousness
+- Capture ideas as they come
+- Notes, tasks, reflections
+- Thinking, not just doing
 
-- **Time (Right Pane)**: Your timeline. See how your day unfolds, what needs to happen when, and what you've committed to doing.
+**Time (Right)** → Your timeline
+- See your day unfold
+- What's scheduled, what's coming
+- Structure without pressure
 
-The magic happens when these two views coexist. An idea can become a task. A task can spawn new thoughts. Notes provide context for scheduled work. Everything flows together naturally.
+**The magic**: An idea becomes a task. A task spawns thoughts. Notes provide context for scheduled work. Everything flows naturally between the two panes.
 
 ### Core Principles
 
-1. **Minimal Friction**: Quick input with simple prefixes. No clicking through forms or navigating complex hierarchies.
+**Minimal Friction** → Type `t buy milk at 5pm` and you're done. No forms, no clicking through menus.
 
-2. **Natural Language**: Write "meeting at 2pm" or "call mom tomorrow" – the app understands.
+**Natural Language** → Write "meeting tomorrow at 2pm" - the app understands.
 
-3. **Contextual Structure**: Items can nest (todos can have subtasks, notes can have subnotes) but the structure emerges from your thinking, not from imposed categories.
+**Emergent Structure** → Nest items with Tab. Structure emerges from your thinking, not imposed categories.
 
-4. **Two Modes of Engagement**:
-   - **Infinite Scrolling**: For the flow state. Capture everything as it comes. Review all days at once.
-   - **Book Style**: For focused reflection. One day at a time, like turning pages in a journal.
+**Two Modes of Engagement**:
+- **Infinite Scroll** → Flow state. Capture everything as it comes. See all days at once.
+- **Book Style** → Focused reflection. One day at a time, like turning pages in a journal.
 
-5. **Typography Matters**: Serif fonts for content (easier on the eyes, feels like writing). Monospace for metadata (clear, functional, distinct).
+**Typography Matters** → Serif fonts for content (easier to read, feels like writing). Monospace for metadata (clear, functional, distinct).
+
+---
+
+**This app doesn't prescribe methodology.** It won't tell you to "optimize yourself." Instead, it provides clean space where:
+- Thoughts can exist without immediately becoming tasks
+- Tasks don't lose their context
+- Time provides structure without creating pressure
+- The past informs the future without constraining it
+
+Use it as a journal, a task manager, or both. The tool adapts to your thinking, not the other way around.
+
+---
 
 ## How to Use
 
@@ -245,16 +295,7 @@ Stay on top of your schedule with browser notifications:
 
 7. **Let the timeline guide you**: In the Time pane, see what's coming up. Let it inform your priorities without creating pressure.
 
-## Philosophy in Practice
-
-This app doesn't prescribe a methodology. It won't tell you to be "productive" or "optimize" yourself. Instead, it provides a clean space where:
-
-- Thoughts can exist without immediately becoming tasks
-- Tasks can exist without losing their context
-- Time provides structure without creating pressure
-- The past informs the future without constraining it
-
-Use it as a journal. Use it as a task manager. Use it as both. The tool adapts to your thinking, not the other way around.
+---
 
 ## Install as an App
 
