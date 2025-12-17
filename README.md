@@ -256,34 +256,34 @@ This app doesn't prescribe a methodology. It won't tell you to be "productive" o
 
 Use it as a journal. Use it as a task manager. Use it as both. The tool adapts to your thinking, not the other way around.
 
-## Running the App
+## Install as an App
 
-### Development
+Thoughts & Time works as a Progressive Web App (PWA) - install it for a native app experience:
 
-```bash
-cd /home/user/Thoughts-Time
-npm install
-npm run dev
-```
+### Desktop (Chrome/Edge)
+Click the install icon (⊕) in the address bar when visiting the app.
 
-Open http://localhost:5173 in your browser.
+### Android
+1. Open the app in Chrome
+2. Tap the menu (⋮)
+3. Select "Add to Home Screen"
 
-### Build for Production
+### iOS
+1. Open the app in Safari
+2. Tap the Share button (□↑)
+3. Select "Add to Home Screen"
 
-```bash
-npm run build
-npm run preview
-```
+**Benefits of installing:**
+- Works offline (all your data stays local)
+- Faster loading (cached on your device)
+- Native app feel (no browser UI)
+- Easy access from home screen/dock
 
-### Install as App
+---
 
-Thoughts & Time can be installed as a Progressive Web App (PWA) on your device:
+## For Developers
 
-- **Desktop (Chrome/Edge)**: Click the install icon in the address bar
-- **Android**: Open menu → "Add to Home Screen"
-- **iOS**: Tap Share → "Add to Home Screen"
-
-Once installed, the app works offline and feels like a native application.
+Want to contribute or run locally? See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup instructions.
 
 ## Technical Stack
 
