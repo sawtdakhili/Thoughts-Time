@@ -173,6 +173,7 @@ function TimePane({
 
   // Track which date header should be visible at top (for floating header in infinite mode)
   const [visibleHeaderDate, setVisibleHeaderDate] = useState<string>(today);
+  const [showFloatingHeader, setShowFloatingHeader] = useState<boolean>(false);
 
   const dates = useMemo(() => {
     const result: string[] = [];
@@ -256,6 +257,9 @@ function TimePane({
 
     const scrollTop = scrollRef.current.scrollTop;
     const virtualItems = virtualizer.getVirtualItems();
+
+    // Show floating header only when scrolled past the first date header (~60px)
+    setShowFloatingHeader(scrollTop > 60);
 
     // Find the first virtual item that overlaps with viewport top
     for (const item of virtualItems) {
@@ -859,7 +863,7 @@ function TimePane({
 
       <div className="h-full flex flex-col">
         {/* Floating header for infinite scroll mode - shows current date */}
-        {viewMode === 'infinite' && visibleDates.length > 0 && (
+        {viewMode === 'infinite' && visibleDates.length > 0 && showFloatingHeader && (
           <FloatingDateHeader
             date={visibleHeaderDate}
             isToday={visibleHeaderDate === today}

@@ -108,6 +108,7 @@ const ThoughtsPane = forwardRef<ThoughtsPaneHandle, ThoughtsPaneProps>(
 
     // Track which date header should be visible at top (for floating header in infinite mode)
     const [visibleHeaderDate, setVisibleHeaderDate] = useState<string>(today);
+    const [showFloatingHeader, setShowFloatingHeader] = useState<boolean>(false);
 
     const dates = useMemo(() => {
       const result: string[] = [];
@@ -201,6 +202,9 @@ const ThoughtsPane = forwardRef<ThoughtsPaneHandle, ThoughtsPaneProps>(
 
       const scrollTop = scrollRef.current.scrollTop;
       const virtualItems = virtualizer.getVirtualItems();
+
+      // Show floating header only when scrolled past the first date header (~60px)
+      setShowFloatingHeader(scrollTop > 60);
 
       // Find the first virtual item that overlaps with viewport top
       for (const item of virtualItems) {
@@ -510,7 +514,7 @@ const ThoughtsPane = forwardRef<ThoughtsPaneHandle, ThoughtsPaneProps>(
         />
 
         {/* Floating header for infinite scroll mode - shows current date */}
-        {viewMode === 'infinite' && visibleDates.length > 0 && (
+        {viewMode === 'infinite' && visibleDates.length > 0 && showFloatingHeader && (
           <FloatingDateHeader
             date={visibleHeaderDate}
             isToday={visibleHeaderDate === today}
