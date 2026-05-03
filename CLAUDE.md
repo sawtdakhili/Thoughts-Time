@@ -1,4 +1,6 @@
-# CLAUDE.md - AI Assistant Guide for Thoughts & Time
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
 
@@ -112,9 +114,72 @@ npm run test:e2e     # Playwright end-to-end tests
 npm run test:e2e:ui  # Playwright with UI
 npm run test:e2e:headed # Playwright in headed mode
 
-# Linting
+# Linting & Formatting
 npm run lint         # ESLint
+npm run format       # Prettier (auto-fix)
+npm run format:check # Prettier (check only, used in CI)
 ```
+
+> Husky pre-commit hook runs lint-staged automatically on every commit (lint + format check).
+
+## Keyboard Shortcuts
+
+**Global** (disabled when any input/textarea/contentEditable is focused):
+
+| Shortcut | Action |
+|----------|--------|
+| Cmd/Ctrl + F | Open search |
+| Escape | Close open modal / dialog / search |
+| Cmd/Ctrl + Z | Undo |
+| Cmd/Ctrl + Shift + Z | Redo |
+
+**In the input textarea / SymbolEditor:**
+
+| Key | Behavior |
+|-----|----------|
+| Enter | Submit (create items) |
+| Shift + Enter | New line (no submit) |
+| Tab | Indent (cycles 0 → 1 → 2 → 0, enforces hierarchy rules) |
+| Shift + Tab | Outdent (removes one level) |
+| Backspace (after symbol) | Reverts `□ ` back to `t ` |
+
+**In edit mode (ItemEditor / SymbolEditor):**
+
+| Key | Behavior |
+|-----|----------|
+| Enter | Save edit |
+| Escape | Cancel edit |
+
+## Key Constants
+
+All defined in `src/constants/index.ts`:
+
+```
+Limits:    MAX_TODO_DEPTH=1, MAX_NOTE_DEPTH=2, MAX_HISTORY_ACTIONS=20
+Animation: PAGE_FLIP_DURATION=600ms, TOAST_DURATION=3000ms, SEARCH_DEBOUNCE=300ms
+           WHEEL_DELTA_THRESHOLD=150px, SCROLL_RESET_DELAY=50ms
+Dates:     DATE_RANGE past/future = 30 days (pre-lazy-load default)
+Lazy:      initial 7 days past + 7 future, chunk size 7, max 90 each direction
+Mobile:    BREAKPOINT=768px, FOOTER_HEIGHT=60px, FAB_SIZE=56px
+           MIN_TOUCH_TARGET=44px, SWIPE_THRESHOLD=50px
+           SWIPE_VELOCITY_THRESHOLD=0.3px/ms, BOTTOM_SHEET_DURATION=300ms
+           KEYBOARD_HEIGHT_THRESHOLD=150px
+```
+
+## Design System
+
+**Typography:**
+- Content (items, input): Crimson Text → Lora → Georgia → serif, 18px, 1.7 line-height
+- Metadata (times, IDs): Courier Prime → Courier New → monospace
+
+**Colors (dark theme):**
+- Background: `#0a0a0a`
+- Text primary: `#f5f5f5`
+- Text secondary: `#6a6a6a`
+- Border subtle: `#1a1a1a`
+- Hover bg: `#0f0f0f`
+
+**Spacing:** 8px base grid (6 / 12 / 16 / 24 / 32 / 48 / 64px steps)
 
 ## Code Conventions
 
@@ -144,6 +209,12 @@ npm run lint         # ESLint
 - Prefix detection: `t `, `e `, `r `, `n `
 - Tab after prefix indicates nesting level
 - Time parsing via chrono-node
+
+## Demo Data
+
+`public/populate-harry-console.js` — paste into browser console while the app is open to wipe all data and load a full Disco Elysium (Harry Du Bois) sample dataset. Useful for testing UI with realistic content. Not imported anywhere; purely a manual dev tool.
+
+Screenshots in the repo root (`screenshot.png`, `screenshot-mobile-thoughts-updated.png`, `screenshot-mobile-time-updated.png`) are used in `README.md`.
 
 ## Testing Guidelines
 
@@ -265,6 +336,62 @@ npm run lint         # ESLint
   # Access at http://localhost:3000
   ```
 
+## Input Syntax Reference
+
+**Prefixes** (space after prefix is required):
+
+| Type | Prefix | Example |
+|------|--------|---------|
+| Todo | `t ` | `t buy groceries tomorrow 3pm` |
+| Event | `e ` | `e team standup 9-10am` |
+| Routine | `r ` | `r morning jog at 6am daily` |
+| Note | `n ` | `n random thought` |
+
+**Multi-line hierarchy** (Tab = one nesting level, max 2 levels):
+```
+t parent todo
+t [tab]child todo
+n [tab][tab]grandchild note
+```
+First line cannot be indented; cannot skip levels.
+
+**Time formats:**
+- Natural language: `tomorrow 3pm`, `next Monday at 2:30`, `Friday afternoon`
+- 24-hour explicit: `at 13:55` (strict `at HH:MM` pattern required)
+- Relative: `in 30 minutes`, `in 2 hours` (also: min/mins/hr/hrs)
+- Range (events): `between 2pm and 4pm`, `from 10am to 12pm`
+
+**Recurrence patterns** (for `r ` prefix):
+- `daily` / `every day`
+- `every N days` (e.g. `every 3 days`)
+- `every Monday` (any day name)
+- `every other Monday` (bi-weekly)
+- `weekday` / `every weekday` → Mon–Fri
+- `weekend` / `every weekend` → Sat–Sun
+- `first Monday of each month`, `second Tuesday of the month`, etc. (ordinals: first/second/third/fourth/fifth/last)
+- `15th of each month` / `on the 15th`
+- `last day of the month`
+- `every N weeks`
+- `every N months`
+
+**`needsTimePrompt` triggers:** Events and todos that have no date OR no specific time (suppressed if `at HH:MM` is detected).
+
+## Symbol Reference
+
+| Symbol | Unicode | Prefix | Meaning |
+|--------|---------|--------|---------|
+| □ | U+25A1 | `t` | Todo (unchecked) |
+| ☑ | U+2611 | `t` | Todo (checked/complete) |
+| ↹ | U+21B9 | `e` | Event |
+| ⇤ | U+21E4 | — | Event start (split mode) |
+| ⇥ | U+21E5 | — | Event end (split mode, opacity-60) |
+| ↻ | U+21BB | `r` | Routine |
+| ↝ | U+219D | `n` | Note |
+| ■ | U+25A0 | — | Daily Review header |
+| ↸ | U+21B8 | — | Jump to Source action |
+
+Symbol conversion is real-time: typing `t ` + space in the input auto-converts to `□ `. Backspace at position 2 reverts symbol back to prefix.
+
 ## View Modes
 
 - **Infinite Scroll**: All days visible, continuous scrolling
@@ -317,6 +444,11 @@ See `MOBILE_IMPLEMENTATION.md` for complete mobile documentation.
 - Subtasks inherit parent's time/date (no independent scheduling)
 - Daily Review at top shows incomplete todos from past days (parent only, no children)
 
+**Event split logic** — events render as one of three variants:
+- `event-single` (↹): event has no overlapping scheduled todos within its time window
+- `event-start` (⇤): event contains scheduled todos in its timeframe — shows start marker with full controls
+- `event-end` (⇥): paired end marker, opacity-60, no edit/delete buttons
+
 ## Notes for AI Assistants
 
 1. **Always run tests** after making changes: `npm run test` and `npm run build`
@@ -333,27 +465,72 @@ See `MOBILE_IMPLEMENTATION.md` for complete mobile documentation.
 12. **Notifications** - Browser notifications for events/routines, auto-scheduled via `useNotifications` hook, configurable in Settings
 13. **Self-hosting** - Complete Docker setup available, see `SELF_HOSTING.md` and `docker-compose.yml`
 14. **Drag-to-reorder** - Will NEVER be implemented (see ROADMAP.md), app uses chronological ordering by creation date
-9. **Test coverage** - 429 tests covering stores, hooks, and components (109 mobile-specific, 27 performance regression, sync features)
-10. **TimePane subtasks** - Only todo children appear in timeline (notes filtered out)
-11. **Daily Review filtering** - Excludes todos already scheduled for today/future to prevent duplication
-12. **Reference date parsing** - Reschedule actions use today as reference (not original date)
-13. **Mobile responsive** - Complete mobile implementation with swipe gestures, bottom sheet, FAB, and footer navigation
-14. **Touch-optimized** - 44×44px minimum touch targets, haptic feedback, keyboard detection
-15. **Authentication system** - Dual mode (guest/authenticated), email/password sign in/up, Supabase backend
-16. **Storage key separation** - Supabase uses `thoughts-time-auth`, Zustand uses `thoughts-time-auth-mode` (CRITICAL: different keys to avoid conflicts)
-17. **Rules of Hooks** - NEVER put early returns before hooks (caused "rendered more hooks" crash in UserMenu)
-18. **Direct state selection** - In auth components, use `useAuthStore((state) => state.mode)` NOT `isGuest()` functions (prevents re-render loops)
-19. **User ID strategy** - All items default to `userId: 'guest'`, transformed to actual userId only during Supabase sync
-20. **Environment variables** - Supabase credentials in `.env.local` (VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY)
-21. **Production deployment** - App is live at https://thoughtsandtime.vercel.app, auto-deploys from `main` branch
-22. **Email confirmation** - Enabled in Supabase for new user signups
-23. **Security hardening** - Circular reference protection, file import validation (type + size), comprehensive type guards for database operations
-24. **Sync reliability** - Exponential backoff retry logic with user-facing error toasts, graceful degradation to localStorage
-25. **Performance optimizations** - Code splitting (835KB → 294KB bundle), search optimization (O(n²) → O(n) with Map-based lookups), React.memo for frequently re-rendered components
-26. **Bundle size** - Main bundle reduced 65% through manual chunk configuration (vendor, date-utils, codemirror, supabase, virtual)
-27. **Optimistic updates** - Items show instant UI feedback with sync status indicators (⏳ pending, 🔄 syncing, ⚠️ error)
-28. **Conflict resolution** - Timestamp-based last-write-wins with user-facing conflict dialog when editing on multiple devices
-29. **Data migration** - One-click localStorage to Supabase migration tool with progress tracking for guest → authenticated transitions
+15. **Test coverage** - 429 tests total: 403 passing, 26 currently failing. Failures are in `useStore` (deleteItem, toggleTodoComplete) and `ItemDisplay` rendering — caused by Supabase auth client calling `storage.getItem` during test init in Happy DOM, not actual logic bugs
+16. **TimePane subtasks** - Only todo children appear in timeline (notes filtered out)
+17. **Daily Review filtering** - Excludes todos already scheduled for today/future to prevent duplication
+18. **Reference date parsing** - Reschedule actions use today as reference (not original date)
+19. **Mobile responsive** - Complete mobile implementation with swipe gestures, bottom sheet, FAB, and footer navigation
+20. **Touch-optimized** - 44×44px minimum touch targets, haptic feedback, keyboard detection
+21. **Authentication system** - Dual mode (guest/authenticated), email/password sign in/up, Supabase backend
+22. **Storage key separation** - Supabase uses `thoughts-time-auth`, Zustand uses `thoughts-time-auth-mode` (CRITICAL: different keys to avoid conflicts)
+23. **Rules of Hooks** - NEVER put early returns before hooks (caused "rendered more hooks" crash in UserMenu)
+24. **Direct state selection** - In auth components, use `useAuthStore((state) => state.mode)` NOT `isGuest()` functions (prevents re-render loops)
+25. **User ID strategy** - All items default to `userId: 'guest'`, transformed to actual userId only during Supabase sync
+26. **Environment variables** - Supabase credentials in `.env.local` (VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY)
+27. **Production deployment** - App is live at https://thoughtsandtime.vercel.app, auto-deploys from `main` branch
+28. **Email confirmation** - Enabled in Supabase for new user signups
+29. **Security hardening** - Circular reference protection, file import validation (type + size), comprehensive type guards for database operations
+30. **Sync reliability** - Exponential backoff retry logic with user-facing error toasts, graceful degradation to localStorage
+31. **Performance optimizations** - Code splitting (835KB → 294KB bundle), search optimization (O(n²) → O(n) with Map-based lookups), React.memo for frequently re-rendered components
+32. **Bundle size** - Main bundle reduced 65% through manual chunk configuration (vendor, date-utils, codemirror, supabase, virtual)
+33. **Optimistic updates** - Items show instant UI feedback with sync status indicators (⏳ pending, 🔄 syncing, ⚠️ error)
+34. **Conflict resolution** - Timestamp-based last-write-wins with user-facing conflict dialog when editing on multiple devices
+35. **Data migration** - One-click localStorage to Supabase migration tool with progress tracking for guest → authenticated transitions
+
+## Database Column Mapping
+
+Supabase uses snake_case. Non-obvious camelCase → snake_case mappings:
+
+| App field | DB column | Notes |
+|-----------|-----------|-------|
+| `scheduledTime` | `scheduled_time` | |
+| `hasTime` | `has_time` | |
+| `parentId` / `parentType` | `parent_id` / `parent_type` | |
+| `depthLevel` | `depth_level` | |
+| `startTime` / `endTime` | `start_time` / `end_time` | |
+| `isAllDay` | `is_all_day` | |
+| `splitStartId` / `splitEndId` | `split_start_id` / `split_end_id` | |
+| `recurrencePattern` | `recurrence_pattern` | stored as JSON |
+| `scheduledTime` (routine) | `routine_scheduled_time` | stored as `HH:mm` string, NOT ISO |
+| `linkPreviews` | `link_previews` | stored as JSON array |
+| `embeddedItems` | `embedded_items` | stored as JSON array |
+| `completionLinkId` | `completion_link_id` | |
+| `lastCompleted` | `last_completed` | ISO string in DB |
+| `children` | `children` | stored as JSON array, defaults to `[]` |
+
+All timestamps except `routine_scheduled_time` are ISO strings in DB, converted to `Date` on load.
+
+## Vite Bundle Chunks
+
+Manual chunk split (65% size reduction: 835KB → 294KB, gzipped 88KB):
+
+| Chunk | Contents |
+|-------|----------|
+| `vendor` | react, react-dom, zustand |
+| `date-utils` | date-fns, chrono-node |
+| `codemirror` | all `@codemirror/*` packages |
+| `supabase` | @supabase/supabase-js |
+| `virtual` | @tanstack/react-virtual |
+
+## Roadmap (What's Next)
+
+Planned but not yet implemented (see `ROADMAP.md` for full detail):
+- 🟡 URL link previews for Notes
+- 🟢 PocketBase as alternative self-hosted backend (Phase 2)
+- 🟢 OAuth providers (Google, GitHub)
+- 🟢 Collaboration / team workspaces
+
+**Confirmed will NEVER be added:** drag-to-reorder (app uses chronological ordering by creation date, by design).
 
 ## License
 
